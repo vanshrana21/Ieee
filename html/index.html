@@ -152,66 +152,112 @@
     </nav>
 
     <section class="hero">
-        <div class="container hero-container">
-            <div class="hero-content">
-                <h1 class="hero-title">AI-Powered Legal Research Assistant</h1>
-                <p class="hero-subtitle">Find relevant case judgments, statutes, and legal precedents in seconds. Powered by advanced AI technology.</p>
-                
-                <div class="hero-actions">
-                    <a href="signup.html" class="btn btn-primary btn-large">Get Started</a>
-                    <a href="#how-it-works" class="btn btn-outline btn-large">See How It Works</a>
-                </div>
-                
-                <div class="hero-trust">
-                    <span>Designed for academic and research purposes</span>
-                </div>
+    <div class="container hero-container">
+        <div class="hero-content">
+            <h1 class="hero-title">AI-Powered Legal Research Assistant</h1>
+            <p class="hero-subtitle">Find relevant case judgments, statutes, and legal precedents in seconds. Powered by advanced AI technology.</p>
+            
+            <div class="hero-actions">
+                <a href="signup.html" class="btn btn-primary btn-large">Get Started</a>
+                <a href="#how-it-works" class="btn btn-outline btn-large">See How It Works</a>
             </div>
             
-            <div class="hero-visual">
-                <div class="dashboard-mock">
-                    <div class="mock-header">
-                        <div class="mock-searchbar-enhanced">
-                            <svg class="mock-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"/>
-                                <path d="M21 21l-4.35-4.35"/>
-                            </svg>
-                            <span class="mock-search-text">Search Indian Case Law</span>
+            <div class="hero-trust">
+                <span>Designed for academic and research purposes</span>
+            </div>
+        </div>
+        
+        <!-- NEW: 3D FLOATING LEGAL ELEMENTS -->
+        <div class="hero-3d-container">
+            <div class="hero-3d-scene">
+                
+                <!-- Main Document Stack (Front) -->
+                <div class="floating-doc doc-main">
+                    <div class="doc-content">
+                        <div class="doc-header">
+                            <div class="doc-badge">Supreme Court</div>
+                            <div class="doc-year">1973</div>
                         </div>
-                    </div>
-                    <div class="mock-content-enhanced">
-                        <div class="mock-case-list">
-                            <div class="mock-case-card">
-                                <div class="mock-case-title">Kesavananda Bharati v. State of Kerala</div>
-                                <div class="mock-case-court">Supreme Court, 1973</div>
-                            </div>
-                            <div class="mock-case-card">
-                                <div class="mock-case-title">Maneka Gandhi v. Union of India</div>
-                                <div class="mock-case-court">Supreme Court, 1978</div>
-                            </div>
-                            <div class="mock-case-card">
-                                <div class="mock-case-title">Vishaka v. State of Rajasthan</div>
-                                <div class="mock-case-court">Supreme Court, 1997</div>
-                            </div>
-                            <div class="mock-case-card">
-                                <div class="mock-case-title">Navtej Singh Johar v. Union of India</div>
-                                <div class="mock-case-court">Supreme Court, 2018</div>
-                            </div>
-                        </div>
-                        <div class="mock-detail-panel">
-                            <div class="mock-detail-title">Kesavananda Bharati v. State of Kerala</div>
-                            <div class="mock-detail-meta">Supreme Court of India, 1973</div>
-                            <div class="mock-detail-summary">
-                                <div class="mock-summary-line"></div>
-                                <div class="mock-summary-line"></div>
-                                <div class="mock-summary-line short"></div>
-                                <div class="mock-summary-line"></div>
-                            </div>
+                        <div class="doc-title">Kesavananda Bharati v. State of Kerala</div>
+                        <div class="doc-excerpt">
+                            <div class="doc-line"></div>
+                            <div class="doc-line short"></div>
+                            <div class="doc-line"></div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Secondary Document (Behind Right) -->
+                <div class="floating-doc doc-secondary-1">
+                    <div class="doc-content">
+                        <div class="doc-header">
+                            <div class="doc-badge">Supreme Court</div>
+                            <div class="doc-year">1978</div>
+                        </div>
+                        <div class="doc-title">Maneka Gandhi v. Union of India</div>
+                        <div class="doc-excerpt">
+                            <div class="doc-line"></div>
+                            <div class="doc-line"></div>
+                            <div class="doc-line short"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tertiary Document (Behind Left) -->
+                <div class="floating-doc doc-secondary-2">
+                    <div class="doc-content">
+                        <div class="doc-header">
+                            <div class="doc-badge">Supreme Court</div>
+                            <div class="doc-year">2018</div>
+                        </div>
+                        <div class="doc-title">Navtej Singh Johar v. Union of India</div>
+                        <div class="doc-excerpt">
+                            <div class="doc-line"></div>
+                            <div class="doc-line short"></div>
+                            <div class="doc-line"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Floating Law Book Icon -->
+                <div class="floating-icon icon-book">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                </div>
+                
+                <!-- Floating Scales Icon -->
+                <div class="floating-icon icon-scales">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 3v18"/>
+                        <path d="M5 7h14"/>
+                        <path d="M5 7l-1 6c-.5 2 1 3 3 3s3.5-1 3-3l-1-6"/>
+                        <path d="M19 7l-1 6c-.5 2 1 3 3 3s3.5-1 3-3l-1-6"/>
+                    </svg>
+                </div>
+                
+                <!-- Floating Gavel Icon -->
+                <div class="floating-icon icon-gavel">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 13l-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/>
+                        <path d="m16 16 6-6"/>
+                        <path d="m8 8 6-6"/>
+                        <path d="m9 7 8 8"/>
+                        <path d="m21 11-8-8"/>
+                    </svg>
+                </div>
+                
+                <!-- Accent Orbs -->
+                <div class="accent-orb orb-1"></div>
+                <div class="accent-orb orb-2"></div>
+                <div class="accent-orb orb-3"></div>
+                
             </div>
         </div>
-    </section>
+    </div>
+</section>
+
 
     <section class="features" id="features">
         <div class="container">
@@ -344,7 +390,7 @@
                     </ul>
                 </div>
             </div>
-            
+            <div id="hero-3d" class="hero-3d-canvas"></div>
             <div class="footer-bottom">
                 <p>&copy; 2025 LegalAI Research. Academic research project.</p>
             </div>
@@ -365,5 +411,287 @@
     
 
     <script src="../js/auth.js"></script>
+    <script>
+        (function() {
+    'use strict';
+
+    let scene, camera, renderer, cards = [];
+    let heroSection, canvas3D;
+    let animationFrame;
+
+    function initThreeHero() {
+        const container = document.getElementById('hero-3d');
+        heroSection = document.querySelector('.hero');
+        
+        if (!container || !heroSection) {
+            console.warn('3D Hero: Container not found');
+            return;
+        }
+
+        canvas3D = container;
+
+        // Scene
+        scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0xf8f9fa, 15, 40);
+
+        // Camera
+        camera = new THREE.PerspectiveCamera(
+            45,
+            container.offsetWidth / container.offsetHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(0, 0, 18);
+
+        // Renderer
+        renderer = new THREE.WebGLRenderer({ 
+            antialias: true, 
+            alpha: true 
+        });
+        renderer.setSize(container.offsetWidth, container.offsetHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000000, 0); // Transparent
+        container.appendChild(renderer.domElement);
+
+        // Lights
+        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambient);
+
+        const light1 = new THREE.DirectionalLight(0xc5a572, 0.8);
+        light1.position.set(5, 5, 5);
+        scene.add(light1);
+
+        const light2 = new THREE.DirectionalLight(0x1e3a5f, 0.4);
+        light2.position.set(-5, -5, 3);
+        scene.add(light2);
+
+        // Create cards
+        createLegalCards();
+
+        // Event listeners
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onResize);
+
+        // Start animation
+        animate();
+
+        console.log('✨ 3D Hero initialized');
+    }
+
+    function createLegalCards() {
+        const cardConfigs = [
+            { 
+                title: 'Kesavananda Bharati',
+                color: 0xe8dcc8,
+                index: 0
+            },
+            { 
+                title: 'Maneka Gandhi',
+                color: 0xdcc9b3,
+                index: 1
+            },
+            { 
+                title: 'Navtej Singh Johar',
+                color: 0xd0b89e,
+                index: 2
+            }
+        ];
+
+        cardConfigs.forEach((config, i) => {
+            // Card mesh
+            const geometry = new THREE.BoxGeometry(5, 6.5, 0.08);
+            const material = new THREE.MeshStandardMaterial({
+                color: config.color,
+                metalness: 0.2,
+                roughness: 0.3,
+                emissive: 0x1e3a5f,
+                emissiveIntensity: 0.05
+            });
+
+            const card = new THREE.Mesh(geometry, material);
+            
+            // Initial stacked position
+            card.position.set(0, 0, -i * 0.12);
+            card.rotation.x = 0.08;
+            
+            card.userData = config;
+
+            // Edge highlight
+            const edges = new THREE.EdgesGeometry(geometry);
+            const edgeMat = new THREE.LineBasicMaterial({ 
+                color: 0xc5a572,
+                transparent: true,
+                opacity: 0.3
+            });
+            const edgeMesh = new THREE.LineSegments(edges, edgeMat);
+            card.add(edgeMesh);
+
+            scene.add(card);
+            cards.push(card);
+        });
+    }
+
+    function onScroll() {
+        if (!heroSection) return;
+
+        const rect = heroSection.getBoundingClientRect();
+        const heroHeight = heroSection.offsetHeight;
+        const viewportHeight = window.innerHeight;
+        
+        // Calculate scroll progress through hero
+        let progress = 0;
+        
+        if (rect.top > 0) {
+            // Hero not reached yet
+            progress = 0;
+        } else if (rect.bottom < viewportHeight) {
+            // Hero scrolled past
+            progress = 1;
+        } else {
+            // Hero is in viewport
+            progress = Math.abs(rect.top) / (heroHeight - viewportHeight);
+            progress = Math.max(0, Math.min(1, progress));
+        }
+
+        updateAnimation(progress);
+    }
+
+    function updateAnimation(progress) {
+        // Cinematic 4-stage animation
+        
+        cards.forEach((card, i) => {
+            const delay = i * 0.08;
+            const p = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+
+            if (p < 0.25) {
+                // Stage 1: Lift and separate (0-25%)
+                const t = p / 0.25;
+                const eased = easeOutCubic(t);
+                
+                card.position.y = eased * (i - 1) * 2.5;
+                card.position.x = 0;
+                card.position.z = -i * 0.12 + eased * i * 1.5;
+                card.rotation.x = 0.08 - eased * 0.08;
+                card.rotation.y = 0;
+                card.scale.set(1, 1, 1);
+
+            } else if (p < 0.5) {
+                // Stage 2: Fan out in 3D (25-50%)
+                const t = (p - 0.25) / 0.25;
+                const eased = easeOutCubic(t);
+                
+                card.position.y = (i - 1) * 2.5;
+                card.position.x = eased * (i - 1) * 4;
+                card.position.z = i * 1.5 - eased * 2;
+                card.rotation.x = 0;
+                card.rotation.y = eased * (i - 1) * 0.35;
+                card.scale.set(1, 1, 1);
+
+            } else if (p < 0.75) {
+                // Stage 3: Rotate and reveal (50-75%)
+                const t = (p - 0.5) / 0.25;
+                const eased = easeInOutCubic(t);
+                
+                card.position.y = (i - 1) * 2.5;
+                card.position.x = (i - 1) * 4;
+                card.position.z = i * 1.5 - 2;
+                card.rotation.x = eased * 0.15;
+                card.rotation.y = (i - 1) * 0.35 + eased * 0.2;
+                card.scale.set(1, 1, 1);
+
+            } else {
+                // Stage 4: Fade and compress (75-100%)
+                const t = (p - 0.75) / 0.25;
+                const eased = easeInCubic(t);
+                
+                const targetX = (i - 1) * 3;
+                const targetY = 0;
+                const targetZ = -8;
+
+                card.position.x = (i - 1) * 4 + eased * (targetX - (i - 1) * 4);
+                card.position.y = (i - 1) * 2.5 + eased * (targetY - (i - 1) * 2.5);
+                card.position.z = (i * 1.5 - 2) + eased * (targetZ - (i * 1.5 - 2));
+                
+                card.rotation.x = (0.15) * (1 - eased * 0.5);
+                card.rotation.y = ((i - 1) * 0.35 + 0.2) * (1 - eased * 0.7);
+                
+                const scale = 1 - eased * 0.4;
+                card.scale.set(scale, scale, scale);
+            }
+
+            // Opacity fade on final stage
+            card.material.opacity = 1 - Math.max(0, progress - 0.8) * 2;
+        });
+
+        // Camera movement
+        camera.position.z = 18 - progress * 6;
+        camera.position.y = progress * 1.5;
+        camera.rotation.x = -progress * 0.08;
+    }
+
+    function animate() {
+        animationFrame = requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
+
+    function onResize() {
+        if (!canvas3D || !camera || !renderer) return;
+
+        const width = canvas3D.offsetWidth;
+        const height = canvas3D.offsetHeight;
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+
+    // Easing functions
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function easeInOutCubic(t) {
+        return t < 0.5 
+            ? 4 * t * t * t 
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function easeInCubic(t) {
+        return t * t * t;
+    }
+
+    // Cleanup
+    function cleanup() {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onResize);
+        cancelAnimationFrame(animationFrame);
+        
+        if (renderer) {
+            renderer.dispose();
+        }
+    }
+
+    // Initialize when Three.js is loaded
+    function checkAndInit() {
+        if (typeof THREE !== 'undefined') {
+            // Wait for DOM + existing animations to settle
+            setTimeout(initThreeHero, 500);
+        } else {
+            console.warn('3D Hero: Three.js not loaded');
+        }
+    }
+
+    // Start when ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkAndInit);
+    } else {
+        checkAndInit();
+    }
+
+    // Expose cleanup for debugging
+    window.cleanup3DHero = cleanup;
+
+})();
+    </script>
 </body>
 </html>
