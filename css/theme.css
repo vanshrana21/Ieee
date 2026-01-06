@@ -1,0 +1,447 @@
+/**
+ * theme.css
+ * Centralized theme system with light and dark mode
+ * Load this FIRST before any other stylesheets
+ */
+
+/* =========================
+   LIGHT THEME (DEFAULT)
+========================= */
+:root {
+  /* Primary Colors */
+  --color-primary: #1e3a5f;
+  --color-primary-dark: #152a45;
+  --color-primary-light: #2d5180;
+  --color-accent: #c5a572;
+  --color-accent-dark: #a68b5b;
+  --color-accent-light: #d4b985;
+  
+  /* Backgrounds */
+  --color-background: #ffffff;
+  --color-surface: #f8f9fa;
+  --color-surface-dark: #e9ecef;
+  --color-surface-hover: #f1f3f5;
+  
+  /* Text Colors */
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6c757d;
+  --color-text-light: #adb5bd;
+  --color-text-inverse: #ffffff;
+  
+  /* Borders */
+  --color-border: #dee2e6;
+  --color-border-light: #e9ecef;
+  
+  /* Status Colors */
+  --color-success: #28a745;
+  --color-error: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  
+  /* Component-specific */
+  --navbar-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --button-secondary-bg: transparent;
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* =========================
+   DARK THEME
+========================= */
+.dark-mode {
+  /* Primary Colors - Keep brand identity */
+  --color-primary: #4a7bb7;
+  --color-primary-dark: #3a5f8f;
+  --color-primary-light: #5d8fc9;
+  --color-accent: #d4b985;
+  --color-accent-dark: #c5a572;
+  --color-accent-light: #e0c99d;
+  
+  /* Backgrounds - Modern dark palette */
+  --color-background: #0f1419;
+  --color-surface: #1a1f26;
+  --color-surface-dark: #13171d;
+  --color-surface-hover: #21262d;
+  
+  /* Text Colors - High contrast for readability */
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-light: #6e7681;
+  --color-text-inverse: #0f1419;
+  
+  /* Borders - Subtle but visible */
+  --color-border: #30363d;
+  --color-border-light: #21262d;
+  
+  /* Status Colors - Adjusted for dark backgrounds */
+  --color-success: #3fb950;
+  --color-error: #f85149;
+  --color-warning: #d29922;
+  --color-info: #58a6ff;
+  
+  /* Shadows - Deeper for dark mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+  
+  /* Component-specific */
+  --navbar-bg: #1a1f26;
+  --sidebar-bg: #1a1f26;
+  --card-bg: #1a1f26;
+  --input-bg: #0d1117;
+  --button-secondary-bg: transparent;
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+}
+
+/* =========================
+   SMOOTH TRANSITIONS
+========================= */
+body,
+.dashboard-navbar,
+.dashboard-sidebar,
+.navbar,
+.auth-right,
+.settings-card,
+.results-panel,
+.case-card,
+.feature-card,
+.pricing-card,
+.btn,
+.form-input,
+.form-select,
+.form-textarea {
+  transition: 
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* =========================
+   GLOBAL DARK MODE STYLES
+========================= */
+.dark-mode body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+/* Navigation */
+.dark-mode .navbar,
+.dark-mode .dashboard-navbar {
+  background-color: var(--navbar-bg);
+  border-bottom-color: var(--color-border);
+}
+
+.dark-mode .dashboard-sidebar {
+  background-color: var(--sidebar-bg);
+  border-right-color: var(--color-border);
+}
+
+/* Cards and Surfaces */
+.dark-mode .card,
+.dark-mode .settings-card,
+.dark-mode .results-panel,
+.dark-mode .search-section,
+.dark-mode .dashboard-mock,
+.dark-mode .feature-card,
+.dark-mode .pricing-card,
+.dark-mode .auth-card {
+  background-color: var(--card-bg);
+  border-color: var(--color-border);
+}
+
+.dark-mode .case-card {
+  background-color: var(--card-bg);
+  border-bottom-color: var(--color-border-light);
+}
+
+.dark-mode .case-card:hover {
+  background-color: var(--color-surface-hover);
+}
+
+/* Forms */
+.dark-mode .form-input,
+.dark-mode .form-select,
+.dark-mode .form-textarea,
+.dark-mode .search-bar,
+.dark-mode .filter-select,
+.dark-mode .settings-select {
+  background-color: var(--input-bg);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.dark-mode .form-input::placeholder,
+.dark-mode .search-bar::placeholder {
+  color: var(--color-text-light);
+}
+
+.dark-mode .form-input:focus,
+.dark-mode .form-select:focus,
+.dark-mode .form-textarea:focus,
+.dark-mode .search-bar:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(74, 123, 183, 0.1);
+}
+
+/* Buttons */
+.dark-mode .btn-secondary,
+.dark-mode .btn-outline {
+  background-color: var(--button-secondary-bg);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.dark-mode .btn-secondary:hover,
+.dark-mode .btn-outline:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+/* Sidebar */
+.dark-mode .sidebar-link {
+  color: var(--color-text-secondary);
+}
+
+.dark-mode .sidebar-link:hover,
+.dark-mode .sidebar-link.active {
+  background-color: var(--color-surface-hover);
+  color: var(--color-primary);
+}
+
+.dark-mode .sidebar-divider {
+  background-color: var(--color-border-light);
+}
+
+.dark-mode .usage-stats {
+  background-color: var(--color-surface-dark);
+}
+
+.dark-mode .usage-bar {
+  background-color: var(--color-border);
+}
+
+/* Interactive Elements */
+.dark-mode .sidebar-toggle:hover,
+.dark-mode .notification-btn:hover,
+.dark-mode .detail-close:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-primary);
+}
+
+.dark-mode .user-profile:hover {
+  background-color: var(--color-surface-hover);
+}
+
+/* Settings Page Specific */
+.dark-mode .settings-section-icon {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border);
+}
+
+.dark-mode .settings-theme-status {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border);
+}
+
+.dark-mode .toggle-slider {
+  background-color: var(--color-border);
+}
+
+.dark-mode .toggle-slider:before {
+  background-color: var(--color-surface);
+}
+
+.dark-mode .settings-info-box {
+  background-color: rgba(212, 185, 133, 0.08);
+  border-color: rgba(212, 185, 133, 0.15);
+  color: var(--color-text-secondary);
+}
+
+.dark-mode .account-plan-badge {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border);
+}
+
+.dark-mode .account-plan-badge.premium {
+  background-color: rgba(212, 185, 133, 0.1);
+  border-color: rgba(212, 185, 133, 0.2);
+  color: var(--color-accent);
+}
+
+.dark-mode .account-progress-bar {
+  background-color: var(--color-border);
+}
+
+/* Landing Page */
+.dark-mode .hero {
+  background: linear-gradient(135deg, #0f1419 0%, #1a1f26 100%);
+}
+
+.dark-mode .features,
+.dark-mode .security {
+  background-color: var(--color-background);
+}
+
+.dark-mode .how-it-works {
+  background-color: var(--color-surface);
+}
+
+.dark-mode .feature-card:hover,
+.dark-mode .pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+.dark-mode .security-item {
+  background-color: var(--color-surface);
+  border-color: var(--color-border-light);
+}
+
+.dark-mode .security-item:hover {
+  border-color: var(--color-accent);
+}
+
+.dark-mode .mock-header {
+  background-color: var(--color-primary);
+}
+
+.dark-mode .mock-searchbar {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-mode .mock-content {
+  background-color: var(--color-surface);
+}
+
+.dark-mode .mock-item,
+.dark-mode .mock-text-line {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border);
+}
+
+/* Pricing Page */
+.dark-mode .pricing-section {
+  background-color: var(--color-background);
+}
+
+.dark-mode .pricing-card.featured {
+  border-color: var(--color-primary);
+  background: linear-gradient(
+    180deg,
+    rgba(74, 123, 183, 0.08),
+    var(--card-bg)
+  );
+}
+
+/* Footer */
+.dark-mode .footer {
+  background-color: #0a0e13;
+  color: rgba(230, 237, 243, 0.8);
+}
+
+.dark-mode .footer-section h4 {
+  color: var(--color-text-inverse);
+}
+
+.dark-mode .footer-section ul li a {
+  color: rgba(230, 237, 243, 0.7);
+}
+
+.dark-mode .footer-section ul li a:hover {
+  color: var(--color-accent);
+}
+
+.dark-mode .footer-bottom {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Detail Panel */
+.dark-mode .detail-panel {
+  background-color: var(--card-bg);
+  border-left-color: var(--color-border);
+}
+
+.dark-mode .detail-header {
+  background-color: var(--color-surface);
+  border-bottom-color: var(--color-border-light);
+}
+
+.dark-mode .detail-actions {
+  background-color: var(--color-surface);
+  border-top-color: var(--color-border-light);
+}
+
+.dark-mode .detail-section-title {
+  border-bottom-color: var(--color-border-light);
+}
+
+/* Auth Pages */
+.dark-mode .auth-right {
+  background-color: var(--color-background);
+}
+
+/* Case Tags */
+.dark-mode .case-tag {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+/* Results */
+.dark-mode .results-header {
+  border-bottom-color: var(--color-border-light);
+}
+
+.dark-mode .results-sort select {
+  background-color: var(--input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* Notification Badge */
+.dark-mode .notification-badge {
+  background-color: var(--color-error);
+  border-color: var(--navbar-bg);
+}
+
+/* User Avatar */
+.dark-mode .user-avatar {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Logout Link */
+.dark-mode .logout-link:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-error);
+}
+
+/* Scrollbar Styling (Optional but Professional) */
+.dark-mode ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 6px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-light);
+}

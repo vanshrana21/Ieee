@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Powered Legal Research Assistant - Find case judgments in seconds">
+    <title>LegalAI Research - AI-Powered Legal Research Assistant</title>
+    
+    <!-- CRITICAL: Load theme FIRST to prevent flash -->
+    <script src="../js/theme.js"></script>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/landing.css">
+    <style>
+        .mock-searchbar-enhanced {
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: var(--border-radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+        }
+        .mock-search-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.5;
+        }
+        .mock-search-text {
+            font-size: 13px;
+            color: rgba(0, 0, 0, 0.4);
+            font-weight: 400;
+        }
+        .mock-content-enhanced {
+            display: flex;
+            padding: var(--spacing-lg);
+            gap: var(--spacing-md);
+            min-height: 300px;
+        }
+        .mock-case-list {
+            width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .mock-case-card {
+            background-color: var(--color-background);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mock-case-card:first-child {
+            background-color: rgba(30, 58, 95, 0.04);
+            border-left: 3px solid var(--color-primary);
+        }
+        .mock-case-card:hover {
+            background-color: var(--color-surface);
+        }
+        .mock-case-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+        .mock-case-court {
+            font-size: 10px;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+        .mock-detail-panel {
+            flex: 1;
+            background-color: var(--color-background);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+        }
+        .mock-detail-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        .mock-detail-meta {
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            margin-bottom: 14px;
+            font-weight: 500;
+        }
+        .mock-detail-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .mock-summary-line {
+            height: 10px;
+            background-color: var(--color-surface);
+            border-radius: 2px;
+        }
+        .mock-summary-line.short {
+            width: 65%;
+        }
+        @media (max-width: 768px) {
+            .mock-content-enhanced {
+                flex-direction: column;
+                padding: var(--spacing-md);
+            }
+            .mock-case-list {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                gap: 10px;
+            }
+            .mock-case-card {
+                min-width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
+                    <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572"/>
+                    <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff"/>
+                </svg>
+                <span class="logo-text">LegalAI Research</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="index.html#features">Features</a></li>
+                <li><a href="index.html#how-it-works">How it works</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+            
+            <div class="nav-actions">
+                <a href="login.html" class="btn btn-secondary">Sign In</a>
+                <a href="signup.html" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">AI-Powered Legal Research Assistant</h1>
+                <p class="hero-subtitle">Find relevant case judgments, statutes, and legal precedents in seconds. Powered by advanced AI technology.</p>
+                
+                <div class="hero-actions">
+                    <a href="signup.html" class="btn btn-primary btn-large">Get Started</a>
+                    <a href="#how-it-works" class="btn btn-outline btn-large">See How It Works</a>
+                </div>
+                
+                <div class="hero-trust">
+                    <span>Designed for academic and research purposes</span>
+                </div>
+            </div>
+            
+            <div class="hero-visual">
+                <div class="dashboard-mock">
+                    <div class="mock-header">
+                        <div class="mock-searchbar-enhanced">
+                            <svg class="mock-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            <span class="mock-search-text">Search Indian Case Law</span>
+                        </div>
+                    </div>
+                    <div class="mock-content-enhanced">
+                        <div class="mock-case-list">
+                            <div class="mock-case-card">
+                                <div class="mock-case-title">Kesavananda Bharati v. State of Kerala</div>
+                                <div class="mock-case-court">Supreme Court, 1973</div>
+                            </div>
+                            <div class="mock-case-card">
+                                <div class="mock-case-title">Maneka Gandhi v. Union of India</div>
+                                <div class="mock-case-court">Supreme Court, 1978</div>
+                            </div>
+                            <div class="mock-case-card">
+                                <div class="mock-case-title">Vishaka v. State of Rajasthan</div>
+                                <div class="mock-case-court">Supreme Court, 1997</div>
+                            </div>
+                            <div class="mock-case-card">
+                                <div class="mock-case-title">Navtej Singh Johar v. Union of India</div>
+                                <div class="mock-case-court">Supreme Court, 2018</div>
+                            </div>
+                        </div>
+                        <div class="mock-detail-panel">
+                            <div class="mock-detail-title">Kesavananda Bharati v. State of Kerala</div>
+                            <div class="mock-detail-meta">Supreme Court of India, 1973</div>
+                            <div class="mock-detail-summary">
+                                <div class="mock-summary-line"></div>
+                                <div class="mock-summary-line"></div>
+                                <div class="mock-summary-line short"></div>
+                                <div class="mock-summary-line"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Key Features</h2>
+                <p class="section-subtitle">Core functionality for legal research</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Intelligent Search</h3>
+                    <p class="feature-description">Natural language queries to find relevant cases. Search uses AI to understand legal context and terminology.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Case Summaries</h3>
+                    <p class="feature-description">AI-generated summaries extract key facts and legal principles from case judgments for quick review.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Real-Time Updates</h3>
+                    <p class="feature-description">Stay current with newly published judgments and legal developments as they become available.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Get started with legal research in three simple steps</p>
+            </div>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Describe Your Query</h3>
+                        <p class="step-description">Use natural language to describe the legal issue, case facts, or precedents you are researching. Our AI understands legal terminology and context, so you can search the way you think.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Review AI Analysis</h3>
+                        <p class="step-description">Get instant results with AI-generated summaries highlighting key legal points, holdings, and relevant citations from thousands of cases. Filter by jurisdiction, court, date, and relevance.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Export Your Research</h3>
+                        <p class="step-description">Download formatted research reports, save important cases to your workspace, or share findings with your team securely. All exports include proper citations and references.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to Get Started?</h2>
+                <p class="cta-subtitle">Explore the platform and see how AI can assist with legal research</p>
+                <div class="cta-actions">
+                    <a href="signup.html" class="btn btn-primary btn-large">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
+                            <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572"/>
+                            <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff"/>
+                        </svg>
+                        <span class="logo-text">LegalAI Research</span>
+                    </div>
+                    <p class="footer-description">AI-powered legal research platform for academic purposes.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="index.html#features">Features</a></li>
+                        <li><a href="index.html#how-it-works">How it Works</a></li>
+                        <li><a href="pricing.html">Pricing</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#terms">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 LegalAI Research. Academic research project.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="../js/auth.js"></script>
+</body>
+</html>
