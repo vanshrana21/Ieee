@@ -1,0 +1,336 @@
+/**
+ * ============================================
+ * 3D HERO SECTION - CINEMATIC SCROLL ANIMATION
+ * ============================================
+ * Professional glassmorphic document stack with depth
+ */
+
+/* ============================================
+   3D CONTAINER & PERSPECTIVE
+   ============================================ */
+
+.hero-visual-3d {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+}
+
+.document-stack {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    transform-style: preserve-3d;
+    transform: rotateX(15deg) rotateY(-15deg);
+}
+
+/* ============================================
+   DOCUMENT LAYERS - STACKED 3D CARDS
+   ============================================ */
+
+.doc-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+
+.doc-card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+        0 20px 60px rgba(30, 58, 95, 0.15),
+        0 10px 30px rgba(30, 58, 95, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    padding: 30px;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Layer positioning with Z-depth */
+.layer-back {
+    transform: translateZ(-120px) scale(0.9);
+    opacity: 0.7;
+}
+
+.layer-back .doc-card {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.layer-middle {
+    transform: translateZ(-60px) scale(0.95);
+    opacity: 0.85;
+}
+
+.layer-middle .doc-card {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.layer-front {
+    transform: translateZ(0px);
+    z-index: 3;
+}
+
+/* ============================================
+   DOCUMENT CARD CONTENT
+   ============================================ */
+
+.doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(30, 58, 95, 0.1);
+}
+
+.doc-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5180 100%);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);
+}
+
+.doc-year {
+    font-size: 13px;
+    font-weight: 700;
+    color: #c5a572;
+    background: rgba(197, 165, 114, 0.1);
+    padding: 5px 12px;
+    border-radius: 6px;
+}
+
+.doc-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a5f;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
+}
+
+.doc-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.doc-line {
+    height: 8px;
+    background: linear-gradient(90deg, 
+        rgba(30, 58, 95, 0.15) 0%, 
+        rgba(30, 58, 95, 0.05) 100%);
+    border-radius: 4px;
+    animation: shimmer 3s infinite;
+}
+
+.doc-line.short {
+    width: 65%;
+}
+
+@keyframes shimmer {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ============================================
+   FLOATING ACCENT ELEMENTS
+   ============================================ */
+
+.floating-accent {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c5a572 0%, #d4b985 100%);
+    opacity: 0.3;
+    filter: blur(40px);
+    animation: float 6s infinite ease-in-out;
+}
+
+.accent-1 {
+    width: 200px;
+    height: 200px;
+    top: -50px;
+    right: -50px;
+    animation-delay: 0s;
+}
+
+.accent-2 {
+    width: 150px;
+    height: 150px;
+    bottom: 50px;
+    left: -30px;
+    animation-delay: 2s;
+}
+
+.accent-3 {
+    width: 100px;
+    height: 100px;
+    top: 50%;
+    right: 50px;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) scale(1);
+    }
+    50% {
+        transform: translateY(-20px) scale(1.1);
+    }
+}
+
+/* ============================================
+   HOVER INTERACTIONS
+   ============================================ */
+
+.doc-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 
+        0 30px 80px rgba(30, 58, 95, 0.2),
+        0 15px 40px rgba(30, 58, 95, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .hero-visual-3d {
+        height: 500px;
+    }
+    
+    .document-stack {
+        width: 400px;
+        height: 400px;
+    }
+    
+    .doc-title {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-visual-3d {
+        height: 400px;
+        perspective: 800px;
+    }
+    
+    .document-stack {
+        width: 320px;
+        height: 380px;
+        transform: rotateX(10deg) rotateY(-10deg);
+    }
+    
+    .doc-card {
+        padding: 20px;
+    }
+    
+    .doc-title {
+        font-size: 14px;
+    }
+    
+    .doc-badge {
+        font-size: 9px;
+        padding: 4px 10px;
+    }
+    
+    .doc-year {
+        font-size: 11px;
+    }
+    
+    /* Reduce layer depth on mobile */
+    .layer-back {
+        transform: translateZ(-60px) scale(0.92);
+    }
+    
+    .layer-middle {
+        transform: translateZ(-30px) scale(0.96);
+    }
+    
+    .floating-accent {
+        display: none; /* Hide on mobile for performance */
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-visual-3d {
+        height: 350px;
+    }
+    
+    .document-stack {
+        width: 280px;
+        height: 320px;
+    }
+    
+    .doc-card {
+        padding: 16px;
+    }
+    
+    .doc-title {
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+    
+    .doc-lines {
+        gap: 8px;
+    }
+    
+    .doc-line {
+        height: 6px;
+    }
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+.doc-layer,
+.doc-card,
+.floating-accent {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .floating-accent {
+        animation: none;
+    }
+    
+    .doc-line {
+        animation: none;
+    }
+    
+    .doc-card {
+        transition: none;
+    }
+    
+    .document-stack {
+        transform: none;
+    }
+}
