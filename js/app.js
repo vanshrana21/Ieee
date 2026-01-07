@@ -1,12 +1,3 @@
-/**
- * app.js
- * Login and Registration page logic
- * Handles form submissions and page navigation
- */
-
-// ============================================================================
-// PAGE INITIALIZATION
-// ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     // Redirect to dashboard if already logged in
@@ -17,13 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeRegisterForm();
 });
 
-// ============================================================================
-// FORM INITIALIZATION
-// ============================================================================
-
-/**
- * Initialize login form submission
- */
 function initializeLoginForm() {
     const loginForm = document.getElementById('loginForm');
     
@@ -32,9 +16,7 @@ function initializeLoginForm() {
     }
 }
 
-/**
- * Initialize register form submission
- */
+
 function initializeRegisterForm() {
     const registerForm = document.getElementById('registerForm');
     
@@ -42,14 +24,7 @@ function initializeRegisterForm() {
         registerForm.addEventListener('submit', handleRegisterSubmit);
     }
 }
-
 // ============================================================================
-// LOGIN HANDLER
-// ============================================================================
-
-/**
- * Handle login form submission
- */
 async function handleLoginSubmit(event) {
     event.preventDefault();
     
@@ -99,13 +74,7 @@ async function handleLoginSubmit(event) {
     }
 }
 
-// ============================================================================
-// REGISTER HANDLER
-// ============================================================================
 
-/**
- * Handle register form submission
- */
 async function handleRegisterSubmit(event) {
     event.preventDefault();
     
@@ -183,13 +152,6 @@ async function handleRegisterSubmit(event) {
     }
 }
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Toggle between login and register forms
- */
 function showRegister(event) {
     if (event) event.preventDefault();
     
@@ -204,9 +166,6 @@ function showRegister(event) {
     if (registerError) registerError.style.display = 'none';
 }
 
-/**
- * Toggle between register and login forms
- */
 function showLogin(event) {
     if (event) event.preventDefault();
     
@@ -221,9 +180,6 @@ function showLogin(event) {
     if (registerError) registerError.style.display = 'none';
 }
 
-/**
- * Fill demo credentials for quick testing
- */
 function fillDemoCredentials() {
     const emailInput = document.getElementById('loginEmail');
     const passwordInput = document.getElementById('loginPassword');
