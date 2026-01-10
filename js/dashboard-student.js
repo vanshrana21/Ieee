@@ -9,7 +9,11 @@ if (role !== 'student') {
 }
 
 const navItems = document.querySelectorAll('.nav-item');
-
+if (item.hasAttribute('data-action') && item.getAttribute('data-action') === 'start-studying') {
+    e.preventDefault();
+    window.location.href = 'start-studying.html';
+    return;
+}
 navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         if (!item.hasAttribute('data-logout')) {
@@ -89,3 +93,17 @@ try {
 } catch (e) {
     console.log('Using placeholder student name');
 }
+function handleStartStudying() {
+    window.location.href = 'start-studying.html';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const startStudyingButtons = document.querySelectorAll('[data-action="start-studying"]');
+    
+    startStudyingButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleStartStudying();
+        });
+    });
+});

@@ -22,7 +22,8 @@
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Dashboard</span>
                 </a>
-                <a href="#" class="nav-item" data-page="study">
+                <!-- UPDATED: Added onclick for Start Studying -->
+                <a href="#" class="nav-item" data-page="study" onclick="goToStartStudying()">
                     <span class="nav-icon">📘</span>
                     <span class="nav-text">Start Studying</span>
                 </a>
@@ -73,7 +74,8 @@
                 ⚡ Quick Actions
             </div>
             <div class="primary-actions">
-                <div class="action-card" onclick="startStudying()">
+                <!-- UPDATED: Changed onclick to goToStartStudying() -->
+                <div class="action-card" onclick="goToStartStudying()">
                     <span class="action-icon">📘</span>
                     <h3>Start Studying</h3>
                     <p>Access subject-wise materials: Constitutional Law, Criminal Law, Contracts & more</p>
@@ -230,7 +232,86 @@
         </main>
     </div>
 
-    <script src="../js/auth.js"></script>
+    <!-- UPDATED: Removed auth.js, using inline script instead -->
+    <script>
+        // ========================================
+        // NAVIGATION FUNCTION - FRONTEND ONLY
+        // ========================================
+        
+        function goToStartStudying() {
+            window.location.href = "start-studying.html";
+        }
+
+        // ========================================
+        // OTHER BUTTON FUNCTIONS (PLACEHOLDERS)
+        // ========================================
+        
+        function openCaseSimplifier() {
+            // TODO: Implement Case Simplifier navigation
+        }
+
+        function practiceAnswers() {
+            // TODO: Implement Answer Practice navigation
+        }
+
+        function openNotes() {
+            // TODO: Implement Notes navigation
+        }
+
+        // ========================================
+        // AI ASSISTANT FUNCTIONS
+        // ========================================
+        
+        function askAI() {
+            const query = document.getElementById('aiQuery').value;
+            if (query.trim()) {
+                // TODO: Implement AI query handling
+                document.getElementById('aiQuery').value = '';
+            }
+        }
+
+        function setQuery(element) {
+            const query = element.textContent.trim().replace(/"/g, '');
+            document.getElementById('aiQuery').value = query;
+            document.getElementById('aiQuery').focus();
+        }
+
+        document.getElementById('aiQuery').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                askAI();
+            }
+        });
+
+        // ========================================
+        // UI FUNCTIONS
+        // ========================================
+        
+        function toggleCheck(item) {
+            const checkbox = item.querySelector('.checkbox');
+            checkbox.classList.toggle('checked');
+            item.classList.toggle('completed');
+        }
+
+        function openItem(itemId) {
+            // TODO: Implement item opening logic
+        }
+
+        // ========================================
+        // PROGRESS BAR ANIMATION
+        // ========================================
+        
+        window.addEventListener('load', function() {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        });
+    </script>
     <script src="../js/dashboard-student.js"></script>
+
 </body>
 </html>
