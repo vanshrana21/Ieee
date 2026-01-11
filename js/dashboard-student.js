@@ -26,12 +26,12 @@
 
         function practiceAnswers() {
             console.log('Opening Answer Practice...');
-            alert('✍️ Answer Writing Practice\n\nSelect question type:\n• 5-mark questions\n• 10-mark questions\n• 20-mark questions\n\nGet AI-powered feedback!');
+            window.location.href = "./answer-practice.html";
         }
 
         function openNotes() {
             console.log('Opening Notes...');
-            alert('📝 My Notes\n\nAccess your:\n• Case-linked notes\n• Subject-wise notes\n• Exam preparation notes');
+            window.location.href = "./my-notes.html";
         }
 
         // AI Assistant Functions
