@@ -4,314 +4,205 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - LegalAI Research</title>
-    <link rel="stylesheet" href="../css/dashboard-student.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard-student.css">
+
 </head>
 <body>
-    <div class="app-layout">
-        <!-- Fixed Left Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">LegalAI Research</div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                ⚖️ LegalAI Research
+            </div>
+            <button class="logout-btn" data-logout>Logout</button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="welcome-content">
+                <h1>Welcome back, <span id="studentName">Priya Sharma</span>! 👋</h1>
+                <div class="student-info">
+                    <span class="badge">📚 2nd Year Law Student</span>
+                    <span class="badge">Semester IV</span>
+                </div>
+                <p class="motivation-text">Let's prepare smarter today and ace those exams! 🎯</p>
+            </div>
+        </div>
+
+        <!-- Primary Action Cards -->
+        <div class="section-title">
+            ⚡ Quick Actions
+        </div>
+        <div class="primary-actions">
+            <div class="action-card" onclick="startStudying()">
+                <span class="action-icon">📘</span>
+                <h3>Start Studying</h3>
+                <p>Access subject-wise materials: Constitutional Law, Criminal Law, Contracts & more</p>
             </div>
 
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-page="dashboard">
-                    <span class="nav-icon">📊</span>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-                <!-- UPDATED: Added onclick for Start Studying -->
-                <a href="#" class="nav-item" data-page="study" onclick="goToStartStudying()">
-                    <span class="nav-icon">📘</span>
-                    <span class="nav-text">Start Studying</span>
-                </a>
-                <a href="#" class="nav-item" data-page="cases">
-                    <span class="nav-icon">📚</span>
-                    <span class="nav-text">Case Simplifier</span>
-                </a>
-                <a href="#" class="nav-item" data-page="practice">
-                    <span class="nav-icon">✍️</span>
-                    <span class="nav-text">Answer Practice</span>
-                </a>
-                <a href="#" class="nav-item" data-page="notes">
-                    <span class="nav-icon">📝</span>
-                    <span class="nav-text">My Notes</span>
-                </a>
-            </nav>
-
-            <div class="sidebar-footer">
-                <a href="#" class="nav-item" data-page="profile">
-                    <span class="nav-icon">👤</span>
-                    <span class="nav-text">Profile</span>
-                </a>
-                <a href="#" class="nav-item" data-page="settings">
-                    <span class="nav-icon">⚙️</span>
-                    <span class="nav-text">Settings</span>
-                </a>
-                <a href="#" class="nav-item logout-item" data-logout>
-                    <span class="nav-icon">🚪</span>
-                    <span class="nav-text">Logout</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <div class="welcome-section">
-                <div class="welcome-content">
-                    <h1>Welcome back, <span id="studentName">Priya Sharma</span>! 👋</h1>
-                    <div class="student-info">
-                        <span class="badge" id="yearBadge">📚 2nd Year Law Student</span>
-                        <span class="badge">Semester IV</span>
-                    </div>
-                    <p class="motivation-text">Let's prepare smarter today and ace those exams! 🎯</p>
-                </div>
+            <div class="action-card" onclick="openCaseSimplifier()">
+                <span class="action-icon">📚</span>
+                <h3>Case Simplifier</h3>
+                <p>Get simplified breakdowns: Facts, Issues, Judgment, Ratio Decidendi & Exam Tips</p>
             </div>
 
-            <div class="section-title">
-                ⚡ Quick Actions
-            </div>
-            <div class="primary-actions">
-                <!-- UPDATED: Changed onclick to goToStartStudying() -->
-                <div class="action-card" onclick="goToStartStudying()">
-                    <span class="action-icon">📘</span>
-                    <h3>Start Studying</h3>
-                    <p>Access subject-wise materials: Constitutional Law, Criminal Law, Contracts & more</p>
-                </div>
-
-                <div class="action-card" onclick="openCaseSimplifier()">
-                    <span class="action-icon">📚</span>
-                    <h3>Case Simplifier</h3>
-                    <p>Get simplified breakdowns: Facts, Issues, Judgment, Ratio Decidendi & Exam Tips</p>
-                </div>
-
-                <div class="action-card" onclick="practiceAnswers()">
-                    <span class="action-icon">✍️</span>
-                    <h3>Answer Writing Practice</h3>
-                    <p>Practice 5-mark and 10-mark answers with AI-powered feedback</p>
-                </div>
-
-                <div class="action-card" onclick="openNotes()">
-                    <span class="action-icon">📝</span>
-                    <h3>My Notes</h3>
-                    <p>Organize case-linked and subject-specific notes in one place</p>
-                </div>
+            <div class="action-card" onclick="practiceAnswers()">
+                <span class="action-icon">✍️</span>
+                <h3>Answer Writing Practice</h3>
+                <p>Practice 5-mark and 10-mark answers with AI-powered feedback</p>
             </div>
 
-            <div class="two-column">
-                <div class="ai-section">
-                    <div class="ai-header">
-                        <span style="font-size: 32px;">🤖</span>
-                        <h2>AI Study Assistant</h2>
-                    </div>
-                    <div class="ai-input-container">
-                        <input 
-                            type="text" 
-                            class="ai-input" 
-                            placeholder="Ask anything about law in simple terms..."
-                            id="aiQuery"
-                        >
-                        <button class="ai-submit" onclick="askAI()">➤</button>
-                    </div>
-                    <div class="example-queries">
-                        <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;">💡 Try asking:</div>
-                        <div class="example-query" onclick="setQuery(this)">
-                            "Explain Article 21 in simple words"
-                        </div>
-                        <div class="example-query" onclick="setQuery(this)">
-                            "Why is Kesavananda Bharati important for exams?"
-                        </div>
-                        <div class="example-query" onclick="setQuery(this)">
-                            "What's the difference between IPC and CrPC?"
-                        </div>
-                        <div class="example-query" onclick="setQuery(this)">
-                            "Summarize doctrine of basic structure"
-                        </div>
-                    </div>
+            <div class="action-card" onclick="openNotes()">
+                <span class="action-icon">📝</span>
+                <h3>My Notes</h3>
+                <p>Organize case-linked and subject-specific notes in one place</p>
+            </div>
+        </div>
+
+        <!-- Two Column Layout: AI Assistant + Progress -->
+        <div class="two-column">
+            <!-- AI Study Assistant -->
+            <div class="ai-section">
+                <div class="ai-header">
+                    <span style="font-size: 32px;">🤖</span>
+                    <h2>AI Study Assistant</h2>
                 </div>
-
-                <div class="progress-section">
-                    <h2>📊 Your Progress</h2>
-                    
-                    <div class="today-task">
-                        <h4>✨ Today's Suggested Task</h4>
-                        <p>Review landmark cases in Constitutional Law (Maneka Gandhi, ADM Jabalpur)</p>
+                <div class="ai-input-container">
+                    <input 
+                        type="text" 
+                        class="ai-input" 
+                        placeholder="Ask anything about law in simple terms..."
+                        id="aiQuery"
+                    >
+                    <button class="ai-submit" onclick="askAI()">➤</button>
+                </div>
+                <div class="example-queries">
+                    <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;">💡 Try asking:</div>
+                    <div class="example-query" onclick="setQuery(this)">
+                        "Explain Article 21 in simple words"
                     </div>
-
-                    <div class="subject-progress">
-                        <div class="subject-item">
-                            <div class="subject-header">
-                                <span class="subject-name">Constitutional Law</span>
-                                <span class="subject-percentage">75%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 75%"></div>
-                            </div>
-                        </div>
-
-                        <div class="subject-item">
-                            <div class="subject-header">
-                                <span class="subject-name">Criminal Law</span>
-                                <span class="subject-percentage">60%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 60%"></div>
-                            </div>
-                        </div>
-
-                        <div class="subject-item">
-                            <div class="subject-header">
-                                <span class="subject-name">Contract Law</span>
-                                <span class="subject-percentage">45%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 45%"></div>
-                            </div>
-                        </div>
+                    <div class="example-query" onclick="setQuery(this)">
+                        "Why is Kesavananda Bharati important for exams?"
                     </div>
-
-                    <ul class="checklist">
-                        <li class="checklist-item completed" onclick="toggleCheck(this)">
-                            <div class="checkbox checked"></div>
-                            <span class="checklist-text">Read Kesavananda Bharati case</span>
-                        </li>
-                        <li class="checklist-item completed" onclick="toggleCheck(this)">
-                            <div class="checkbox checked"></div>
-                            <span class="checklist-text">Revise Articles 14-21</span>
-                        </li>
-                        <li class="checklist-item" onclick="toggleCheck(this)">
-                            <div class="checkbox"></div>
-                            <span class="checklist-text">Complete Contract Law notes</span>
-                        </li>
-                        <li class="checklist-item" onclick="toggleCheck(this)">
-                            <div class="checkbox"></div>
-                            <span class="checklist-text">Practice 10-mark answers</span>
-                        </li>
-                    </ul>
+                    <div class="example-query" onclick="setQuery(this)">
+                        "What's the difference between IPC and CrPC?"
+                    </div>
+                    <div class="example-query" onclick="setQuery(this)">
+                        "Summarize doctrine of basic structure"
+                    </div>
                 </div>
             </div>
 
-            <div class="recent-section">
-                <h2>🕐 Recently Viewed</h2>
-                <div class="recent-items">
-                    <div class="recent-item" onclick="openItem('case1')">
-                        <div class="recent-icon">⚖️</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Kesavananda Bharati v. State of Kerala</div>
-                            <div class="recent-meta">Constitutional Law • Viewed 2 hours ago</div>
+            <!-- Progress & Learning Path -->
+            <div class="progress-section">
+                <h2>📊 Your Progress</h2>
+                
+                <div class="today-task">
+                    <h4>✨ Today's Suggested Task</h4>
+                    <p>Review landmark cases in Constitutional Law (Maneka Gandhi, ADM Jabalpur)</p>
+                </div>
+
+                <div class="subject-progress">
+                    <div class="subject-item">
+                        <div class="subject-header">
+                            <span class="subject-name">Constitutional Law</span>
+                            <span class="subject-percentage">75%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
                         </div>
                     </div>
 
-                    <div class="recent-item" onclick="openItem('note1')">
-                        <div class="recent-icon">📝</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Article 21 - Right to Life Notes</div>
-                            <div class="recent-meta">My Notes • Updated yesterday</div>
+                    <div class="subject-item">
+                        <div class="subject-header">
+                            <span class="subject-name">Criminal Law</span>
+                            <span class="subject-percentage">60%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%"></div>
                         </div>
                     </div>
 
-                    <div class="recent-item" onclick="openItem('case2')">
-                        <div class="recent-icon">⚖️</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Maneka Gandhi v. Union of India</div>
-                            <div class="recent-meta">Constitutional Law • Viewed 3 days ago</div>
+                    <div class="subject-item">
+                        <div class="subject-header">
+                            <span class="subject-name">Contract Law</span>
+                            <span class="subject-percentage">45%</span>
                         </div>
-                    </div>
-
-                    <div class="recent-item" onclick="openItem('practice1')">
-                        <div class="recent-icon">✍️</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Answer Practice - Basic Structure Doctrine</div>
-                            <div class="recent-meta">Practice Session • Last week</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 45%"></div>
                         </div>
                     </div>
                 </div>
+
+                <ul class="checklist">
+                    <li class="checklist-item completed" onclick="toggleCheck(this)">
+                        <div class="checkbox checked"></div>
+                        <span class="checklist-text">Read Kesavananda Bharati case</span>
+                    </li>
+                    <li class="checklist-item completed" onclick="toggleCheck(this)">
+                        <div class="checkbox checked"></div>
+                        <span class="checklist-text">Revise Articles 14-21</span>
+                    </li>
+                    <li class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <span class="checklist-text">Complete Contract Law notes</span>
+                    </li>
+                    <li class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <span class="checklist-text">Practice 10-mark answers</span>
+                    </li>
+                </ul>
             </div>
-        </main>
+        </div>
+
+        <!-- Recently Viewed / Saved -->
+        <div class="recent-section">
+            <h2>🕐 Recently Viewed</h2>
+            <div class="recent-items">
+                <div class="recent-item" onclick="openItem('case1')">
+                    <div class="recent-icon">⚖️</div>
+                    <div class="recent-details">
+                        <div class="recent-title">Kesavananda Bharati v. State of Kerala</div>
+                        <div class="recent-meta">Constitutional Law • Viewed 2 hours ago</div>
+                    </div>
+                </div>
+
+                <div class="recent-item" onclick="openItem('note1')">
+                    <div class="recent-icon">📝</div>
+                    <div class="recent-details">
+                        <div class="recent-title">Article 21 - Right to Life Notes</div>
+                        <div class="recent-meta">My Notes • Updated yesterday</div>
+                    </div>
+                </div>
+
+                <div class="recent-item" onclick="openItem('case2')">
+                    <div class="recent-icon">⚖️</div>
+                    <div class="recent-details">
+                        <div class="recent-title">Maneka Gandhi v. Union of India</div>
+                        <div class="recent-meta">Constitutional Law • Viewed 3 days ago</div>
+                    </div>
+                </div>
+
+                <div class="recent-item" onclick="openItem('practice1')">
+                    <div class="recent-icon">✍️</div>
+                    <div class="recent-details">
+                        <div class="recent-title">Answer Practice - Basic Structure Doctrine</div>
+                        <div class="recent-meta">Practice Session • Last week</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- UPDATED: Removed auth.js, using inline script instead -->
-    <script>
-        // ========================================
-        // NAVIGATION FUNCTION - FRONTEND ONLY
-        // ========================================
-        
-        function goToStartStudying() {
-            window.location.href = "start-studying.html";
-        }
-
-        // ========================================
-        // OTHER BUTTON FUNCTIONS (PLACEHOLDERS)
-        // ========================================
-        
-        function openCaseSimplifier() {
-            // TODO: Implement Case Simplifier navigation
-        }
-
-        function practiceAnswers() {
-            // TODO: Implement Answer Practice navigation
-        }
-
-        function openNotes() {
-            // TODO: Implement Notes navigation
-        }
-
-        // ========================================
-        // AI ASSISTANT FUNCTIONS
-        // ========================================
-        
-        function askAI() {
-            const query = document.getElementById('aiQuery').value;
-            if (query.trim()) {
-                // TODO: Implement AI query handling
-                document.getElementById('aiQuery').value = '';
-            }
-        }
-
-        function setQuery(element) {
-            const query = element.textContent.trim().replace(/"/g, '');
-            document.getElementById('aiQuery').value = query;
-            document.getElementById('aiQuery').focus();
-        }
-
-        document.getElementById('aiQuery').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                askAI();
-            }
-        });
-
-        // ========================================
-        // UI FUNCTIONS
-        // ========================================
-        
-        function toggleCheck(item) {
-            const checkbox = item.querySelector('.checkbox');
-            checkbox.classList.toggle('checked');
-            item.classList.toggle('completed');
-        }
-
-        function openItem(itemId) {
-            // TODO: Implement item opening logic
-        }
-
-        // ========================================
-        // PROGRESS BAR ANIMATION
-        // ========================================
-        
-        window.addEventListener('load', function() {
-            const progressBars = document.querySelectorAll('.progress-fill');
-            progressBars.forEach(bar => {
-                const width = bar.style.width;
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width;
-                }, 100);
-            });
-        });
-    </script>
-    <script src="../js/dashboard-student.js"></script>
-
+    <script src="../js/auth.js"></script>
+    <script src="../js/dashboard-student.js"></script>  
+    
+    
 </body>
 </html>
