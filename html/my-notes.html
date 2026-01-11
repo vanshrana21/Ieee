@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Notes - LegalAI Research</title>
+    <link rel="stylesheet" href="my-notes.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=IBM+Plex+Serif:wght@400;500;600&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/my-notes.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <button class="back-btn" id="backBtn">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Back to Dashboard</span>
+            </button>
+            <h1 class="app-title">LegalAI Research</h1>
+            <div class="header-actions">
+                <button class="exam-toggle" id="examToggle">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 2L11.5 7L17 7.75L13 11.5L14 17L9 14.25L4 17L5 11.5L1 7.75L6.5 7L9 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Exam Mode</span>
+                </button>
+                <button class="new-note-btn" id="newNoteBtn">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 4V14M4 9H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>New Note</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Subjects</h2>
+            </div>
+            
+            <div class="subject-cards">
+                <div class="subject-card" data-subject="constitutional">
+                    <div class="subject-icon">§</div>
+                    <div class="subject-info">
+                        <h3>Constitutional Law</h3>
+                        <div class="subject-meta">
+                            <span class="note-count">0 notes</span>
+                            <span class="last-updated">Never updated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subject-card" data-subject="criminal">
+                    <div class="subject-icon">⚖</div>
+                    <div class="subject-info">
+                        <h3>Criminal Law</h3>
+                        <div class="subject-meta">
+                            <span class="note-count">0 notes</span>
+                            <span class="last-updated">Never updated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subject-card" data-subject="contract">
+                    <div class="subject-icon">◊</div>
+                    <div class="subject-info">
+                        <h3>Contract Law</h3>
+                        <div class="subject-meta">
+                            <span class="note-count">0 notes</span>
+                            <span class="last-updated">Never updated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-filters">
+                <h3>Filters</h3>
+                <div class="filter-group">
+                    <label class="filter-option">
+                        <input type="checkbox" id="filterCaseLinked">
+                        <span>Case-Linked Only</span>
+                    </label>
+                </div>
+                
+                <div class="sort-group">
+                    <label>Sort By</label>
+                    <select id="sortSelect">
+                        <option value="recent">Most Recent</option>
+                        <option value="alphabetical">Alphabetical</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Notes Panel -->
+        <section class="notes-panel">
+            <div class="panel-header">
+                <h2 id="panelTitle">All Notes</h2>
+                <div class="search-box">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search notes...">
+                </div>
+            </div>
+
+            <div class="notes-list" id="notesList">
+                <div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                        <rect x="12" y="8" width="40" height="48" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <line x1="20" y1="20" x2="44" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="20" y1="28" x2="38" y2="28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="20" y1="36" x2="42" y2="36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <h3>No notes yet</h3>
+                    <p>Create your first note to get started with your legal research.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Editor Panel -->
+        <section class="editor-panel" id="editorPanel">
+            <div class="editor-header">
+                <h2 id="editorTitle">Create New Note</h2>
+                <button class="close-editor" id="closeEditor">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M5 5L15 15M5 15L15 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="editor-content">
+                <div class="form-group">
+                    <label for="noteTitle">Note Title</label>
+                    <input type="text" id="noteTitle" placeholder="e.g., Marbury v. Madison - Judicial Review">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="noteSubject">Subject</label>
+                        <select id="noteSubject">
+                            <option value="constitutional">Constitutional Law</option>
+                            <option value="criminal">Criminal Law</option>
+                            <option value="contract">Contract Law</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="linkedCase">Linked Case (Optional)</label>
+                        <input type="text" id="linkedCase" placeholder="e.g., Miranda v. Arizona">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="noteTags">Tags (Optional)</label>
+                    <input type="text" id="noteTags" placeholder="e.g., judicial review, separation of powers">
+                </div>
+
+                <div class="form-group">
+                    <label>Note Content</label>
+                    <div class="editor-toolbar">
+                        <button type="button" class="toolbar-btn" data-command="bold" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" class="toolbar-btn" data-command="italic" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button type="button" class="toolbar-btn" data-command="underline" title="Underline">
+                            <u>U</u>
+                        </button>
+                        <div class="toolbar-divider"></div>
+                        <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="3" cy="4" r="1.5" fill="currentColor"/>
+                                <circle cx="3" cy="8" r="1.5" fill="currentColor"/>
+                                <circle cx="3" cy="12" r="1.5" fill="currentColor"/>
+                                <line x1="6" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5"/>
+                                <line x1="6" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5"/>
+                                <line x1="6" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <text x="1" y="6" font-size="8" fill="currentColor">1.</text>
+                                <text x="1" y="11" font-size="8" fill="currentColor">2.</text>
+                                <text x="1" y="16" font-size="8" fill="currentColor">3.</text>
+                                <line x1="6" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5"/>
+                                <line x1="6" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5"/>
+                                <line x1="6" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="editor-area" id="noteContent" contenteditable="true" data-placeholder="Begin typing your legal notes here..."></div>
+                </div>
+
+                <div class="editor-actions">
+                    <button class="btn-secondary" id="cancelBtn">Cancel</button>
+                    <button class="btn-primary" id="saveBtn">Save Note</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Delete Note</h3>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this note? This action cannot be undone.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelDelete">Cancel</button>
+                <button class="btn-danger" id="confirmDelete">Delete Note</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/my-notes.js"></script>
+</body>
+</html>

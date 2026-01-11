@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Answer Writing Practice - LegalAI Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/answer-practice.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                ⚖️ LegalAI Research
+            </div>
+            <button class="back-btn" onclick="goBackToDashboard()">← Back to Dashboard</button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>✍️ Answer Writing Practice</h1>
+            <p>Master the art of writing structured legal answers for university exams</p>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="main-layout">
+            <!-- Left Column: Question & Writing Area -->
+            <div class="left-column">
+                <!-- Question Selection -->
+                <div class="selection-card">
+                    <h2>Select Question</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subjectSelect">Subject</label>
+                            <select id="subjectSelect" class="input-field">
+                                <option value="">Choose Subject</option>
+                                <option value="constitutional">Constitutional Law</option>
+                                <option value="criminal">Criminal Law</option>
+                                <option value="contract">Contract Law</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="marksSelect">Question Type</label>
+                            <select id="marksSelect" class="input-field">
+                                <option value="">Choose Marks</option>
+                                <option value="5">5-Mark Questions</option>
+                                <option value="10">10-Mark Questions</option>
+                                <option value="20">20-Mark Questions</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn-load" onclick="loadQuestion()">
+                        <span class="btn-icon">📝</span>
+                        Load Question
+                    </button>
+                </div>
+
+                <!-- Question Display Card -->
+                <div id="questionCard" class="question-card hidden">
+                    <div class="question-header">
+                        <div class="question-meta">
+                            <span class="meta-badge" id="questionSubject">Constitutional Law</span>
+                            <span class="meta-badge marks" id="questionMarks">10 Marks</span>
+                        </div>
+                        <div class="question-stats">
+                            <span class="stat-item">⏱️ <span id="suggestedTime">15 mins</span></span>
+                            <span class="stat-item">📏 <span id="wordLimit">~300 words</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="question-text">
+                        <h3>Question:</h3>
+                        <p id="questionContent"></p>
+                    </div>
+
+                    <div class="question-hint">
+                        <strong>💡 Hint:</strong> <span id="questionHint"></span>
+                    </div>
+                </div>
+
+                <!-- Answer Writing Section -->
+                <div id="writingSection" class="writing-section hidden">
+                    <div class="writing-header">
+                        <h2>Your Answer</h2>
+                        <div class="writing-tools">
+                            <div class="word-counter">
+                                <span id="wordCount">0</span> words
+                            </div>
+                            <div class="timer" id="timer">
+                                <span class="timer-icon">⏱️</span>
+                                <span id="timerDisplay">00:00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <textarea 
+                        id="answerTextarea" 
+                        class="answer-textarea"
+                        placeholder="Start writing your answer here...
+
+Structure your answer properly:
+1. Introduction
+2. Main Body (with case laws, sections, principles)
+3. Conclusion
+
+Remember to cite relevant cases and legal provisions!"
+                    ></textarea>
+
+                    <div class="writing-actions">
+                        <button class="btn-secondary" onclick="clearAnswer()">🔄 Clear</button>
+                        <button class="btn-submit" onclick="submitAnswer()">✅ Submit Answer</button>
+                    </div>
+                </div>
+
+                <!-- Feedback Section -->
+                <div id="feedbackSection" class="feedback-section hidden">
+                    <h2>📊 Your Performance Feedback</h2>
+                    
+                    <div class="feedback-cards">
+                        <!-- Structure Feedback -->
+                        <div class="feedback-card">
+                            <div class="feedback-header">
+                                <h3>📋 Structure & Organization</h3>
+                                <span class="score-badge" id="structureScore">4/5</span>
+                            </div>
+                            <div class="feedback-content" id="structureFeedback"></div>
+                        </div>
+
+                        <!-- Legal Accuracy -->
+                        <div class="feedback-card">
+                            <div class="feedback-header">
+                                <h3>⚖️ Legal Accuracy</h3>
+                                <span class="score-badge" id="accuracyScore">4/5</span>
+                            </div>
+                            <div class="feedback-content" id="accuracyFeedback"></div>
+                        </div>
+
+                        <!-- Case Law Usage -->
+                        <div class="feedback-card">
+                            <div class="feedback-header">
+                                <h3>📚 Case Law & Citations</h3>
+                                <span class="score-badge" id="caseLawScore">3/5</span>
+                            </div>
+                            <div class="feedback-content" id="caseLawFeedback"></div>
+                        </div>
+
+                        <!-- Language & Presentation -->
+                        <div class="feedback-card">
+                            <div class="feedback-header">
+                                <h3>✨ Language & Presentation</h3>
+                                <span class="score-badge" id="languageScore">4/5</span>
+                            </div>
+                            <div class="feedback-content" id="languageFeedback"></div>
+                        </div>
+
+                        <!-- Overall Score -->
+                        <div class="overall-score-card">
+                            <div class="overall-content">
+                                <div class="score-circle">
+                                    <span class="score-number" id="overallScore">8.5</span>
+                                    <span class="score-max">/ <span id="maxMarks">10</span></span>
+                                </div>
+                                <div class="score-info">
+                                    <h3>Estimated Marks</h3>
+                                    <p id="scoreMessage">Great work! Keep practicing to perfect your technique.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="feedback-actions">
+                        <button class="btn-secondary" onclick="retryQuestion()">🔄 Retry Question</button>
+                        <button class="btn-primary" onclick="saveAttempt()">💾 Save Attempt</button>
+                        <button class="btn-secondary" onclick="loadNewQuestion()">➡️ Next Question</button>
+                    </div>
+                </div>
+
+                <!-- Model Answer Section -->
+                <div id="modelAnswerSection" class="model-answer-section hidden">
+                    <div class="model-header">
+                        <h2>📖 Model Answer</h2>
+                        <button class="toggle-btn" onclick="toggleModelAnswer()">
+                            <span id="toggleText">Show Model Answer</span>
+                        </button>
+                    </div>
+                    
+                    <div id="modelAnswerContent" class="model-content hidden">
+                        <div class="model-answer" id="modelAnswerText"></div>
+                        <button class="copy-btn" onclick="copyModelAnswer()">📋 Copy Model Answer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Tips & Progress -->
+            <div class="right-column">
+                <!-- Exam Tips Card -->
+                <div id="examTipsCard" class="tips-card hidden">
+                    <h3>🎯 Exam Tips</h3>
+                    
+                    <div class="tip-section">
+                        <h4>How Examiners Evaluate:</h4>
+                        <ul id="evaluationPoints"></ul>
+                    </div>
+
+                    <div class="tip-section">
+                        <h4>Common Mistakes to Avoid:</h4>
+                        <ul id="commonMistakes"></ul>
+                    </div>
+
+                    <div class="tip-section">
+                        <h4>How to Score Full Marks:</h4>
+                        <ul id="fullMarksStrategy"></ul>
+                    </div>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="progress-card">
+                    <h3>📈 Your Progress</h3>
+                    
+                    <div class="progress-stat">
+                        <div class="stat-label">Total Attempts</div>
+                        <div class="stat-value" id="totalAttempts">0</div>
+                    </div>
+
+                    <div class="progress-stat">
+                        <div class="stat-label">Average Score</div>
+                        <div class="stat-value" id="averageScore">-</div>
+                    </div>
+
+                    <div class="progress-stat">
+                        <div class="stat-label">Improvement Trend</div>
+                        <div class="stat-value improvement" id="improvementTrend">📈 Growing</div>
+                    </div>
+
+                    <div class="recent-attempts">
+                        <h4>Recent Attempts</h4>
+                        <div id="recentAttemptsList" class="attempts-list">
+                            <p class="empty-state">No attempts yet. Start practicing!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-card">
+                    <h3>⚡ Quick Actions</h3>
+                    <button class="quick-btn" onclick="addToNotes()">📝 Add to Notes</button>
+                    <button class="quick-btn" onclick="viewAllAttempts()">📊 View All Attempts</button>
+                    <button class="quick-btn" onclick="resetProgress()">🔄 Reset Progress</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="../js/answer-practice.js"></script>
+</body>
+</html>
