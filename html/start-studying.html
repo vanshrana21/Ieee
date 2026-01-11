@@ -4,160 +4,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Start Studying - LegalAI Research</title>
-    <link rel="stylesheet" href="start-studying.css">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/start-studying.css">
 </head>
 <body>
-    <!-- Header Section -->
-    <header class="study-header">
-        <div class="container">
-            <div class="logo">LegalAI Research</div>
-            <button class="back-btn" onclick="window.location.href='dashboard-student.html'">
-                <span class="back-icon">←</span> Back to Dashboard
-            </button>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                ⚖️ LegalAI Research
+            </div>
+            <button class="back-btn" onclick="goBackToDashboard()">← Back to Dashboard</button>
         </div>
-    </header>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Page Title -->
-            <div class="page-title">
-                <h1>Start Studying</h1>
-                <p class="subtitle">Choose what you want to focus on today</p>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Subject Selection Section -->
+        <div id="subjectSelection" class="subject-selection">
+            <div class="page-header">
+                <h1>📚 Choose Your Subject</h1>
+                <p>Select a subject to begin your study session</p>
             </div>
 
-            <!-- Subject Selection Section (Initially Visible) -->
-            <section id="subject-selection" class="subject-section">
-                <div class="subjects-grid">
-                    <!-- Constitutional Law -->
-                    <div class="subject-card" data-subject="constitutional">
-                        <div class="subject-icon">⚖️</div>
-                        <h3>Constitutional Law</h3>
-                        <p>Fundamental rights, directive principles, amendments</p>
-                        <div class="subject-stats">
-                            <span class="stat-badge">45 Topics</span>
-                            <span class="stat-badge">120 Cases</span>
-                        </div>
-                    </div>
-
-                    <!-- Criminal Law -->
-                    <div class="subject-card" data-subject="criminal">
-                        <div class="subject-icon">🔨</div>
-                        <h3>Criminal Law</h3>
-                        <p>IPC, CrPC, evidence, criminal procedure</p>
-                        <div class="subject-stats">
-                            <span class="stat-badge">38 Topics</span>
-                            <span class="stat-badge">95 Cases</span>
-                        </div>
-                    </div>
-
-                    <!-- Contract Law -->
-                    <div class="subject-card" data-subject="contract">
-                        <div class="subject-icon">📝</div>
-                        <h3>Contract Law</h3>
-                        <p>Offer, acceptance, consideration, breach</p>
-                        <div class="subject-stats">
-                            <span class="stat-badge">32 Topics</span>
-                            <span class="stat-badge">78 Cases</span>
-                        </div>
-                    </div>
-
-                    <!-- Tort Law (Coming Soon) -->
-                    <div class="subject-card coming-soon" data-subject="tort">
-                        <div class="subject-icon">⚠️</div>
-                        <h3>Tort Law</h3>
-                        <p>Negligence, liability, damages</p>
-                        <div class="coming-soon-badge">Coming Soon</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Study Hub Section (Initially Hidden) -->
-            <section id="study-hub" class="study-hub hidden">
-                <!-- Subject Header -->
-                <div class="hub-header">
-                    <button class="change-subject-btn" id="changeSubjectBtn">
-                        <span class="back-icon">←</span> Change Subject
-                    </button>
-                    <div class="current-subject">
-                        <div class="current-subject-icon" id="currentSubjectIcon">⚖️</div>
-                        <div class="current-subject-info">
-                            <h2 id="currentSubjectTitle">Constitutional Law</h2>
-                            <p id="currentSubjectDesc">Master the foundation of Indian law</p>
-                        </div>
+            <div class="subject-grid">
+                <div class="subject-card" onclick="selectSubject('constitutional')">
+                    <div class="subject-icon">⚖️</div>
+                    <h3>Constitutional Law</h3>
+                    <p>Fundamental rights, directive principles, constitutional amendments & landmark judgments</p>
+                    <div class="card-footer">
+                        <span class="topic-count">24 Topics</span>
+                        <span class="case-count">45 Cases</span>
                     </div>
                 </div>
 
-                <!-- Study Options -->
-                <div class="study-options">
-                    <div class="option-card" data-option="concepts">
-                        <div class="option-icon">📚</div>
-                        <h3>Learn Concepts</h3>
-                        <p>Theory, definitions, and principles</p>
-                    </div>
-
-                    <div class="option-card" data-option="cases">
-                        <div class="option-icon">⚖️</div>
-                        <h3>Landmark Cases</h3>
-                        <p>Leading judgments and precedents</p>
-                    </div>
-
-                    <div class="option-card" data-option="practice">
-                        <div class="option-icon">✍️</div>
-                        <h3>Answer Writing</h3>
-                        <p>Practice questions and model answers</p>
-                    </div>
-
-                    <div class="option-card" data-option="notes">
-                        <div class="option-icon">📔</div>
-                        <h3>My Notes</h3>
-                        <p>Your saved notes and highlights</p>
+                <div class="subject-card" onclick="selectSubject('criminal')">
+                    <div class="subject-icon">🔨</div>
+                    <h3>Criminal Law</h3>
+                    <p>IPC provisions, criminal procedure, evidence law & important criminal cases</p>
+                    <div class="card-footer">
+                        <span class="topic-count">28 Topics</span>
+                        <span class="case-count">52 Cases</span>
                     </div>
                 </div>
 
-                <!-- Content Area -->
-                <div class="content-area" id="contentArea">
-                    <!-- Default Content (Concepts View) -->
-                    <div class="content-section" id="conceptsContent">
-                        <h3 class="content-heading">Important Topics</h3>
-                        <div class="topics-grid" id="topicsGrid">
-                            <!-- Topics will be loaded dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Cases Content -->
-                    <div class="content-section hidden" id="casesContent">
-                        <h3 class="content-heading">Landmark Cases</h3>
-                        <div class="cases-list" id="casesList">
-                            <!-- Cases will be loaded dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Practice Content -->
-                    <div class="content-section hidden" id="practiceContent">
-                        <h3 class="content-heading">Practice Questions</h3>
-                        <div class="practice-questions" id="practiceQuestions">
-                            <!-- Questions will be loaded dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Notes Content -->
-                    <div class="content-section hidden" id="notesContent">
-                        <h3 class="content-heading">My Notes</h3>
-                        <div class="notes-area" id="notesArea">
-                            <div class="empty-state">
-                                <div class="empty-icon">📝</div>
-                                <p>You haven't created any notes yet.</p>
-                                <button class="create-note-btn">Create Your First Note</button>
-                            </div>
-                        </div>
+                <div class="subject-card" onclick="selectSubject('contract')">
+                    <div class="subject-icon">📝</div>
+                    <h3>Contract Law</h3>
+                    <p>Formation, performance, breach of contracts & Indian Contract Act provisions</p>
+                    <div class="card-footer">
+                        <span class="topic-count">18 Topics</span>
+                        <span class="case-count">38 Cases</span>
                     </div>
                 </div>
-            </section>
+
+                <div class="subject-card disabled">
+                    <div class="subject-icon">⚡</div>
+                    <h3>Tort Law</h3>
+                    <p>Coming soon - Negligence, nuisance, defamation & tortious liability</p>
+                    <div class="card-footer">
+                        <span class="coming-soon-badge">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </main>
-    
-    <script src="start-studying.js"></script>
+
+        <!-- Study Hub Section (Hidden Initially) -->
+        <div id="studyHub" class="study-hub hidden">
+            <div class="breadcrumb">
+                <span onclick="backToSubjects()">📚 Subjects</span>
+                <span class="separator">›</span>
+                <span id="currentSubject">Constitutional Law</span>
+            </div>
+
+            <div class="study-header">
+                <h1>Studying: <span id="subjectTitle">Constitutional Law</span></h1>
+                <p>Choose a study mode to get started</p>
+            </div>
+
+            <div class="study-modes">
+                <div class="mode-card" onclick="openMode('concepts')">
+                    <div class="mode-icon">💡</div>
+                    <h3>Learn Concepts</h3>
+                    <p>Topic-wise structured content with definitions, principles & exam tips</p>
+                </div>
+
+                <div class="mode-card" onclick="openMode('cases')">
+                    <div class="mode-icon">⚖️</div>
+                    <h3>Landmark Cases</h3>
+                    <p>Simplified case breakdowns: Facts, Issues, Judgment & Ratio Decidendi</p>
+                </div>
+
+                <div class="mode-card" onclick="openMode('practice')">
+                    <div class="mode-icon">✍️</div>
+                    <h3>Answer Writing</h3>
+                    <p>Practice 5-mark and 10-mark questions with AI-powered feedback</p>
+                </div>
+
+                <div class="mode-card" onclick="openMode('notes')">
+                    <div class="mode-icon">📓</div>
+                    <h3>My Notes</h3>
+                    <p>Create, organize and review your personal study notes</p>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div id="contentArea" class="content-area hidden">
+                <div class="content-header">
+                    <button class="back-link" onclick="backToModes()">← Back to Study Modes</button>
+                    <h2 id="contentTitle">Learn Concepts</h2>
+                </div>
+
+                <div id="contentBody" class="content-body">
+                    <!-- Dynamic content loads here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/start-studying.js"></script>
 </body>
 </html>

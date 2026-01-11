@@ -13,14 +13,15 @@
         // ===== DASHBOARD FUNCTIONALITY =====
         
         // Primary Action Card Functions
-        function startStudying() {
-            console.log('Starting study session...');
-            alert('📘 Subject Selection - Choose your subject:\n\n• Constitutional Law\n• Criminal Law\n• Contract Law\n• Tort Law\n• Family Law');
-        }
+            function startStudying() {
+        console.log('Redirecting to Start Studying page...');
+        window.location.href = "start-studying.html";
+    }
+
 
         function openCaseSimplifier() {
             console.log('Opening Case Simplifier...');
-            alert('📚 Case Simplifier\n\nEnter a case name to get:\n✓ Facts\n✓ Issues\n✓ Judgment\n✓ Ratio Decidendi\n✓ Exam Importance');
+            window.location.href = "./case-simplifier.html";
         }
 
         function practiceAnswers() {
