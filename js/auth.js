@@ -2,21 +2,15 @@
  * auth.js
  * Complete authentication module for LegalAI Research
  * Handles login, signup, logout, token management, and role-based routing
- * 
- * CHANGES MADE:
- * - Added role storage in localStorage
- * - Modified register() to include role field
- * - Modified login() to store user role
- * - Added role-based redirect logic after authentication
- * - All existing functionality preserved
  */
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 const TOKEN_KEY = 'access_token';
-const ROLE_KEY = 'user_role'; // NEW: Store user role
+const ROLE_KEY = 'user_role';
+const USER_NAME_KEY = 'legalai_user_name';
 
 // ============================================================================
-// TOKEN MANAGEMENT (Unchanged)
+// TOKEN MANAGEMENT
 // ============================================================================
 
 function setToken(token) {
@@ -46,7 +40,8 @@ function removeToken() {
     try {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem('user_info');
-        localStorage.removeItem(ROLE_KEY); // NEW: Remove role on logout
+        localStorage.removeItem(ROLE_KEY);
+        localStorage.removeItem(USER_NAME_KEY);
         return true;
     } catch (error) {
         console.error('Failed to remove token:', error);
@@ -67,7 +62,61 @@ function isAuthenticated() {
 }
 
 // ============================================================================
-// ROLE MANAGEMENT (NEW)
+// USER NAME MANAGEMENT
+// ============================================================================
+
+/**
+ * Store user's full name in localStorage
+ * @param {string} name - User's full name
+ */
+function saveUserName(name) {
+    if (!name || typeof name !== 'string') {
+        console.warn('Invalid name provided to saveUserName');
+        return false;
+    }
+    
+    const trimmedName = name.trim();
+    if (trimmedName.length === 0) {
+        console.warn('Empty name provided to saveUserName');
+        return false;
+    }
+    
+    try {
+        localStorage.setItem(USER_NAME_KEY, trimmedName);
+        return true;
+    } catch (error) {
+        console.error('Failed to store user name:', error);
+        return false;
+    }
+}
+
+/**
+ * Get stored user name
+ * @returns {string|null} - User's name or null
+ */
+function getUserName() {
+    try {
+        return localStorage.getItem(USER_NAME_KEY);
+    } catch (error) {
+        console.error('Failed to retrieve user name:', error);
+        return null;
+    }
+}
+
+/**
+ * Get user's first name for greeting
+ * @returns {string|null} - User's first name or null
+ */
+function getUserFirstName() {
+    const fullName = getUserName();
+    if (!fullName) return null;
+    
+    const firstName = fullName.trim().split(' ')[0];
+    return firstName || null;
+}
+
+// ============================================================================
+// ROLE MANAGEMENT
 // ============================================================================
 
 /**
@@ -108,13 +157,12 @@ function getDashboardUrl(role) {
     } else if (role === 'student') {
         return '/html/dashboard-student.html';
     } else {
-        // Fallback to default dashboard
         return '/html/dashboard.html';
     }
 }
 
 // ============================================================================
-// API REQUEST (Unchanged)
+// API REQUEST
 // ============================================================================
 
 async function apiRequest(endpoint, options = {}) {
@@ -196,13 +244,9 @@ async function authenticatedFetch(url, options = {}) {
 }
 
 // ============================================================================
-// REGISTER (Updated with role)
+// REGISTER
 // ============================================================================
 
-/**
- * Register new user with role
- * CHANGES: Now includes role field in registration
- */
 async function register(fullName, email, password, role) {
     const registerResult = await apiRequest('/api/auth/register', {
         method: 'POST',
@@ -211,7 +255,7 @@ async function register(fullName, email, password, role) {
             email: email,
             password: password,
             name: fullName,
-            role: role // NEW: Include role in registration
+            role: role
         })
     });
 
@@ -219,13 +263,15 @@ async function register(fullName, email, password, role) {
         return registerResult;
     }
 
-    // Store token and role
     if (registerResult.data.access_token) {
         setToken(registerResult.data.access_token);
         
-        // NEW: Store role from registration response
         if (registerResult.data.role) {
             setUserRole(registerResult.data.role);
+        }
+        
+        if (registerResult.data.name || registerResult.data.full_name) {
+            saveUserName(registerResult.data.name || registerResult.data.full_name);
         }
         
         return {
@@ -238,13 +284,9 @@ async function register(fullName, email, password, role) {
 }
 
 // ============================================================================
-// LOGIN (Updated with role)
+// LOGIN
 // ============================================================================
 
-/**
- * Login user and store role
- * CHANGES: Now stores user role from login response
- */
 async function login(email, password) {
     try {
         const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -271,9 +313,13 @@ async function login(email, password) {
         if (data.access_token) {
             localStorage.setItem('access_token', data.access_token);
             
-            // NEW: Store user role from login response
             if (data.role) {
                 setUserRole(data.role);
+            }
+            
+            if (data.name || data.full_name || data.user_name) {
+                const userName = data.name || data.full_name || data.user_name;
+                saveUserName(userName);
             }
             
             return {
@@ -297,13 +343,9 @@ async function login(email, password) {
 }
 
 // ============================================================================
-// LOGIN HANDLER (Updated with role-based redirect)
+// LOGIN HANDLER
 // ============================================================================
 
-/**
- * Handle login form submission
- * CHANGES: Now redirects to role-specific dashboard
- */
 async function handleLogin(event) {
     if (event) {
         event.preventDefault();
@@ -341,7 +383,6 @@ async function handleLogin(event) {
         const result = await login(email, password);
         
         if (result.success) {
-            // NEW: Role-based redirect
             const role = getUserRole();
             const dashboardUrl = getDashboardUrl(role);
             window.location.href = dashboardUrl;
@@ -367,7 +408,7 @@ async function handleLogin(event) {
 }
 
 // ============================================================================
-// LOGOUT (Unchanged)
+// LOGOUT
 // ============================================================================
 
 function logout() {
@@ -376,7 +417,7 @@ function logout() {
 }
 
 // ============================================================================
-// USER INFO (Unchanged)
+// USER INFO
 // ============================================================================
 
 async function getCurrentUser() {
@@ -416,7 +457,7 @@ async function getUserCredits() {
 }
 
 // ============================================================================
-// ROUTE PROTECTION (Updated with role-based redirect)
+// ROUTE PROTECTION
 // ============================================================================
 
 function requireAuth() {
@@ -427,10 +468,6 @@ function requireAuth() {
     return true;
 }
 
-/**
- * Redirect authenticated users to appropriate dashboard
- * CHANGES: Now redirects to role-specific dashboard
- */
 function redirectIfAuthenticated() {
     if (isAuthenticated()) {
         const role = getUserRole();
@@ -442,7 +479,7 @@ function redirectIfAuthenticated() {
 }
 
 // ============================================================================
-// DOM INITIALIZATION (Updated with role handling)
+// DOM INITIALIZATION
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -463,12 +500,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
-            const role = document.getElementById('role').value; // NEW: Get role value
+            const role = document.getElementById('role').value;
             const submitBtn = signupForm.querySelector('.auth-submit');
             
-            // Validate role selection
             if (!role) {
                 alert('Please select your role (Lawyer or Law Student)');
+                return;
+            }
+            
+            if (!fullName || fullName.trim().length === 0) {
+                alert('Please enter your full name');
                 return;
             }
             
@@ -480,11 +521,12 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating Account...';
             
-            // NEW: Pass role to register function
+            // Save name immediately from form
+            saveUserName(fullName);
+            
             const result = await register(fullName, email, password, role);
             
             if (result.success) {
-                // NEW: Role-based redirect after signup
                 const userRole = getUserRole();
                 const dashboardUrl = getDashboardUrl(userRole);
                 window.location.href = dashboardUrl;
@@ -514,7 +556,7 @@ function handleLogout() {
 }
 
 // ============================================================================
-// EXPORTS (Updated with new functions)
+// EXPORTS
 // ============================================================================
 
 window.auth = {
@@ -535,7 +577,10 @@ window.auth = {
     removeToken,
     clearAccessToken,
     authenticatedFetch,
-    getUserRole,      // NEW: Export role getter
-    setUserRole,      // NEW: Export role setter
-    getDashboardUrl   // NEW: Export dashboard URL helper
+    getUserRole,
+    setUserRole,
+    getDashboardUrl,
+    getUserName,
+    saveUserName,
+    getUserFirstName
 };

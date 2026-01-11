@@ -27,46 +27,18 @@
             <div class="page-header">
                 <h1>📚 Choose Your Subject</h1>
                 <p>Select a subject to begin your study session</p>
+                
+                <!-- Optional: Add search functionality -->
+                <!-- <div class="search-box">
+                    <input type="text" id="subjectSearch" placeholder="🔍 Search subjects..." />
+                </div> -->
             </div>
 
+            <!-- Subject Grid (Dynamically populated by JS) -->
             <div class="subject-grid">
-                <div class="subject-card" onclick="selectSubject('constitutional')">
-                    <div class="subject-icon">⚖️</div>
-                    <h3>Constitutional Law</h3>
-                    <p>Fundamental rights, directive principles, constitutional amendments & landmark judgments</p>
-                    <div class="card-footer">
-                        <span class="topic-count">24 Topics</span>
-                        <span class="case-count">45 Cases</span>
-                    </div>
-                </div>
-
-                <div class="subject-card" onclick="selectSubject('criminal')">
-                    <div class="subject-icon">🔨</div>
-                    <h3>Criminal Law</h3>
-                    <p>IPC provisions, criminal procedure, evidence law & important criminal cases</p>
-                    <div class="card-footer">
-                        <span class="topic-count">28 Topics</span>
-                        <span class="case-count">52 Cases</span>
-                    </div>
-                </div>
-
-                <div class="subject-card" onclick="selectSubject('contract')">
-                    <div class="subject-icon">📝</div>
-                    <h3>Contract Law</h3>
-                    <p>Formation, performance, breach of contracts & Indian Contract Act provisions</p>
-                    <div class="card-footer">
-                        <span class="topic-count">18 Topics</span>
-                        <span class="case-count">38 Cases</span>
-                    </div>
-                </div>
-
-                <div class="subject-card disabled">
-                    <div class="subject-icon">⚡</div>
-                    <h3>Tort Law</h3>
-                    <p>Coming soon - Negligence, nuisance, defamation & tortious liability</p>
-                    <div class="card-footer">
-                        <span class="coming-soon-badge">Coming Soon</span>
-                    </div>
+                <!-- Subjects will be rendered here by JavaScript -->
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                    <p style="color: #64748b;">Loading subjects...</p>
                 </div>
             </div>
         </div>
@@ -98,7 +70,7 @@
                 </div>
 
                 <div class="mode-card" onclick="openMode('practice')">
-                    <div class="mode-icon">✍️</div>
+                    <div class="mode-icon">✏️</div>
                     <h3>Answer Writing</h3>
                     <p>Practice 5-mark and 10-mark questions with AI-powered feedback</p>
                 </div>
@@ -123,7 +95,9 @@
             </div>
         </div>
     </div>
-
+    <!-- IMPORTANT: Load subjects-data.js BEFORE start-studying.js -->
+    <script src="../js/subjects-data.js"></script>
     <script src="../js/start-studying.js"></script>
+    <script src="../js/subjects-data.js"></script>
 </body>
 </html>
