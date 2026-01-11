@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Simplifier - LegalAI Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/case-simplifier.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                ⚖️ LegalAI Research
+            </div>
+            <button class="back-btn" onclick="goBackToDashboard()">← Back to Dashboard</button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>📚 Case Simplifier</h1>
+            <p>Transform complex judgments into structured, exam-ready notes</p>
+        </div>
+
+        <!-- Case Input Section -->
+        <div class="input-section">
+            <div class="input-card">
+                <h2>Enter Case Details</h2>
+                
+                <div class="form-group">
+                    <label for="caseName">Case Name</label>
+                    <input 
+                        type="text" 
+                        id="caseName" 
+                        placeholder="e.g., Kesavananda Bharati v. State of Kerala"
+                        class="input-field"
+                    >
+                    <div class="input-hint">Enter the full case name or citation</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subjectSelect">Subject Category</label>
+                    <select id="subjectSelect" class="input-field">
+                        <option value="">Select Subject</option>
+                        <option value="constitutional">Constitutional Law</option>
+                        <option value="criminal">Criminal Law</option>
+                        <option value="contract">Contract Law</option>
+                        <option value="tort">Tort Law</option>
+                        <option value="property">Property Law</option>
+                    </select>
+                </div>
+
+                <button class="btn-simplify" onclick="simplifyCase()">
+                    <span class="btn-icon">✨</span>
+                    Simplify This Case
+                </button>
+
+                <!-- Quick Access -->
+                <div class="quick-access">
+                    <div class="quick-title">💡 Popular Cases:</div>
+                    <div class="quick-links">
+                        <span class="quick-link" onclick="loadPopularCase('kesavananda')">Kesavananda Bharati</span>
+                        <span class="quick-link" onclick="loadPopularCase('maneka')">Maneka Gandhi</span>
+                        <span class="quick-link" onclick="loadPopularCase('nanavati')">K.M. Nanavati</span>
+                        <span class="quick-link" onclick="loadPopularCase('carlill')">Carlill v. Carbolic</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Cases Sidebar -->
+            <div class="saved-cases-card">
+                <h3>📑 Saved Cases</h3>
+                <div id="savedCasesList" class="saved-list">
+                    <p class="empty-state">No saved cases yet. Simplify a case and save it!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Section (Hidden Initially) -->
+        <div id="outputSection" class="output-section hidden">
+            <!-- Case Header -->
+            <div class="case-header">
+                <div class="case-title-section">
+                    <h2 id="outputCaseName">Case Name</h2>
+                    <div class="case-meta">
+                        <span class="meta-badge" id="outputSubject">Constitutional Law</span>
+                        <span class="meta-badge importance">High Importance</span>
+                    </div>
+                </div>
+                
+                <div class="case-actions">
+                    <button class="action-btn" onclick="saveCase()" title="Save Case">
+                        💾 Save
+                    </button>
+                    <button class="action-btn" onclick="exportPDF()" title="Export as PDF">
+                        📄 Export PDF
+                    </button>
+                    <button class="action-btn" onclick="addToNotes()" title="Add to Notes">
+                        📝 Add to Notes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Collapsible Content Cards -->
+            <div class="content-cards">
+                <!-- Facts of the Case -->
+                <div class="collapse-card">
+                    <div class="collapse-header" onclick="toggleCollapse(this)">
+                        <div class="collapse-title">
+                            <span class="collapse-icon">📋</span>
+                            <h3>Facts of the Case</h3>
+                        </div>
+                        <span class="collapse-arrow">▼</span>
+                    </div>
+                    <div class="collapse-content">
+                        <div id="factsContent" class="content-body"></div>
+                        <button class="copy-btn" onclick="copySection('factsContent')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Issues Involved -->
+                <div class="collapse-card">
+                    <div class="collapse-header" onclick="toggleCollapse(this)">
+                        <div class="collapse-title">
+                            <span class="collapse-icon">❓</span>
+                            <h3>Issues Involved</h3>
+                        </div>
+                        <span class="collapse-arrow">▼</span>
+                    </div>
+                    <div class="collapse-content">
+                        <div id="issuesContent" class="content-body"></div>
+                        <button class="copy-btn" onclick="copySection('issuesContent')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Judgment Summary -->
+                <div class="collapse-card">
+                    <div class="collapse-header" onclick="toggleCollapse(this)">
+                        <div class="collapse-title">
+                            <span class="collapse-icon">⚖️</span>
+                            <h3>Judgment Summary</h3>
+                        </div>
+                        <span class="collapse-arrow">▼</span>
+                    </div>
+                    <div class="collapse-content">
+                        <div id="judgmentContent" class="content-body"></div>
+                        <button class="copy-btn" onclick="copySection('judgmentContent')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Ratio Decidendi -->
+                <div class="collapse-card highlighted">
+                    <div class="collapse-header" onclick="toggleCollapse(this)">
+                        <div class="collapse-title">
+                            <span class="collapse-icon">💡</span>
+                            <h3>Ratio Decidendi (Legal Principle)</h3>
+                        </div>
+                        <span class="collapse-arrow">▼</span>
+                    </div>
+                    <div class="collapse-content">
+                        <div id="ratioContent" class="content-body"></div>
+                        <button class="copy-btn" onclick="copySection('ratioContent')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Relevant Articles/Sections -->
+                <div class="collapse-card">
+                    <div class="collapse-header" onclick="toggleCollapse(this)">
+                        <div class="collapse-title">
+                            <span class="collapse-icon">📜</span>
+                            <h3>Relevant Articles / Sections</h3>
+                        </div>
+                        <span class="collapse-arrow">▼</span>
+                    </div>
+                    <div class="collapse-content">
+                        <div id="articlesContent" class="content-body"></div>
+                        <button class="copy-btn" onclick="copySection('articlesContent')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Exam Importance -->
+                <div class="collapse-card exam-card">
+                    <div class="collapse-header" onclick="toggleCollapse(this)">
+                        <div class="collapse-title">
+                            <span class="collapse-icon">🎯</span>
+                            <h3>Exam Importance & Tips</h3>
+                        </div>
+                        <span class="collapse-arrow">▼</span>
+                    </div>
+                    <div class="collapse-content">
+                        <div id="examContent" class="content-body"></div>
+                        <button class="copy-btn" onclick="copySection('examContent')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Answer Writing Format -->
+                <div class="collapse-card answer-card">
+                    <div class="collapse-header" onclick="toggleCollapse(this)">
+                        <div class="collapse-title">
+                            <span class="collapse-icon">✍️</span>
+                            <h3>Answer Writing Format</h3>
+                        </div>
+                        <span class="collapse-arrow">▼</span>
+                    </div>
+                    <div class="collapse-content">
+                        <div id="answerContent" class="content-body"></div>
+                        <button class="copy-btn" onclick="copySection('answerContent')">📋 Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar at Bottom -->
+            <div class="bottom-actions">
+                <button class="btn-secondary" onclick="resetForm()">🔄 Simplify Another Case</button>
+                <button class="btn-primary" onclick="saveCase()">💾 Save This Case</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/case-simplifier.js"></script>
+</body>
+</html>
