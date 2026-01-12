@@ -82,15 +82,18 @@ async def check_and_migrate_role_column():
                         full_name VARCHAR NOT NULL,
                         password_hash VARCHAR NOT NULL,
                         role VARCHAR NOT NULL,
+                        course_id INTEGER,
+                        current_semester INTEGER,
                         is_active BOOLEAN DEFAULT 1,
                         is_premium BOOLEAN DEFAULT 0,
                         credits_remaining INTEGER DEFAULT 500,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (course_id) REFERENCES courses(id)
                     )
                 """))
                 
-                # Copy existing data with default role as 'lawyer'
+                # Copy existing data with default role as 'student'
                 await conn.execute(text("""
                     INSERT INTO users_new (
                         id, email, full_name, password_hash, role,
@@ -98,7 +101,7 @@ async def check_and_migrate_role_column():
                         created_at, updated_at
                     )
                     SELECT 
-                        id, email, full_name, password_hash, 'lawyer',
+                        id, email, full_name, password_hash, 'student',
                         is_active, is_premium, credits_remaining,
                         created_at, updated_at
                     FROM users
@@ -112,6 +115,8 @@ async def check_and_migrate_role_column():
                 await conn.execute(text("CREATE INDEX ix_users_id ON users (id)"))
                 await conn.execute(text("CREATE INDEX ix_users_email ON users (email)"))
                 await conn.execute(text("CREATE INDEX ix_users_role ON users (role)"))
+                await conn.execute(text("CREATE INDEX ix_users_course_id ON users (course_id)"))
+                await conn.execute(text("CREATE INDEX ix_users_current_semester ON users (current_semester)"))
                 
                 logger.info("✓ Successfully migrated users table with role column")
             else:
@@ -122,6 +127,9 @@ async def check_and_migrate_role_column():
             raise
 
 
+# UPDATE the init_db() function in backend/database.py
+# Replace the import section (around line 142) with this:
+
 async def init_db():
     """
     Initialize database:
@@ -131,6 +139,18 @@ async def init_db():
     logger.info("Initializing database...")
     
     try:
+        # Import all models to register them with Base
+        from backend.orm.user import User
+        from backend.orm.course import Course
+        from backend.orm.subject import Subject
+        from backend.orm.curriculum import CourseCurriculum
+        from backend.orm.content_module import ContentModule  # PHASE 6
+        from backend.orm.learn_content import LearnContent    # PHASE 6
+        from backend.orm.case_content import CaseContent      # PHASE 6
+        from backend.orm.practice_question import PracticeQuestion  # PHASE 6
+        from backend.orm.user_notes import UserNotes          # PHASE 6
+        from backend.orm.user_progress import UserProgress
+        
         # First, handle migration for existing database
         await check_and_migrate_role_column()
         
@@ -143,6 +163,7 @@ async def init_db():
     except Exception as e:
         logger.error(f"Database initialization failed: {str(e)}")
         raise
+
 
 
 async def close_db():
