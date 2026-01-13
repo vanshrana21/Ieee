@@ -1,6 +1,8 @@
 """
 backend/orm/user.py
 User model with course enrollment and semester tracking
+
+PHASE 8 UPDATE: Added relationships for progress tracking
 """
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
@@ -23,7 +25,11 @@ class User(Base):
     - course_id: Which law program (BA LLB / BBA LLB / LLB)
     - current_semester: Which semester (1-10)
     
-    These two fields determine which subjects the user can see.
+    PHASE 8 ADDITIONS:
+    - content_progress: Progress on individual content items
+    - practice_attempts: Practice question submissions
+    - subject_progress: Aggregate subject-level progress
+    - notes: User's personal notes
     """
     __tablename__ = "users"
     
@@ -35,17 +41,17 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT, index=True)
     
-    # ⭐ PHASE 3: Course Enrollment
+    # Course Enrollment
     course_id = Column(
         Integer,
         ForeignKey("courses.id", ondelete="SET NULL"),
-        nullable=True,  # NULL = user hasn't selected course yet
+        nullable=True,
         index=True
     )
     
     current_semester = Column(
         Integer,
-        nullable=True,  # NULL = user hasn't started yet
+        nullable=True,
         default=1,
         index=True
     )
@@ -60,6 +66,35 @@ class User(Base):
         "Course",
         foreign_keys=[course_id],
         backref="enrolled_users"
+    )
+    
+    # PHASE 8: Progress tracking relationships
+    content_progress = relationship(
+        "UserContentProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+    
+    practice_attempts = relationship(
+        "PracticeAttempt",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+    
+    subject_progress = relationship(
+        "SubjectProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+    
+    notes = relationship(
+        "UserNotes",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
     
     def __repr__(self):
@@ -93,9 +128,3 @@ class User(Base):
             return "archived"
         else:
             return "locked"
-        notes = relationship(
-    "UserNotes",
-    back_populates="user",
-    cascade="all, delete-orphan",
-    lazy="selectin"
-)
