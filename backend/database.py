@@ -33,7 +33,7 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
-Base = declarative_base()
+from backend.orm.base import Base
 
 
 async def get_db():
@@ -127,9 +127,6 @@ async def check_and_migrate_role_column():
             raise
 
 
-# UPDATE the init_db() function in backend/database.py
-# Replace the import section (around line 142) with this:
-
 async def init_db():
     """
     Initialize database:
@@ -150,6 +147,11 @@ async def init_db():
         from backend.orm.practice_question import PracticeQuestion  # PHASE 6
         from backend.orm.user_notes import UserNotes          # PHASE 6
         from backend.orm.user_progress import UserProgress
+        
+        # ⭐ PHASE 8: Import progress tracking models
+        from backend.orm.user_content_progress import UserContentProgress
+        from backend.orm.practice_attempt import PracticeAttempt
+        from backend.orm.subject_progress import SubjectProgress
         
         # First, handle migration for existing database
         await check_and_migrate_role_column()

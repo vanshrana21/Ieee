@@ -1,6 +1,8 @@
 """
 backend/orm/subject.py
 Subject model for law subjects
+
+PHASE 8 UPDATE: Added subject_progress relationship
 """
 from sqlalchemy import Column, Integer, String, Text, Enum as SQLEnum
 from sqlalchemy.orm import relationship
@@ -29,12 +31,14 @@ class Subject(Base):
     - Same subject can appear in multiple courses
     - Same subject can appear in different semesters
     - Curriculum table maps Subject → Course → Semester
+    
+    PHASE 8: Added subject_progress relationship for aggregate tracking
     """
     __tablename__ = "subjects"
     
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(200), nullable=False, index=True)  # "Contract Law"
-    code = Column(String(50), nullable=False, unique=True, index=True)  # "LAW201"
+    title = Column(String(200), nullable=False, index=True)
+    code = Column(String(50), nullable=False, unique=True, index=True)
     description = Column(Text, nullable=True)
     category = Column(SQLEnum(SubjectCategory), nullable=False, index=True)
     syllabus = Column(Text, nullable=True)
@@ -52,8 +56,15 @@ class Subject(Base):
         cascade="all, delete-orphan"
     )
     
-    user_progress = relationship(
-        "UserProgress",
+    user_notes = relationship(
+        "UserNotes",
+        back_populates="subject",
+        cascade="all, delete-orphan"
+    )
+    
+    # PHASE 8: Aggregate progress tracking
+    subject_progress = relationship(
+        "SubjectProgress",
         back_populates="subject",
         cascade="all, delete-orphan"
     )

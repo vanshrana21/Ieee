@@ -1,13 +1,20 @@
+"""
+backend/routes/__init__.py
+Route registration - UPDATED FOR PHASE 8
+"""
 from fastapi import APIRouter
-from backend.routes.auth import router as auth_router
-from backend.routes.search import router as search_router
-from backend.routes.user import router as user_router
-from backend.routes.curriculum import router as curriculum_router
-from backend.routes.content import router as content_router  # PHASE 6
+from backend.routes import auth, user, curriculum, content, progress
+from backend.routes import ai_tutor, recommendations  # PHASE 8
 
 router = APIRouter()
-router.include_router(auth_router)
-router.include_router(search_router)
-router.include_router(user_router)
-router.include_router(curriculum_router)
-router.include_router(content_router)  # PHASE 6
+
+# Existing routes
+router.include_router(auth.router)
+router.include_router(user.router)
+router.include_router(curriculum.router)
+router.include_router(content.router)
+router.include_router(progress.router)
+
+# PHASE 8: Intelligence routes
+router.include_router(ai_tutor.router)
+router.include_router(recommendations.router)
