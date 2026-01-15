@@ -1,3 +1,439 @@
+/**
+ * search.js
+ * Phase 6.1: Search, Filtering & Discovery
+ * Provides unified search across all content types
+ */
+
+// ============================================================================
+// SEARCH API
+// ============================================================================
+
+/**
+ * Perform search query
+ * @param {string} query - Search query string
+ * @param {Object} filters - Optional filters
+ * @returns {Promise} Search results
+ */
+async function performSearch(query, filters = {}) {
+    if (!query || query.trim().length < 2) {
+        return {
+            success: false,
+            error: 'Search query must be at least 2 characters'
+        };
+    }
+
+    try {
+        const token = window.auth.getToken();
+        if (!token) {
+            throw new Error('Not authenticated');
+        }
+
+        // Build query parameters
+        const params = new URLSearchParams({
+            q: query.trim(),
+            page: filters.page || 1,
+            page_size: filters.page_size || 20
+        });
+
+        // Add optional filters
+        if (filters.content_types && filters.content_types.length > 0) {
+            params.append('content_types', filters.content_types.join(','));
+        }
+        if (filters.subject_id) {
+            params.append('subject_id', filters.subject_id);
+        }
+        if (filters.semester) {
+            params.append('semester', filters.semester);
+        }
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/search?${params.toString()}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            return {
+                success: false,
+                error: data.detail || 'Search failed',
+                status: response.status
+            };
+        }
+
+        return {
+            success: true,
+            data: data
+        };
+
+    } catch (error) {
+        console.error('Search error:', error);
+        return {
+            success: false,
+            error: error.message || 'Network error'
+        };
+    }
+}
+
+// ============================================================================
+// SEARCH UI RENDERING
+// ============================================================================
+
+/**
+ * Render search results in container
+ * @param {HTMLElement} container - Container element
+ * @param {Array} results - Search results array
+ * @param {Object} metadata - Pagination metadata
+ */
+function renderSearchResults(container, results, metadata) {
+    if (!container) {
+        console.error('Search container not found');
+        return;
+    }
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    if (!results || results.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <h3>No results found</h3>
+                <p>Try different keywords or adjust your filters</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Create results header
+    const header = document.createElement('div');
+    header.className = 'search-results-header';
+    header.innerHTML = `
+        <p>Found <strong>${metadata.total_count}</strong> result${metadata.total_count !== 1 ? 's' : ''}</p>
+    `;
+    container.appendChild(header);
+
+    // Render each result
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'search-results-list';
+
+    results.forEach(result => {
+        const resultCard = createSearchResultCard(result);
+        resultsContainer.appendChild(resultCard);
+    });
+
+    container.appendChild(resultsContainer);
+
+    // Add pagination if needed
+    if (metadata.has_more || metadata.page > 1) {
+        const pagination = createPagination(metadata);
+        container.appendChild(pagination);
+    }
+}
+
+/**
+ * Create search result card based on content type
+ */
+function createSearchResultCard(result) {
+    const card = document.createElement('div');
+    card.className = 'search-result-card';
+    card.onclick = () => navigateToContent(result);
+
+    const icon = getContentIcon(result.content_type);
+    const typeLabel = getContentTypeLabel(result.content_type);
+
+    card.innerHTML = `
+        <div class="result-icon">${icon}</div>
+        <div class="result-content">
+            <div class="result-header">
+                <h3 class="result-title">${escapeHtml(result.title)}</h3>
+                <span class="result-type-badge">${typeLabel}</span>
+            </div>
+            ${result.description ? 
+                `<p class="result-description">${escapeHtml(result.description.substring(0, 150))}${result.description.length > 150 ? '...' : ''}</p>` 
+                : ''}
+            <div class="result-meta">
+                ${result.subject_code ? 
+                    `<span class="meta-item">📚 ${result.subject_code} - ${result.subject_name}</span>` 
+                    : ''}
+                ${result.semester ? 
+                    `<span class="meta-item">📅 Semester ${result.semester}</span>` 
+                    : ''}
+                ${result.module_title ? 
+                    `<span class="meta-item">📂 ${result.module_title}</span>` 
+                    : ''}
+                ${result.exam_importance ? 
+                    `<span class="meta-item importance-${result.exam_importance}">⭐ ${result.exam_importance.toUpperCase()} Importance</span>` 
+                    : ''}
+                ${result.difficulty ? 
+                    `<span class="meta-item difficulty-${result.difficulty}">📊 ${result.difficulty}</span>` 
+                    : ''}
+                ${result.marks ? 
+                    `<span class="meta-item">✍️ ${result.marks} marks</span>` 
+                    : ''}
+            </div>
+            ${result.tags && result.tags.length > 0 ? 
+                `<div class="result-tags">
+                    ${result.tags.slice(0, 5).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                </div>` 
+                : ''}
+        </div>
+    `;
+
+    return card;
+}
+
+/**
+ * Get icon for content type
+ */
+function getContentIcon(contentType) {
+    const icons = {
+        'subject': '📚',
+        'learn': '📖',
+        'case': '⚖️',
+        'practice': '✏️'
+    };
+    return icons[contentType] || '📄';
+}
+
+/**
+ * Get label for content type
+ */
+function getContentTypeLabel(contentType) {
+    const labels = {
+        'subject': 'Subject',
+        'learn': 'Learn',
+        'case': 'Case',
+        'practice': 'Practice'
+    };
+    return labels[contentType] || contentType;
+}
+
+/**
+ * Navigate to content based on type
+ */
+function navigateToContent(result) {
+    const routes = {
+        'subject': (r) => `/html/subject-modules.html?subjectId=${r.id}`,
+        'learn': (r) => `/html/learn-content.html?id=${r.id}`,
+        'case': (r) => `/html/case-content.html?id=${r.id}`,
+        'practice': (r) => `/html/practice-content.html?id=${r.id}`
+    };
+
+    const route = routes[result.content_type];
+    if (route) {
+        window.location.href = route(result);
+    } else {
+        console.error('Unknown content type:', result.content_type);
+    }
+}
+
+/**
+ * Create pagination controls
+ */
+function createPagination(metadata) {
+    const pagination = document.createElement('div');
+    pagination.className = 'search-pagination';
+
+    const prevDisabled = metadata.page <= 1;
+    const nextDisabled = !metadata.has_more;
+
+    pagination.innerHTML = `
+        <button 
+            class="pagination-btn" 
+            id="prevPageBtn" 
+            ${prevDisabled ? 'disabled' : ''}
+        >
+            ← Previous
+        </button>
+        <span class="pagination-info">Page ${metadata.page}</span>
+        <button 
+            class="pagination-btn" 
+            id="nextPageBtn" 
+            ${nextDisabled ? 'disabled' : ''}
+        >
+            Next →
+        </button>
+    `;
+
+    return pagination;
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================================================
+// SEARCH INITIALIZATION
+// ============================================================================
+
+let currentSearchQuery = '';
+let currentFilters = {};
+
+/**
+ * Initialize search functionality
+ */
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const searchResults = document.getElementById('searchResults');
+
+    if (!searchInput || !searchButton || !searchResults) {
+        console.warn('Search elements not found on this page');
+        return;
+    }
+
+    // Search button click
+    searchButton.addEventListener('click', async () => {
+        await executeSearch();
+    });
+
+    // Enter key in search input
+    searchInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            await executeSearch();
+        }
+    });
+
+    // Initialize filter checkboxes if present
+    initializeFilters();
+}
+
+/**
+ * Execute search with current query and filters
+ */
+async function executeSearch(page = 1) {
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const query = searchInput.value.trim();
+
+    if (query.length < 2) {
+        searchResults.innerHTML = `
+            <div class="search-hint">
+                <p>⌨️ Enter at least 2 characters to search</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Show loading state
+    searchResults.innerHTML = `
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Searching...</p>
+        </div>
+    `;
+
+    currentSearchQuery = query;
+    currentFilters.page = page;
+
+    const result = await performSearch(query, currentFilters);
+
+    if (!result.success) {
+        searchResults.innerHTML = `
+            <div class="error-state">
+                <p>❌ ${result.error}</p>
+            </div>
+        `;
+        return;
+    }
+
+    renderSearchResults(searchResults, result.data.results, {
+        total_count: result.data.total_count,
+        page: result.data.page,
+        page_size: result.data.page_size,
+        has_more: result.data.has_more
+    });
+
+    // Setup pagination handlers
+    setupPaginationHandlers();
+}
+
+/**
+ * Setup pagination button handlers
+ */
+function setupPaginationHandlers() {
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+
+    if (prevBtn) {
+        prevBtn.onclick = () => {
+            executeSearch((currentFilters.page || 1) - 1);
+        };
+    }
+
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            executeSearch((currentFilters.page || 1) + 1);
+        };
+    }
+}
+
+/**
+ * Initialize filter controls
+ */
+function initializeFilters() {
+    const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+    
+    filterCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            updateFilters();
+        });
+    });
+}
+
+/**
+ * Update filters from UI controls
+ */
+function updateFilters() {
+    const contentTypeCheckboxes = document.querySelectorAll('.content-type-filter:checked');
+    currentFilters.content_types = Array.from(contentTypeCheckboxes).map(cb => cb.value);
+
+    const subjectFilter = document.getElementById('subjectFilter');
+    if (subjectFilter && subjectFilter.value) {
+        currentFilters.subject_id = parseInt(subjectFilter.value);
+    } else {
+        delete currentFilters.subject_id;
+    }
+
+    const semesterFilter = document.getElementById('semesterFilter');
+    if (semesterFilter && semesterFilter.value) {
+        currentFilters.semester = parseInt(semesterFilter.value);
+    } else {
+        delete currentFilters.semester;
+    }
+
+    // Re-run search with new filters
+    if (currentSearchQuery) {
+        executeSearch(1);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initializeSearch);
+
+// ============================================================================
+// GLOBAL EXPORTS
+// ============================================================================
+
+window.search = {
+    performSearch,
+    renderSearchResults,
+    executeSearch,
+    initializeSearch
+};
+
 window.Storage = window.Storage || {
   getSavedCases: () => [],
   getSearchHistory: () => []

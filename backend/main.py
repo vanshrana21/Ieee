@@ -3,6 +3,15 @@ import sys
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
+from backend.routes import progress
+from backend.routes import auth, user, curriculum, modules, content, progress
+from backend.routes.practice import router as practice_router
+from backend.routes import search
+from backend.routes import bookmarks, saved_searches
+from backend.routes import semantic_search
+from backend.routes import tutor
+from backend.routes import practice
+from backend.routes import study_plan
 
 
 
@@ -32,6 +41,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from backend.routes import rag_search
+from backend.routes import notes
 
 from backend.database import init_db, close_db
 from backend.routes import router
@@ -170,6 +180,23 @@ async def root():
     }
 
 app.include_router(router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+app.include_router(user.router, prefix="/api")
+app.include_router(curriculum.router, prefix="/api")
+app.include_router(modules.router, prefix="/api")
+app.include_router(content.router, prefix="/api")
+app.include_router(progress.router, prefix="/api")
+app.include_router(practice_router, prefix="/api")
+app.include_router(search.router)
+app.include_router(bookmarks.router)
+app.include_router(saved_searches.router)
+app.include_router(notes.router)
+app.include_router(semantic_search.router)
+app.include_router(tutor.router)
+app.include_router(practice.router)
+app.include_router(study_plan.router)
+
+
 
 if __name__ == "__main__":
     import uvicorn

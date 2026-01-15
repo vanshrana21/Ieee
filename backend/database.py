@@ -8,6 +8,15 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
 from dotenv import load_dotenv
+from backend.orm.bookmark import Bookmark
+from backend.orm.saved_search import SavedSearch
+from backend.orm.smart_note import SmartNote 
+from backend.orm.semantic_embedding import SemanticEmbedding
+from backend.orm.tutor_session import TutorSession 
+from backend.orm.tutor_message import TutorMessage 
+from backend.orm.topic_mastery import TopicMastery 
+from backend.orm.study_plan import StudyPlan  # PHASE 9C
+from backend.orm.study_plan_item import StudyPlanItem
 
 load_dotenv()
 

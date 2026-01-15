@@ -7,7 +7,7 @@ PHASE 8 UPDATE: Added subject_progress relationship
 from sqlalchemy import Column, Integer, String, Text, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class SubjectCategory(str, Enum):
@@ -45,29 +45,29 @@ class Subject(Base):
     
     # Relationships
     curriculum = relationship(
-        "CourseCurriculum",
-        back_populates="subject",
-        cascade="all, delete-orphan"
-    )
+    "CourseCurriculum",
+    back_populates="subject",
+    cascade="all, delete-orphan"
+)
     
     content_modules = relationship(
-        "ContentModule",
-        back_populates="subject",
-        cascade="all, delete-orphan"
-    )
+    "ContentModule",
+    back_populates="subject",
+    cascade="all, delete-orphan"
+)
     
     user_notes = relationship(
-        "UserNotes",
-        back_populates="subject",
-        cascade="all, delete-orphan"
-    )
+    "UserNotes",
+    back_populates="subject",
+    cascade="all, delete-orphan"
+)
     
     # PHASE 8: Aggregate progress tracking
     subject_progress = relationship(
-        "SubjectProgress",
-        back_populates="subject",
-        cascade="all, delete-orphan"
-    )
+    "SubjectProgress",
+    back_populates="subject",
+    cascade="all, delete-orphan"
+)
     
     def __repr__(self):
         return f"<Subject(id={self.id}, title='{self.title}')>"

@@ -5,7 +5,7 @@ UserProgress - Tracks student learning (minimal for Phase 3)
 from sqlalchemy import Column, Integer, Float, ForeignKey, Enum as SQLEnum, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from enum import Enum
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class ProgressStatus(str, Enum):
@@ -59,8 +59,11 @@ class UserProgress(Base):
     progress_percentage = Column(Float, default=0.0, nullable=False)
     
     # Relationships
-    subject = relationship("Subject", back_populates="user_progress")
-    module = relationship("ContentModule", back_populates="user_progress")
+    # ✅ CORRECT (unidirectional)
+    subject = relationship("Subject", lazy="joined")
+    module = relationship("ContentModule", lazy="joined")
+
+
     
     # Constraints
     __table_args__ = (

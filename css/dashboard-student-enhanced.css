@@ -1,0 +1,124 @@
+/**
+ * dashboard-student-enhanced.css
+ * Phase 4.2: Additional styles for clickable subjects and module buttons
+ */
+
+/* ===== ENHANCED SUBJECT ITEMS ===== */
+.subject-item.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.subject-item.clickable:hover {
+    background: #f8fafc;
+    border-left: 4px solid #1A3D6D;
+    padding-left: 16px;
+    transform: translateX(4px);
+}
+
+.subject-item.expanded {
+    background: #f8fafc;
+    border-left: 4px solid #1A3D6D;
+    padding-left: 16px;
+}
+
+/* ===== MODULE BUTTONS ===== */
+.module-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.module-btn {
+    background: white;
+    border: 2px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.module-btn:hover:not(.locked) {
+    background: #1A3D6D;
+    border-color: #1A3D6D;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(26, 61, 109, 0.2);
+}
+
+.module-btn.locked {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.module-btn.locked:hover {
+    background: #f1f5f9;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== SUBJECT ITEM HOVER HINT ===== */
+.subject-item.clickable::after {
+    content: '👆 Click to view modules';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #94a3b8;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.subject-item.clickable:hover::after {
+    opacity: 1;
+}
+
+.subject-item.expanded::after {
+    content: '👇 Modules shown below';
+    opacity: 1;
+}
+
+/* Make subject-item position relative for absolute positioning */
+.subject-item {
+    position: relative;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .module-buttons {
+        flex-direction: column;
+    }
+
+    .module-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .subject-item.clickable::after {
+        display: none;
+    }
+}

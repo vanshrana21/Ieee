@@ -2,11 +2,17 @@
 backend/orm/__init__.py
 ORM models package
 """
-from backend.orm.course import Course
-from backend.orm.subject import Subject
-from backend.orm.curriculum import CourseCurriculum
-from backend.orm.content_module import ContentModule
-from backend.orm.user_progress import UserProgress
+from .user import User
+from .course import Course
+from .subject import Subject
+from .content_module import ContentModule
+from .learn_content import LearnContent
+from .case_content import CaseContent
+from .practice_question import PracticeQuestion
+from .practice_attempt import PracticeAttempt
+from .practice_evaluation import PracticeEvaluation  # ✅ MUST BE HERE
+
+
 
 __all__ = [
     "Course",

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete your LegalAI Research profile">
+    <title>Complete Your Profile - LegalAI Research</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-left">
+            <div class="auth-left-content">
+                <div class="auth-logo">
+                    <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
+                        <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572"/>
+                        <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff"/>
+                    </svg>
+                    <span class="auth-brand">LegalAI Research</span>
+                </div>
+                
+                <h1 class="auth-left-title">Welcome! Let's personalize your experience</h1>
+                <p class="auth-left-description">We need a few details to customize your legal research dashboard and provide you with relevant case law and study materials.</p>
+                
+                <ul class="auth-trust-list">
+                    <li class="auth-trust-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <span>Personalized curriculum tracking</span>
+                    </li>
+                    <li class="auth-trust-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                        </svg>
+                        <span>Curated study resources</span>
+                    </li>
+                    <li class="auth-trust-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10"/>
+                            <path d="M12 20V4"/>
+                            <path d="M6 20v-6"/>
+                        </svg>
+                        <span>Progress analytics dashboard</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="auth-right">
+            <div class="auth-card">
+                <div class="auth-card-header">
+                    <h2 class="auth-card-title">Complete your profile</h2>
+                    <p class="auth-card-subtitle">Tell us about your academic background</p>
+                </div>
+                
+                <form class="auth-form" id="onboardingForm">
+                    <div class="form-group">
+                        <label for="role" class="form-label">Your role</label>
+                        <input 
+                            type="text" 
+                            id="role" 
+                            name="role" 
+                            class="form-input" 
+                            readonly
+                            disabled
+                            style="background-color: #f5f5f5; cursor: not-allowed;"
+                        >
+                        <span class="form-helper">This was set during registration</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="course" class="form-label">Course / Program</label>
+                        <select 
+                            id="course" 
+                            name="course" 
+                            class="form-input" 
+                            required
+                            style="cursor: pointer;"
+                        >
+                            <option value="">Select your course</option>
+                            <option value="1">BA LLB (5 Year Integrated)</option>
+                            <option value="2">BBA LLB (5 Year Integrated)</option>
+                            <option value="3">LLB (3 Year)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="semester" class="form-label">Current Semester</label>
+                        <input 
+                            type="number" 
+                            id="semester" 
+                            name="semester" 
+                            class="form-input" 
+                            placeholder="e.g., 3"
+                            min="1"
+                            max="10"
+                            required
+                        >
+                        <span class="form-helper">Enter a number between 1 and 10</span>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-large auth-submit">
+                        Complete Setup
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
+    <script>
+        // Course ID mapping
+        const COURSE_MAP = {
+            '1': 'BA LLB',
+            '2': 'BBA LLB',
+            '3': 'LLB'
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure user is authenticated
+            if (!window.auth.isAuthenticated()) {
+                window.location.href = '/html/login.html';
+                return;
+            }
+
+            // Redirect if already enrolled
+            if (window.auth.redirectIfEnrolled) {
+                window.auth.redirectIfEnrolled();
+            }
+
+            // Display user role
+            const roleInput = document.getElementById('role');
+            const userRole = window.auth.getUserRole();
+            if (roleInput && userRole) {
+                roleInput.value = userRole === 'lawyer' ? 'Lawyer' : 'Law Student';
+            }
+
+            // Handle form submission
+            const onboardingForm = document.getElementById('onboardingForm');
+            if (onboardingForm) {
+                onboardingForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const courseId = parseInt(document.getElementById('course').value);
+                    const semester = parseInt(document.getElementById('semester').value);
+                    const submitBtn = onboardingForm.querySelector('.auth-submit');
+
+                    // Validation
+                    if (!courseId) {
+                        alert('Please select your course');
+                        return;
+                    }
+
+                    if (!semester || semester < 1 || semester > 10) {
+                        alert('Please enter a valid semester (1-10)');
+                        return;
+                    }
+
+                    // Disable submit button
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Setting up your account...';
+
+                    try {
+                        // Call enrollment API
+                        const result = await window.auth.enrollUser(courseId, semester);
+
+                        if (result.success) {
+                            // Redirect to appropriate dashboard
+                            const role = window.auth.getUserRole();
+                            const dashboardUrl = window.auth.getDashboardUrl(role);
+                            window.location.href = dashboardUrl;
+                        } else {
+                            throw new Error(result.error || 'Enrollment failed');
+                        }
+                    } catch (error) {
+                        console.error('Onboarding error:', error);
+                        alert(error.message || 'Failed to complete setup. Please try again.');
+                        
+                        // Re-enable submit button
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Complete Setup';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

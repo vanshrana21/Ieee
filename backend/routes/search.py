@@ -1,7 +1,9 @@
 import logging
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status , Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from backend.services.search_service import execute_search
 
 from backend.database import get_db
 from backend.models.search import (
@@ -286,4 +288,43 @@ async def get_ai_summary(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred"
         )
+    
+@router.get("/content")
+async def search_content(
+    q: str = Query(..., min_length=2, max_length=200),
+    content_types: Optional[str] = Query(None),
+    subject_id: Optional[int] = Query(None),
+    semester: Optional[int] = Query(None),
+    page: int = Query(1),
+    page_size: int = Query(20),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    ...
+
+    """
+    Search across curriculum content (Phase 6.1).
+    
+    Uses shared search service for consistency.
+    """
+    
+    # Parse content types
+    content_type_list = None
+    if content_types:
+        content_type_list = [t.strip() for t in content_types.split(",")]
+    
+    # Execute search
+    result = await execute_search(
+        q=q,
+        content_types=content_type_list,
+        subject_id=subject_id,
+        semester=semester,
+        page=page,
+        page_size=page_size,
+        db=db,
+        current_user=current_user
+    )
+    
+    return result
+
     

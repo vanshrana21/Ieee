@@ -63,9 +63,9 @@ class UserProgress(BaseModel):
     - updated_at: Last update time
     
     Relationships:
-    - user: The student
-    - subject: The law subject
-    - module: The specific content module
+    - user: The student (bidirectional with User)
+    - subject: The law subject (UNIDIRECTIONAL - no back_populates)
+    - module: The specific content module (bidirectional with ContentModule)
     
     Constraints:
     - Unique: (user_id, module_id)
@@ -141,9 +141,9 @@ class UserProgress(BaseModel):
         lazy="joined"
     )
     
+    # UNIDIRECTIONAL - Subject does NOT have back_populates to this
     subject = relationship(
         "Subject",
-        back_populates="user_progress",
         lazy="joined"
     )
     

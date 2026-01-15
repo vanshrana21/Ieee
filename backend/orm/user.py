@@ -7,7 +7,7 @@ PHASE 8 UPDATE: Added relationships for progress tracking
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class UserRole(str, Enum):
@@ -62,11 +62,28 @@ class User(Base):
     credits_remaining = Column(Integer, default=500, nullable=False)
     
     # Relationships
+    
     course = relationship(
         "Course",
         foreign_keys=[course_id],
         backref="enrolled_users"
     )
+
+    bookmarks = relationship(
+        "Bookmark",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+    
+    saved_searches = relationship(
+        "SavedSearch",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
+    
     
     # PHASE 8: Progress tracking relationships
     content_progress = relationship(
@@ -128,3 +145,36 @@ class User(Base):
             return "archived"
         else:
             return "locked"
+    
+    def to_dict_with_course(self):
+        """
+        Convert user to dictionary including course details.
+        
+        Returns:
+            dict: User data with nested course object
+        """
+        user_dict = {
+            "id": self.id,
+            "email": self.email,
+            "full_name": self.full_name,
+            "role": self.role.value if self.role else None,
+            "course_id": self.course_id,
+            "current_semester": self.current_semester,
+            "is_active": self.is_active,
+            "is_premium": self.is_premium,
+            "credits_remaining": self.credits_remaining,
+        }
+        
+        # Add course details if user is enrolled
+        if self.course:
+            user_dict["course"] = {
+                "id": self.course.id,
+                "name": self.course.name,
+                "code": self.course.code,
+                "duration_years": self.course.duration_years,
+                "total_semesters": self.course.total_semesters,
+            }
+        else:
+            user_dict["course"] = None
+        
+        return user_dict

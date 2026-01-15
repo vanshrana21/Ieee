@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/dashboard-student.css">
+    
 </head>
 <body>
     <!-- Sidebar -->
@@ -20,19 +21,19 @@
                 <span class="nav-icon">🏠</span>
                 <span class="nav-text">Dashboard</span>
             </a>
-            <a href="./start-studying.html" class="nav-item">
+            <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.startStudying();">
                 <span class="nav-icon">📘</span>
                 <span class="nav-text">Start Studying</span>
             </a>
-            <a href="./case-simplifier.html" class="nav-item">
+            <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.openCaseSimplifier();">
                 <span class="nav-icon">📚</span>
                 <span class="nav-text">Case Simplifier</span>
             </a>
-            <a href="./answer-practice.html" class="nav-item">
+            <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.practiceAnswers();">
                 <span class="nav-icon">✏️</span>
                 <span class="nav-text">Answer Writing Practice</span>
             </a>
-            <a href="./my-notes.html" class="nav-item">
+            <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.openNotes();">
                 <span class="nav-icon">📝</span>
                 <span class="nav-text">My Notes</span>
             </a>
@@ -79,8 +80,46 @@
                 <div class="welcome-content">
                     <h1>Welcome back<span id="studentName"></span>! 👋</h1>
                     <div class="student-info">
-                        <span class="badge">📚 2nd Year Law Student</span>
-                        <span class="badge">Semester IV</span>
+                        <!-- Add after welcome section, before subject progress -->
+<div class="search-section">
+    <div class="search-container">
+        <input 
+            type="text" 
+            id="searchInput" 
+            class="search-input" 
+            placeholder="Search subjects, cases, topics, practice questions..."
+            aria-label="Search content"
+        >
+        <button id="searchButton" class="search-button">
+            🔍 Search
+        </button>
+    </div>
+    
+    <!-- Optional: Filter toggles -->
+    <div class="search-filters">
+        <label class="filter-label">
+            <input type="checkbox" class="content-type-filter filter-checkbox" value="subject" checked>
+            Subjects
+        </label>
+        <label class="filter-label">
+            <input type="checkbox" class="content-type-filter filter-checkbox" value="learn" checked>
+            Learn
+        </label>
+        <label class="filter-label">
+            <input type="checkbox" class="content-type-filter filter-checkbox" value="case" checked>
+            Cases
+        </label>
+        <label class="filter-label">
+            <input type="checkbox" class="content-type-filter filter-checkbox" value="practice" checked>
+            Practice
+        </label>
+    </div>
+    
+    <!-- Search results container -->
+    <div id="searchResults" class="search-results-container"></div>
+</div>
+
+                        <!-- Dynamic badges populated by JavaScript -->
                     </div>
                     <p class="motivation-text">Let's prepare smarter today and ace those exams! 🎯</p>
                 </div>
@@ -91,25 +130,25 @@
                 ⚡ Quick Actions
             </div>
             <div class="primary-actions">
-                <div class="action-card" onclick="startStudying()">
+                <div class="action-card" onclick="window.dashboardStudent.startStudying()">
                     <span class="action-icon">📘</span>
                     <h3>Start Studying</h3>
                     <p>Access subject-wise materials: Constitutional Law, Criminal Law, Contracts & more</p>
                 </div>
 
-                <div class="action-card" onclick="openCaseSimplifier()">
+                <div class="action-card" onclick="window.dashboardStudent.openCaseSimplifier()">
                     <span class="action-icon">📚</span>
                     <h3>Case Simplifier</h3>
                     <p>Get simplified breakdowns: Facts, Issues, Judgment, Ratio Decidendi & Exam Tips</p>
                 </div>
 
-                <div class="action-card" onclick="practiceAnswers()">
+                <div class="action-card" onclick="window.dashboardStudent.practiceAnswers()">
                     <span class="action-icon">✏️</span>
                     <h3>Answer Writing Practice</h3>
                     <p>Practice 5-mark and 10-mark answers with AI-powered feedback</p>
                 </div>
 
-                <div class="action-card" onclick="openNotes()">
+                <div class="action-card" onclick="window.dashboardStudent.openNotes()">
                     <span class="action-icon">📝</span>
                     <h3>My Notes</h3>
                     <p>Organize case-linked and subject-specific notes in one place</p>
@@ -131,20 +170,20 @@
                             placeholder="Ask anything about law in simple terms..."
                             id="aiQuery"
                         >
-                        <button class="ai-submit" onclick="askAI()">➤</button>
+                        <button class="ai-submit" onclick="window.dashboardStudent.askAI()">➤</button>
                     </div>
                     <div class="example-queries">
                         <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;">💡 Try asking:</div>
-                        <div class="example-query" onclick="setQuery(this)">
+                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
                             "Explain Article 21 in simple words"
                         </div>
-                        <div class="example-query" onclick="setQuery(this)">
+                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
                             "Why is Kesavananda Bharati important for exams?"
                         </div>
-                        <div class="example-query" onclick="setQuery(this)">
+                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
                             "What's the difference between IPC and CrPC?"
                         </div>
-                        <div class="example-query" onclick="setQuery(this)">
+                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
                             "Summarize doctrine of basic structure"
                         </div>
                     </div>
@@ -159,52 +198,25 @@
                         <p>Review landmark cases in Constitutional Law (Maneka Gandhi, ADM Jabalpur)</p>
                     </div>
 
+                    <!-- Dynamic subject progress container -->
                     <div class="subject-progress">
-                        <div class="subject-item">
-                            <div class="subject-header">
-                                <span class="subject-name">Constitutional Law</span>
-                                <span class="subject-percentage">75%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 75%"></div>
-                            </div>
-                        </div>
-
-                        <div class="subject-item">
-                            <div class="subject-header">
-                                <span class="subject-name">Criminal Law</span>
-                                <span class="subject-percentage">60%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 60%"></div>
-                            </div>
-                        </div>
-
-                        <div class="subject-item">
-                            <div class="subject-header">
-                                <span class="subject-name">Contract Law</span>
-                                <span class="subject-percentage">45%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 45%"></div>
-                            </div>
-                        </div>
+                        <!-- Populated by dashboard-student.js -->
                     </div>
 
                     <ul class="checklist">
-                        <li class="checklist-item completed" onclick="toggleCheck(this)">
+                        <li class="checklist-item completed" onclick="window.dashboardStudent.toggleCheck(this)">
                             <div class="checkbox checked"></div>
                             <span class="checklist-text">Read Kesavananda Bharati case</span>
                         </li>
-                        <li class="checklist-item completed" onclick="toggleCheck(this)">
+                        <li class="checklist-item completed" onclick="window.dashboardStudent.toggleCheck(this)">
                             <div class="checkbox checked"></div>
                             <span class="checklist-text">Revise Articles 14-21</span>
                         </li>
-                        <li class="checklist-item" onclick="toggleCheck(this)">
+                        <li class="checklist-item" onclick="window.dashboardStudent.toggleCheck(this)">
                             <div class="checkbox"></div>
                             <span class="checklist-text">Complete Contract Law notes</span>
                         </li>
-                        <li class="checklist-item" onclick="toggleCheck(this)">
+                        <li class="checklist-item" onclick="window.dashboardStudent.toggleCheck(this)">
                             <div class="checkbox"></div>
                             <span class="checklist-text">Practice 10-mark answers</span>
                         </li>
@@ -216,7 +228,7 @@
             <div class="recent-section">
                 <h2>🕐 Recently Viewed</h2>
                 <div class="recent-items">
-                    <div class="recent-item" onclick="openItem('case1')">
+                    <div class="recent-item" onclick="window.dashboardStudent.openItem('case1')">
                         <div class="recent-icon">⚖️</div>
                         <div class="recent-details">
                             <div class="recent-title">Kesavananda Bharati v. State of Kerala</div>
@@ -224,7 +236,7 @@
                         </div>
                     </div>
 
-                    <div class="recent-item" onclick="openItem('note1')">
+                    <div class="recent-item" onclick="window.dashboardStudent.openItem('note1')">
                         <div class="recent-icon">📝</div>
                         <div class="recent-details">
                             <div class="recent-title">Article 21 - Right to Life Notes</div>
@@ -232,7 +244,7 @@
                         </div>
                     </div>
 
-                    <div class="recent-item" onclick="openItem('case2')">
+                    <div class="recent-item" onclick="window.dashboardStudent.openItem('case2')">
                         <div class="recent-icon">⚖️</div>
                         <div class="recent-details">
                             <div class="recent-title">Maneka Gandhi v. Union of India</div>
@@ -240,7 +252,7 @@
                         </div>
                     </div>
 
-                    <div class="recent-item" onclick="openItem('practice1')">
+                    <div class="recent-item" onclick="window.dashboardStudent.openItem('practice1')">
                         <div class="recent-icon">✏️</div>
                         <div class="recent-details">
                             <div class="recent-title">Answer Practice - Basic Structure Doctrine</div>
@@ -251,10 +263,86 @@
             </div>
         </div>
     </div>
+    <div class="quick-card" id="startStudyingCard">...</div>
+    <div class="quick-card" id="caseSimplifierCard">...</div>
+    <div class="quick-card" id="practiceCard">...</div>
+    <div class="quick-card" id="notesCard">...</div>
+    <!-- MINIMAL HTML EDITS for dashboard-student.html -->
+<!-- Replace Quick Action Cards section with IDs: -->
+
+<div class="quick-actions-grid">
+    <div class="quick-action-card" id="startStudyingCard">
+        <div class="card-icon">📚</div>
+        <div class="card-content">
+            <h3>Start Studying</h3>
+            <p>Access subject-wise materials: Constitutional Law, Criminal Law, Contracts & more</p>
+        </div>
+    </div>
+
+    <div class="quick-action-card" id="caseSimplifierCard">
+        <div class="card-icon">⚖️</div>
+        <div class="card-content">
+            <h3>Case Simplifier</h3>
+            <p>Get simplified breakdowns: Facts, Issues, Judgment, Ratio Decidendi & Exam Tips</p>
+        </div>
+    </div>
+
+    <div class="quick-action-card" id="practiceModeCard">
+        <div class="card-icon">✍️</div>
+        <div class="card-content">
+            <h3>Answer Writing Practice</h3>
+            <p>Practice 5-mark and 10-mark answers with AI-powered feedback</p>
+        </div>
+    </div>
+
+    <div class="quick-action-card" id="myNotesCard">
+        <div class="card-icon">📝</div>
+        <div class="card-content">
+            <h3>My Notes</h3>
+            <p>Organize case-linked and subject-specific notes in one place</p>
+        </div>
+    </div>
+    
+    <div class="quick-action-card" id="aiTutorCard">
+        <div class="card-icon">🤖</div>
+        <div class="card-content">
+            <h3>AI Tutor</h3>
+            <p>Ask questions and get instant curriculum-aware explanations</p>
+        </div>
+    </div>
+</div>
+
+<!-- Replace AI Assistant input section: -->
+<div class="ai-assistant-section">
+    <h2>🤖 AI Study Assistant</h2>
+    <div class="ai-input-container">
+        <input 
+            type="text" 
+            id="aiInput" 
+            placeholder="Ask me anything about your course..."
+            maxlength="500"
+        >
+        <button id="sendAIBtn" class="send-btn">→</button>
+    </div>
+    <div class="suggestion-chips">
+        <span class="chip">"Explain Article 21 in simple words"</span>
+        <span class="chip">"Why is Kesavananda Bharati important for exams?"</span>
+        <span class="chip">"What's the difference between IPC and CrPC?"</span>
+        <span class="chip">"Summarize doctrine of basic structure"</span>
+    </div>
+</div>
+
+<!-- Add container for study plan (if not exists): -->
+<div id="studyPlanContainer"></div>
+
+
     
     <!-- Load auth.js FIRST (required dependency) -->
     <script src="../js/auth.js"></script>
     <!-- Load dashboard logic SECOND -->
     <script src="../js/dashboard-student.js"></script>
+    <script src="../js/search.js"></script>
+    <script src="../js/notes.js"></script>
+
 </body>
 </html>
