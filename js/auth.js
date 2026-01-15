@@ -2,6 +2,7 @@
  * auth.js
  * Complete authentication module for LegalAI Research
  * Handles login, signup, logout, token management, and role-based routing
+ * Phase 2: Added enrollment functionality
  */
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
@@ -42,6 +43,7 @@ function removeToken() {
         localStorage.removeItem('user_info');
         localStorage.removeItem(ROLE_KEY);
         localStorage.removeItem(USER_NAME_KEY);
+        localStorage.removeItem('is_enrolled');
         return true;
     } catch (error) {
         console.error('Failed to remove token:', error);
@@ -274,6 +276,10 @@ async function register(fullName, email, password, role) {
             saveUserName(registerResult.data.name || registerResult.data.full_name);
         }
         
+        if (typeof registerResult.data.is_enrolled === 'boolean') {
+            localStorage.setItem('is_enrolled', registerResult.data.is_enrolled);
+        }
+        
         return {
             success: true,
             data: registerResult.data
@@ -320,6 +326,10 @@ async function login(email, password) {
             if (data.name || data.full_name || data.user_name) {
                 const userName = data.name || data.full_name || data.user_name;
                 saveUserName(userName);
+            }
+            
+            if (typeof data.is_enrolled === 'boolean') {
+                localStorage.setItem('is_enrolled', data.is_enrolled);
             }
             
             return {
@@ -383,9 +393,15 @@ async function handleLogin(event) {
         const result = await login(email, password);
         
         if (result.success) {
-            const role = getUserRole();
-            const dashboardUrl = getDashboardUrl(role);
-            window.location.href = dashboardUrl;
+            const isEnrolled = localStorage.getItem('is_enrolled') === 'true';
+            
+            if (!isEnrolled) {
+                window.location.href = '/html/onboarding.html';
+            } else {
+                const role = getUserRole();
+                const dashboardUrl = getDashboardUrl(role);
+                window.location.href = dashboardUrl;
+            }
         } else {
             throw new Error(result.error || 'Login failed');
         }
@@ -405,6 +421,37 @@ async function handleLogin(event) {
             loginButton.textContent = 'Login';
         }
     }
+}
+
+// ============================================================================
+// ENROLLMENT (PHASE 2)
+// ============================================================================
+
+/**
+ * Enroll user with course and semester
+ * @param {number} courseId - Course ID (1: BA LLB, 2: BBA LLB, 3: LLB)
+ * @param {number} semester - Semester number (1-10)
+ * @returns {Promise<Object>} - Success/error result
+ */
+async function enrollUser(courseId, semester) {
+    const result = await apiRequest('/api/users/enroll', {
+        method: 'POST',
+        body: JSON.stringify({
+            course_id: courseId,
+            current_semester: semester  // ✅ Correct key
+        })
+    });
+    
+    if (result.success) {
+        localStorage.setItem('is_enrolled', 'true');
+        
+        return {
+            success: true,
+            data: result.data
+        };
+    }
+    
+    return result;
 }
 
 // ============================================================================
@@ -457,6 +504,83 @@ async function getUserCredits() {
 }
 
 // ============================================================================
+// CURRICULUM (PHASE 3)
+// ============================================================================
+
+/**
+ * Get user's curriculum dashboard data
+ * Returns active subjects, archive subjects, course info, and current semester
+ * @returns {Promise<Object>} - Dashboard data with subjects and progress
+ */
+async function getUserCurriculum() {
+    const result = await apiRequest('/api/curriculum/dashboard', {
+        method: 'GET'
+    });
+    
+    if (result.success) {
+        // Transform backend response to match frontend expectations
+        const backendData = result.data;
+        
+        // Combine active and archive subjects into single array with status
+        const allSubjects = [];
+        
+        // Add active subjects (current semester)
+        if (backendData.active_subjects && Array.isArray(backendData.active_subjects)) {
+            backendData.active_subjects.forEach(subject => {
+                allSubjects.push({
+                    id: subject.id,
+                    name: subject.title,
+                    code: subject.code,
+                    semester: subject.semester,
+                    category: subject.category,
+                    is_elective: subject.is_elective,
+                    description: subject.description,
+                    status: 'active',
+                    is_locked: false,
+                    completion_percentage: 0 // Will be populated from progress tracking in Phase 8
+                });
+            });
+        }
+        
+        // Add archive subjects (past semesters)
+        if (backendData.archive_subjects && Array.isArray(backendData.archive_subjects)) {
+            backendData.archive_subjects.forEach(subject => {
+                allSubjects.push({
+                    id: subject.id,
+                    name: subject.title,
+                    code: subject.code,
+                    semester: subject.semester,
+                    category: subject.category,
+                    is_elective: subject.is_elective,
+                    description: subject.description,
+                    status: 'archived',
+                    is_locked: false,
+                    completion_percentage: 0 // Will be populated from progress tracking in Phase 8
+                });
+            });
+        }
+        
+        return {
+            success: true,
+            data: {
+                course: backendData.course?.name || 'Unknown Course',
+                courseCode: backendData.course?.code,
+                semester: backendData.current_semester,
+                totalSemesters: backendData.course?.total_semesters,
+                subjects: allSubjects,
+                activeSubjects: backendData.active_subjects || [],
+                archiveSubjects: backendData.archive_subjects || []
+            }
+        };
+    } else {
+        return {
+            success: false,
+            error: result.error || 'Failed to load curriculum data'
+        };
+    }
+}
+
+// ============================================================================
 // ROUTE PROTECTION
 // ============================================================================
 
@@ -470,6 +594,22 @@ function requireAuth() {
 
 function redirectIfAuthenticated() {
     if (isAuthenticated()) {
+        const role = getUserRole();
+        const dashboardUrl = getDashboardUrl(role);
+        window.location.href = dashboardUrl;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Redirect if user is already enrolled (Phase 2)
+ * Prevents enrolled users from accessing onboarding page
+ */
+function redirectIfEnrolled() {
+    const isEnrolled = localStorage.getItem('is_enrolled') === 'true';
+    
+    if (isEnrolled) {
         const role = getUserRole();
         const dashboardUrl = getDashboardUrl(role);
         window.location.href = dashboardUrl;
@@ -521,21 +661,32 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating Account...';
             
-            // Save name immediately from form
             saveUserName(fullName);
             
             const result = await register(fullName, email, password, role);
             
             if (result.success) {
-                const userRole = getUserRole();
-                const dashboardUrl = getDashboardUrl(userRole);
-                window.location.href = dashboardUrl;
+                const isEnrolled = localStorage.getItem('is_enrolled') === 'true';
+                
+                if (!isEnrolled) {
+                    window.location.href = '/html/onboarding.html';
+                } else {
+                    const userRole = getUserRole();
+                    const dashboardUrl = getDashboardUrl(userRole);
+                    window.location.href = dashboardUrl;
+                }
             } else {
                 alert(result.error || 'Registration failed. Please try again.');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create Account';
             }
         });
+    }
+    
+    // Phase 2: Onboarding page protection
+    if (window.location.pathname.includes('onboarding.html')) {
+        requireAuth();
+        redirectIfEnrolled();
     }
     
     const logoutLinks = document.querySelectorAll('.logout-link, #logout-btn');
@@ -567,9 +718,12 @@ window.auth = {
     handleLogout,
     getCurrentUser,
     getUserCredits,
+    getUserCurriculum,
     isAuthenticated,
     requireAuth,
     redirectIfAuthenticated,
+    redirectIfEnrolled,
+    enrollUser,
     getToken,
     getAccessToken,
     setToken,

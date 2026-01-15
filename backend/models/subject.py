@@ -45,7 +45,9 @@ class Subject(BaseModel):
     Relationships:
     - curriculum: Mappings to courses and semesters
     - content_modules: Learning content (Learn, Cases, Practice, Notes)
-    - user_progress: Student progress tracking
+    
+    NOTE: UserProgress references Subject, but Subject does NOT reference UserProgress back.
+    This is a unidirectional relationship to avoid circular dependencies.
     """
     __tablename__ = "subjects"
     
@@ -99,12 +101,7 @@ class Subject(BaseModel):
         lazy="selectin"
     )
     
-    user_progress = relationship(
-        "UserProgress",
-        back_populates="subject",
-        cascade="all, delete-orphan",
-        lazy="selectin"
-    )
+    # NO relationship to UserProgress - it's unidirectional from UserProgress -> Subject
     
     def __repr__(self):
         return f"<Subject(id={self.id}, title='{self.title}', category='{self.category}')>"

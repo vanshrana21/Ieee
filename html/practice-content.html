@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practice Question | JurisAI</title>
+
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/content-detail.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="logo">JurisAI</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard-student.html" class="nav-item">
+                📚 Dashboard
+            </a>
+            <a href="#" class="nav-item" onclick="handleLogout(); return false;">
+                🚪 Logout
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div id="contentContainer" class="content-detail-container">
+
+            <!-- Loading -->
+            <div id="loadingState" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading question...</p>
+            </div>
+
+            <!-- Error -->
+            <div id="errorState" class="error-state" style="display:none;">
+                <h3>⚠️ Unable to load practice question</h3>
+                <p id="errorMessage"></p>
+                <a href="dashboard-student.html">← Back to Dashboard</a>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/content-detail.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+
+    /* 1️⃣ Require auth */
+    if (!window.auth || !window.auth.requireAuth()) return;
+
+    /* 2️⃣ Get ID */
+    const params = new URLSearchParams(window.location.search);
+    const rawId = params.get('id');
+    const contentId = Number(rawId);
+
+    if (!rawId || Number.isNaN(contentId)) {
+        showError("No valid practice question ID provided.");
+        return;
+    }
+
+    /* 3️⃣ Validate JS module */
+    if (!window.contentDetail || typeof window.contentDetail.loadPracticeContent !== 'function') {
+        showError("Practice module not loaded (content-detail.js missing).");
+        return;
+    }
+
+    /* 4️⃣ Load content */
+    try {
+        await window.contentDetail.loadPracticeContent(contentId);
+    } catch (err) {
+        console.error(err);
+        showError("Failed to fetch practice question from server.");
+    }
+});
+
+/* ✅ Local error renderer (FIXES your crash) */
+function showError(message) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+    document.getElementById('errorMessage').innerText = message;
+}
+</script>
+
+</body>
+</html>

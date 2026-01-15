@@ -252,11 +252,11 @@
                 
                 <div class="user-profile">
                     <div class="user-avatar">
-                        <span>JD</span>
+                        <span id="userInitials">JD</span>
                     </div>
                     <div class="user-info">
-                        <span class="user-name">John Doe</span>
-                        <span class="user-role">Legal Researcher</span>
+                        <span class="user-name" id="userName">Legal Researcher</span>
+                        <span class="user-role">Lawyer</span>
                     </div>
                     <button class="user-dropdown-toggle" aria-label="User menu">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -265,7 +265,7 @@
                     </button>
                 </div>
                 
-                <a href="login.html" class="logout-link">
+                <a href="#" class="logout-link" onclick="event.preventDefault(); handleLogout();">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -316,7 +316,7 @@
                 
                 <div class="sidebar-divider"></div>
                 
-                <a href="settings.html" class="sidebar-link">
+                <a href="#" class="sidebar-link" onclick="event.preventDefault(); alert('Settings coming soon');">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
@@ -336,7 +336,7 @@
                     </div>
                 </div>
                 
-                <a href="#upgrade" class="btn btn-primary btn-small sidebar-upgrade">
+                <a href="#" class="btn btn-primary btn-small sidebar-upgrade" onclick="event.preventDefault(); alert('Upgrade feature coming soon');">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="19" x2="12" y2="5"/>
                         <polyline points="5 12 12 5 19 12"/>
@@ -354,7 +354,7 @@
                 </div>
                 
                 <div class="dashboard-actions">
-                    <button class="btn btn-outline">
+                    <button class="btn btn-outline" onclick="alert('Export feature coming soon');">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                             <polyline points="7 10 12 15 17 10"/>
@@ -378,7 +378,7 @@
                         placeholder="Search for cases, statutes, or legal topics..."
                         value=""
                     >
-                    <button class="search-submit btn btn-primary">
+                    <button class="search-submit btn btn-primary" onclick="alert('Search feature coming in Phase 4+');">
                         Search
                     </button>
                 </div>
@@ -411,20 +411,6 @@
                             <option value="punjab_haryana">Punjab and Haryana High Court</option>
                             <option value="rajasthan">Rajasthan High Court</option>
                             <option value="patna">Patna High Court</option>
-                            <option value="telangana">Telangana High Court</option>
-                            <option value="andhra_pradesh">Andhra Pradesh High Court</option>
-                            <option value="madhya_pradesh">Madhya Pradesh High Court</option>
-                            <option value="chhattisgarh">Chhattisgarh High Court</option>
-                            <option value="jharkhand">Jharkhand High Court</option>
-                            <option value="orissa">Orissa High Court</option>
-                            <option value="gauhati">Gauhati High Court</option>
-                            <option value="jammu_kashmir">Jammu & Kashmir High Court</option>
-                            <option value="himachal_pradesh">Himachal Pradesh High Court</option>
-                            <option value="uttarakhand">Uttarakhand High Court</option>
-                            <option value="tripura">Tripura High Court</option>
-                            <option value="manipur">Manipur High Court</option>
-                            <option value="meghalaya">Meghalaya High Court</option>
-                            <option value="sikkim">Sikkim High Court</option>
                         </select>
                     </div>
                     
@@ -474,8 +460,42 @@
         </main>
     </div>
     
+    <script src="../js/auth.js"></script>
+    
     <script>
+        // Phase 3: Dashboard Protection & User Info Display
         document.addEventListener('DOMContentLoaded', function() {
+            // Enforce authentication
+            if (!window.auth.isAuthenticated()) {
+                window.location.href = '/html/login.html';
+                return;
+            }
+
+            // Enforce enrollment
+            const isEnrolled = localStorage.getItem('is_enrolled') === 'true';
+            if (!isEnrolled) {
+                window.location.href = '/html/onboarding.html';
+                return;
+            }
+
+            // Display user name
+            const userName = window.auth.getUserName();
+            const userNameElement = document.getElementById('userName');
+            if (userNameElement && userName) {
+                userNameElement.textContent = userName;
+            }
+
+            // Display initials
+            const userInitialsElement = document.getElementById('userInitials');
+            if (userInitialsElement && userName) {
+                const names = userName.trim().split(' ');
+                const initials = names.length >= 2 
+                    ? names[0][0] + names[names.length - 1][0]
+                    : names[0][0] + (names[0][1] || '');
+                userInitialsElement.textContent = initials.toUpperCase();
+            }
+
+            // Sidebar toggle
             const sidebarToggle = document.getElementById('sidebarToggle');
             const dashboardLayout = document.querySelector('.dashboard-layout');
 
@@ -485,6 +505,7 @@
                 });
             }
 
+            // Filter reset
             const resetBtn = document.getElementById('resetFiltersBtn');
             const searchInput = document.getElementById('searchInput');
             const jurisdictionFilter = document.getElementById('jurisdictionFilter');
@@ -495,26 +516,13 @@
                 resetBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     
-                    if (searchInput) {
-                        searchInput.value = '';
-                    }
-                    if (jurisdictionFilter) {
-                        jurisdictionFilter.selectedIndex = 0;
-                    }
-                    if (courtFilter) {
-                        courtFilter.selectedIndex = 0;
-                    }
-                    if (yearFilter) {
-                        yearFilter.selectedIndex = 0;
-                    }
+                    if (searchInput) searchInput.value = '';
+                    if (jurisdictionFilter) jurisdictionFilter.selectedIndex = 0;
+                    if (courtFilter) courtFilter.selectedIndex = 0;
+                    if (yearFilter) yearFilter.selectedIndex = 0;
                 });
             }
         });
     </script>
-    
-    <script src="../js/auth.js"></script>
-    <script src="../js/dashboard.js"></script>
-    <script src="../js/cases-data.js"></script>
-    <script src="../js/storage.js"></script>
 </body>
 </html>
