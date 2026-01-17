@@ -503,6 +503,78 @@ body {
     box-shadow: 0 4px 12px rgba(46, 111, 149, 0.3);
 }
 
+/* Category Headers */
+.category-header {
+    grid-column: 1 / -1;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.category-header:first-child {
+    margin-top: 0;
+}
+
+.category-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.category-header p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.current-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--accent-teal), var(--secondary-blue));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+}
+
+.semester-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: #f1f5f9;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+}
+
+.progress-badge {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--secondary-blue);
+    background: rgba(26, 61, 111, 0.1);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+}
+
+.progress-bar-mini {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #e2e8f0;
+}
+
+.progress-bar-mini .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary-blue), var(--accent-teal));
+    border-radius: 0 0 14px 14px;
+    transition: width 0.6s ease;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .container {

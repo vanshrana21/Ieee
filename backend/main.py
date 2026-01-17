@@ -12,6 +12,7 @@ from backend.routes import semantic_search
 from backend.routes import tutor
 from backend.routes import practice
 from backend.routes import study_plan
+from backend.routes import analytics
 
 
 
@@ -195,7 +196,7 @@ app.include_router(semantic_search.router)
 app.include_router(tutor.router)
 app.include_router(practice.router)
 app.include_router(study_plan.router)
-
+app.include_router(analytics.router, prefix="/api")
 
 
 if __name__ == "__main__":
