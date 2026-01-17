@@ -599,3 +599,188 @@ async def mark_content_complete(
         "message": "Content marked as complete",
         "progress": progress.to_dict()
     }
+
+
+# ================= PRACTICE ATTEMPT ENDPOINT =================
+
+class PracticeAttemptRequest(BaseModel):
+    """Request body for submitting a practice attempt"""
+    selected_option: str
+    time_taken_seconds: Optional[int] = None
+
+
+@router.post("/practice/{question_id}/attempt")
+async def submit_practice_attempt(
+    question_id: int,
+    request: PracticeAttemptRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Submit answer to practice question.
+    
+    PHASE 2.2: Practice attempt with mastery recalculation
+    
+    Behavior:
+    - MCQs: Auto-graded immediately
+    - Essays/Short answers: Stored for future grading (is_correct=NULL)
+    - Multiple attempts allowed (attempt_number increments)
+    - Triggers mastery recalculation after each attempt
+    
+    Security:
+    - User must have access to question (semester lock applies)
+    
+    Request:
+        {
+            "selected_option": "B",
+            "time_taken_seconds": 45
+        }
+    
+    Returns:
+        Attempt record + mastery update status
+    """
+    from datetime import datetime
+    from backend.orm.practice_attempt import PracticeAttempt
+    from backend.orm.practice_question import PracticeQuestion, QuestionType
+    from backend.services.mastery_calculator import compute_subject_mastery
+    
+    logger.info(
+        f"Practice attempt: question_id={question_id}, user={current_user.email}"
+    )
+    
+    module, subject = await verify_content_access(
+        db, current_user, ContentType.PRACTICE, question_id
+    )
+    
+    stmt = (
+        select(PracticeQuestion)
+        .where(PracticeQuestion.id == question_id)
+    )
+    result = await db.execute(stmt)
+    question = result.scalar_one_or_none()
+    
+    if not question:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Question not found"
+        )
+    
+    attempt_count_stmt = select(func.count(PracticeAttempt.id)).where(
+        PracticeAttempt.user_id == current_user.id,
+        PracticeAttempt.practice_question_id == question_id
+    )
+    attempt_count = (await db.execute(attempt_count_stmt)).scalar() or 0
+    attempt_number = attempt_count + 1
+    
+    is_correct = None
+    if question.question_type == QuestionType.MCQ:
+        is_correct = question.check_mcq_answer(request.selected_option)
+    
+    attempt = PracticeAttempt(
+        user_id=current_user.id,
+        practice_question_id=question_id,
+        selected_option=request.selected_option,
+        is_correct=is_correct,
+        attempt_number=attempt_number,
+        time_taken_seconds=request.time_taken_seconds,
+        attempted_at=datetime.utcnow()
+    )
+    db.add(attempt)
+    
+    progress_stmt = select(UserContentProgress).where(
+        UserContentProgress.user_id == current_user.id,
+        UserContentProgress.content_type == ContentType.PRACTICE,
+        UserContentProgress.content_id == question_id
+    )
+    progress_result = await db.execute(progress_stmt)
+    progress = progress_result.scalar_one_or_none()
+    
+    if not progress:
+        progress = UserContentProgress(
+            user_id=current_user.id,
+            content_type=ContentType.PRACTICE,
+            content_id=question_id,
+            is_completed=False,
+            view_count=1
+        )
+        db.add(progress)
+    else:
+        progress.record_view()
+    
+    await db.commit()
+    await db.refresh(attempt)
+    
+    mastery_result = await compute_subject_mastery(current_user.id, subject.id, db)
+    
+    logger.info(
+        f"Practice attempt recorded: user={current_user.email}, question={question_id}, "
+        f"correct={is_correct}, mastery_updated={mastery_result['mastery_percent']}%"
+    )
+    
+    return {
+        "success": True,
+        "attempt": {
+            "id": attempt.id,
+            "question_id": question_id,
+            "selected_option": attempt.selected_option,
+            "is_correct": attempt.is_correct,
+            "attempt_number": attempt.attempt_number,
+            "time_taken_seconds": attempt.time_taken_seconds,
+            "attempted_at": attempt.attempted_at.isoformat()
+        },
+        "question": {
+            "id": question.id,
+            "correct_answer": question.correct_answer if is_correct is not None else None,
+            "explanation": question.explanation if is_correct is not None else None
+        },
+        "mastery_update": {
+            "subject_id": subject.id,
+            "subject_mastery_percent": mastery_result["mastery_percent"],
+            "strength_label": mastery_result["strength_label"]
+        }
+    }
+
+
+@router.get("/practice/{question_id}/attempts")
+async def get_practice_attempts(
+    question_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get user's attempt history for a question.
+    
+    Returns:
+    - List of attempts (most recent first)
+    - Shows attempt number and correctness
+    """
+    from backend.orm.practice_attempt import PracticeAttempt
+    
+    await verify_content_access(db, current_user, ContentType.PRACTICE, question_id)
+    
+    stmt = (
+        select(PracticeAttempt)
+        .where(
+            PracticeAttempt.user_id == current_user.id,
+            PracticeAttempt.practice_question_id == question_id
+        )
+        .order_by(PracticeAttempt.attempted_at.desc())
+    )
+    result = await db.execute(stmt)
+    attempts = result.scalars().all()
+    
+    return {
+        "success": True,
+        "question_id": question_id,
+        "total_attempts": len(attempts),
+        "attempts": [
+            {
+                "id": a.id,
+                "attempt_number": a.attempt_number,
+                "is_correct": a.is_correct,
+                "time_taken_seconds": a.time_taken_seconds,
+                "attempted_at": a.attempted_at.isoformat() if a.attempted_at else None
+            }
+            for a in attempts
+        ]
+    }

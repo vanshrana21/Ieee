@@ -2,28 +2,43 @@
 backend/routes/analytics.py
 Learning Analytics API Endpoints
 
-PHASE 10: Read-only intelligence endpoints
+PHASE 2.2: Mastery & Analytics Engine
 
 All endpoints:
 - JWT protected
-- Read-only (no mutations)
-- Call analytics service
+- Read-only (no mutations except mastery recalculation)
+- Database-driven calculations
 - Return standardized JSON
 - No AI/LLM calls
 """
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from backend.database import get_db
 from backend.orm.user import User
+from backend.orm.subject import Subject
+from backend.orm.topic_mastery import TopicMastery
+from backend.orm.subject_progress import SubjectProgress
 from backend.routes.auth import get_current_user
 from backend.services.learning_analytics_service import (
     get_learning_analytics_service,
     LearningAnalyticsService,
     StrengthLevel,
     RevisionPriority
+)
+from backend.services.mastery_calculator import (
+    compute_topic_mastery,
+    compute_subject_mastery,
+    get_weak_topics,
+    get_strong_topics,
+    calculate_study_streak,
+    recalculate_all_mastery_for_user,
+    get_topic_mastery_detail,
+    get_strength_label
 )
 from backend.schemas.analytics import (
     AnalyticsAPIResponse,
@@ -487,4 +502,232 @@ async def get_comprehensive_analytics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate comprehensive analytics"
+        )
+
+
+@router.get("/topic/{topic_id}", response_model=AnalyticsAPIResponse)
+async def get_topic_analytics(
+    topic_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get mastery analytics for a specific topic.
+    
+    PHASE 2.2 ENDPOINT - Topic Mastery
+    
+    Args:
+        topic_id: Topic tag (e.g., "article-21", "contract-formation")
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "topic_tag": "article-21",
+                "mastery_percent": 65.5,
+                "strength_label": "Average",
+                "attempt_count": 12,
+                "last_practiced": "2026-01-17T10:30:00Z",
+                "difficulty_level": "medium"
+            }
+        }
+    """
+    logger.info(f"[ANALYTICS] Topic analytics: user={current_user.email}, topic={topic_id}")
+    
+    try:
+        topic_data = await get_topic_mastery_detail(current_user.id, topic_id, db)
+        
+        if not topic_data:
+            return {
+                "success": True,
+                "message": "No data for this topic yet",
+                "data": {
+                    "topic_tag": topic_id,
+                    "mastery_percent": 0.0,
+                    "strength_label": "Weak",
+                    "attempt_count": 0,
+                    "last_practiced": None,
+                    "difficulty_level": "easy"
+                }
+            }
+        
+        return {
+            "success": True,
+            "message": "Topic analytics retrieved successfully",
+            "data": topic_data
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching topic analytics: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch topic analytics"
+        )
+
+
+@router.get("/subject/{subject_id}", response_model=AnalyticsAPIResponse)
+async def get_subject_analytics(
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get mastery analytics for a specific subject.
+    
+    PHASE 2.2 ENDPOINT - Subject Mastery
+    
+    Triggers mastery recalculation for accuracy.
+    
+    Args:
+        subject_id: Subject ID
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "subject_id": 1,
+                "subject_title": "Constitutional Law",
+                "mastery_percent": 72.5,
+                "strength_label": "Strong",
+                "completed_topics": 5,
+                "total_topics": 8,
+                "topic_breakdown": [...]
+            }
+        }
+    """
+    logger.info(f"[ANALYTICS] Subject analytics: user={current_user.email}, subject={subject_id}")
+    
+    try:
+        subject_stmt = select(Subject).where(Subject.id == subject_id)
+        subject_result = await db.execute(subject_stmt)
+        subject = subject_result.scalar_one_or_none()
+        
+        if not subject:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Subject not found"
+            )
+        
+        mastery_data = await compute_subject_mastery(current_user.id, subject_id, db)
+        
+        mastery_data["subject_title"] = subject.title
+        
+        return {
+            "success": True,
+            "message": "Subject analytics retrieved successfully",
+            "data": mastery_data
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching subject analytics: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch subject analytics"
+        )
+
+
+@router.get("/dashboard", response_model=AnalyticsAPIResponse)
+async def get_dashboard_analytics(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get complete dashboard analytics.
+    
+    PHASE 2.2 ENDPOINT - Dashboard Analytics
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "overall_mastery_percent": 58.2,
+                "weakest_topics": [...],
+                "strongest_topics": [...],
+                "subjects_by_mastery": [...],
+                "study_streak": 5
+            }
+        }
+    """
+    logger.info(f"[ANALYTICS] Dashboard analytics: user={current_user.email}")
+    
+    try:
+        recalc_result = await recalculate_all_mastery_for_user(current_user.id, db)
+        
+        all_topics_stmt = select(TopicMastery).where(
+            TopicMastery.user_id == current_user.id
+        ).order_by(TopicMastery.mastery_score.asc())
+        
+        all_topics_result = await db.execute(all_topics_stmt)
+        all_topics = all_topics_result.scalars().all()
+        
+        overall_mastery = 0.0
+        if all_topics:
+            total_weighted = sum(t.mastery_score * t.attempt_count for t in all_topics)
+            total_weight = sum(t.attempt_count for t in all_topics)
+            overall_mastery = round((total_weighted / total_weight * 100) if total_weight > 0 else 0.0, 2)
+        
+        weakest_topics = [
+            {
+                "topic_tag": t.topic_tag,
+                "subject_id": t.subject_id,
+                "mastery_percent": round(t.mastery_score * 100, 2),
+                "strength_label": get_strength_label(t.mastery_score * 100)
+            }
+            for t in all_topics[:3]
+        ]
+        
+        strongest_topics = [
+            {
+                "topic_tag": t.topic_tag,
+                "subject_id": t.subject_id,
+                "mastery_percent": round(t.mastery_score * 100, 2),
+                "strength_label": get_strength_label(t.mastery_score * 100)
+            }
+            for t in sorted(all_topics, key=lambda x: x.mastery_score, reverse=True)[:3]
+        ]
+        
+        subjects_stmt = (
+            select(SubjectProgress)
+            .options(joinedload(SubjectProgress.subject))
+            .where(SubjectProgress.user_id == current_user.id)
+            .order_by(SubjectProgress.completion_percentage.desc())
+        )
+        subjects_result = await db.execute(subjects_stmt)
+        subjects_progress = subjects_result.scalars().all()
+        
+        subjects_by_mastery = [
+            {
+                "subject_id": sp.subject_id,
+                "subject_title": sp.subject.title if sp.subject else "Unknown",
+                "mastery_percent": round(sp.completion_percentage, 2),
+                "strength_label": get_strength_label(sp.completion_percentage),
+                "completed_topics": sp.completed_items,
+                "total_topics": sp.total_items
+            }
+            for sp in subjects_progress
+        ]
+        
+        study_streak = await calculate_study_streak(current_user.id, db)
+        
+        return {
+            "success": True,
+            "message": "Dashboard analytics retrieved successfully",
+            "data": {
+                "overall_mastery_percent": overall_mastery,
+                "overall_strength_label": get_strength_label(overall_mastery),
+                "weakest_topics": weakest_topics,
+                "strongest_topics": strongest_topics,
+                "subjects_by_mastery": subjects_by_mastery,
+                "study_streak": study_streak,
+                "subjects_recalculated": recalc_result["subjects_recalculated"]
+            }
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching dashboard analytics: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch dashboard analytics"
         )

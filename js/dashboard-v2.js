@@ -140,37 +140,47 @@
             courseEl.textContent = curriculum.course.name || 'Your Course';
         }
 
-        const allSubjects = [...(state.subjects || []), ...(state.archiveSubjects || [])];
-        let overallProgress = 0;
-        if (allSubjects.length > 0) {
-            const totalCompletion = allSubjects.reduce((sum, s) => sum + (s.completion_percentage || 0), 0);
-            overallProgress = Math.round(totalCompletion / allSubjects.length);
-        }
-
-        if (progressEl && progressFillEl) {
-            progressEl.textContent = `${overallProgress}% Complete`;
-            progressFillEl.style.width = `${overallProgress}%`;
-        }
-
-        if (analytics) {
-            const snapshot = analytics.snapshot || {};
-            const consistency = analytics.consistency || {};
-
-            if (accuracyEl) {
-                const accuracy = Math.round(snapshot.overall_accuracy || 0);
-                accuracyEl.textContent = `${accuracy}%`;
+        if (analytics?.data) {
+            const data = analytics.data;
+            
+            const overallProgress = Math.round(data.overall_mastery_percent || 0);
+            if (progressEl && progressFillEl) {
+                progressEl.textContent = `${overallProgress}% Complete`;
+                progressFillEl.style.width = `${overallProgress}%`;
             }
 
-            if (timeEl) {
-                const hours = Math.floor(consistency.total_time_spent_hours || 0);
-                const minutes = Math.round(((consistency.total_time_spent_hours || 0) % 1) * 60);
-                timeEl.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+            if (accuracyEl) {
+                accuracyEl.textContent = `${overallProgress}%`;
             }
 
             if (streakEl) {
-                streakEl.textContent = consistency.current_streak || 0;
+                streakEl.textContent = data.study_streak || 0;
+            }
+
+            if (timeEl) {
+                const subjectsCount = (data.subjects_by_mastery || []).length;
+                timeEl.textContent = subjectsCount > 0 ? `${subjectsCount} subjects` : '0m';
+            }
+
+            const strengthLabel = data.overall_strength_label || 'Weak';
+            const strengthEl = q('#strengthLabel');
+            if (strengthEl) {
+                strengthEl.textContent = strengthLabel;
+                strengthEl.className = `strength-badge strength-${strengthLabel.toLowerCase()}`;
             }
         } else {
+            const allSubjects = [...(state.subjects || []), ...(state.archiveSubjects || [])];
+            let overallProgress = 0;
+            if (allSubjects.length > 0) {
+                const totalCompletion = allSubjects.reduce((sum, s) => sum + (s.completion_percentage || 0), 0);
+                overallProgress = Math.round(totalCompletion / allSubjects.length);
+            }
+
+            if (progressEl && progressFillEl) {
+                progressEl.textContent = `${overallProgress}% Complete`;
+                progressFillEl.style.width = `${overallProgress}%`;
+            }
+
             if (accuracyEl) accuracyEl.textContent = '—';
             if (timeEl) timeEl.textContent = '0m';
             if (streakEl) streakEl.textContent = '0';
@@ -190,7 +200,7 @@
         `;
     }
 
-    function renderSubjects(subjects) {
+    function renderSubjects(subjects, analyticsData = null) {
         const grid = q('#subjectsGrid');
         if (!grid) return;
 
@@ -200,9 +210,20 @@
         }
 
         const colors = ['blue', 'green', 'orange', 'purple'];
+        
+        const masteryMap = {};
+        if (analyticsData?.data?.subjects_by_mastery) {
+            analyticsData.data.subjects_by_mastery.forEach(s => {
+                masteryMap[s.subject_id] = s;
+            });
+        }
 
         grid.innerHTML = subjects.slice(0, 6).map((subject, idx) => {
-            const progress = Math.round(subject.completion_percentage || 0);
+            const masteryInfo = masteryMap[subject.id];
+            const progress = masteryInfo 
+                ? Math.round(masteryInfo.mastery_percent || 0)
+                : Math.round(subject.completion_percentage || 0);
+            const strengthLabel = masteryInfo?.strength_label || 'Weak';
             const color = colors[idx % colors.length];
             const semester = subject.semester ? `Sem ${subject.semester}` : '';
 
@@ -222,7 +243,8 @@
                         <div class="subject-progress-fill" style="width: ${progress}%"></div>
                     </div>
                     <div class="subject-meta">
-                        <span>${progress}% complete</span>
+                        <span>${progress}% mastery</span>
+                        <span class="strength-label strength-${strengthLabel.toLowerCase()}">${strengthLabel}</span>
                     </div>
                     <div class="subject-actions">
                         <button class="subject-btn subject-btn-primary" onclick="window.jurisDashboard.openSubject(${subject.id}, 'learn')">Learn</button>
@@ -576,14 +598,23 @@
                 state.curriculum = curriculumRes;
                 state.subjects = curriculumRes.active_subjects || [];
                 state.archiveSubjects = curriculumRes.archive_subjects || [];
-                
-                renderSubjects(state.subjects);
                 updateResumeSection();
-                updateStats(curriculumRes, null);
             } else {
                 renderSubjectsEmpty();
-                updateStats(null, null);
             }
+
+            const analyticsRes = await fetchJson(`${API_BASE}/api/analytics/dashboard`).catch(err => {
+                console.warn('Analytics fetch failed:', err.message);
+                return null;
+            });
+
+            state.analytics = analyticsRes;
+            
+            if (curriculumRes) {
+                renderSubjects(state.subjects, analyticsRes);
+            }
+            
+            updateStats(curriculumRes, analyticsRes);
 
             const progressRes = await fetchJson(`${API_BASE}/api/progress/recent?limit=5`).catch(() => null);
             if (progressRes?.activities) {
@@ -595,6 +626,7 @@
             console.error('Dashboard init error:', err);
             renderSubjectsEmpty();
             renderRecentActivity([]);
+            updateStats(null, null);
         }
 
         state.isLoading = false;
