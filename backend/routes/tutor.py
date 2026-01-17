@@ -122,13 +122,19 @@ async def tutor_chat(
     """
     Curriculum-aware AI Tutor Chat.
     
-    Phase 4.2 & 4.3: Curriculum-Aware & Adaptive AI Tutor Chat
+    Phase 4.2, 4.3, 4.4: Curriculum-Aware, Adaptive & Session-aware AI Tutor Chat
     """
-    logger.info(f"Tutor chat request: user_id={current_user.id}, mode={request.mode}, question='{request.question[:50]}...'")
+    logger.info(f"Tutor chat request: user_id={current_user.id}, mode={request.mode}, session_id={request.session_id}, question='{request.question[:50]}...'")
     
     try:
         if request.mode in ["adaptive", "concise", "standard", "scaffolded"]:
-            adaptive_result = await process_adaptive_chat(current_user.id, request.question, request.mode, db)
+            adaptive_result = await process_adaptive_chat(
+                current_user.id, 
+                request.question, 
+                request.mode, 
+                db,
+                session_id=request.session_id
+            )
             
             # If error in adaptive processing
             if "error" in adaptive_result and not adaptive_result.get("answer"):
@@ -136,7 +142,8 @@ async def tutor_chat(
                     answer=adaptive_result.get("fallback", "Error processing request"),
                     confidence="Low",
                     linked_topics=[],
-                    why_this_answer=adaptive_result.get("error", "Unknown error")
+                    why_this_answer=adaptive_result.get("error", "Unknown error"),
+                    session_warning=adaptive_result.get("session_warning")
                 )
             
             # Map adaptive result to TutorChatResponse format
@@ -145,7 +152,8 @@ async def tutor_chat(
                 confidence=str(adaptive_result.get("confidence_score", "Medium")),
                 linked_topics=adaptive_result.get("linked_topics", []),
                 why_this_answer=adaptive_result.get("why_this_help", "Based on your curriculum and mastery"),
-                adaptive=AdaptiveTutorResponse(**adaptive_result)
+                adaptive=AdaptiveTutorResponse(**adaptive_result),
+                session_warning=adaptive_result.get("session_warning")
             )
         else:
             # Fallback to Phase 4.2 logic for other modes if any

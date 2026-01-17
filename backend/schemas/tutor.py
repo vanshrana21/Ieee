@@ -23,17 +23,21 @@ class AdaptiveTutorResponse(BaseModel):
     depth: str
     mini_lesson: Optional[List[str]] = None
     worked_examples: Optional[List[Dict[str, Any]]] = None
-    study_actions: List[StudyAction]
-    why_this_help: str
-    provenance: List[ProvenanceItem]
-    confidence_score: float
+    study_actions: Optional[List[StudyAction]] = None
+    why_this_help: Optional[str] = None
+    provenance: Optional[List[ProvenanceItem]] = None
+    confidence_score: Optional[float] = None
     linked_topics: Optional[List[str]] = None
+    provenance_metadata: Optional[Dict[str, Any]] = None
+    session_warning: Optional[str] = None
+
+    class Config:
+        extra = "allow"
 
 class TutorChatResponse(BaseModel):
-    # Phase 4.2 compatibility
     answer: str
     confidence: Optional[str] = None
-    linked_topics: List[str]
+    linked_topics: List[str] = []
     why_this_answer: str
-    # Phase 4.3 extensions (optional to maintain compatibility)
     adaptive: Optional[AdaptiveTutorResponse] = None
+    session_warning: Optional[str] = None

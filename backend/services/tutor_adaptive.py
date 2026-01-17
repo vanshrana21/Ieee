@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from backend.services.tutor_context_service import assemble_context
 from backend.services.ai_service import call_gemini_deterministic
+from backend.services.tutor_session_service import build_session_context, append_message
 from backend.orm.topic_mastery import TopicMastery
 
 logger = logging.getLogger(__name__)
@@ -18,28 +19,21 @@ async def determine_depth(user_id: int, question: str, context: Dict[str, Any], 
     - mastery < 50% -> scaffolded
     - No data -> standard
     """
-    # Extract topic tag from question if possible, or use the context's topics
     question_lower = question.lower()
-    
-    # Try to find a matching topic in context
     matched_mastery = None
     
-    # Check weak topics
     for t in context.get("weak_topics", []):
         if t["topic_tag"].lower().replace("-", " ") in question_lower:
             matched_mastery = t["mastery_percent"]
             break
             
-    # Check strong topics
     if matched_mastery is None:
         for t in context.get("strong_topics", []):
             if t["topic_tag"].lower().replace("-", " ") in question_lower:
                 matched_mastery = t["mastery_percent"]
                 break
                 
-    # If not found in context, query DB directly
     if matched_mastery is None:
-        # This is a bit naive, but we'll try to find any topic tag that appears in the question
         stmt = select(TopicMastery).where(TopicMastery.user_id == user_id)
         result = await db.execute(stmt)
         masteries = result.scalars().all()
@@ -49,7 +43,7 @@ async def determine_depth(user_id: int, question: str, context: Dict[str, Any], 
                 break
                 
     if matched_mastery is None:
-        return "standard"  # Default for no data
+        return "standard"
         
     if matched_mastery >= 75:
         return "concise"
@@ -58,8 +52,13 @@ async def determine_depth(user_id: int, question: str, context: Dict[str, Any], 
     else:
         return "scaffolded"
 
-def build_adaptive_prompt(question: str, context: Dict[str, Any], depth: str) -> str:
-    """Build the AI prompt for adaptive tutor."""
+def build_adaptive_prompt(
+    question: str, 
+    context: Dict[str, Any], 
+    depth: str,
+    session_context: Optional[Dict[str, Any]] = None
+) -> str:
+    """Build the AI prompt for adaptive tutor with session memory."""
     student = context.get("student", {})
     subjects = [s["title"] for s in context.get("active_subjects", [])]
     weak_topics = [t["topic_tag"] for t in context.get("weak_topics", [])]
@@ -67,12 +66,25 @@ def build_adaptive_prompt(question: str, context: Dict[str, Any], depth: str) ->
     subject_list = ", ".join(subjects) if subjects else "None specified"
     weak_topics_str = ", ".join(weak_topics) if weak_topics else "None identified yet"
     
-    # Map context to string representations for prompt
     topic_mastery_str = json.dumps(context.get("weak_topics", []) + context.get("strong_topics", []), indent=2)
     
-    prompt = f"""System: You are a law tutor for Indian curriculum-aware students. You must strictly confine answers to the user's curriculum materials provided in the 'context' field. Never hallucinate. If you need to answer but can't find direct curriculum support, state 'I couldn't find that in your syllabus' and suggest a safe alternative reading inside the syllabus.
-
-User context:
+    # Build session section if available
+    session_section = ""
+    if session_context and session_context.get("session_available"):
+        pinned_prefs = session_context.get("pinned_preferences", {})
+        messages = session_context.get("messages", [])
+        
+        if pinned_prefs:
+            session_section += f"\nPinned preferences:\n{json.dumps(pinned_prefs, indent=2)}\n"
+            
+        if messages:
+            session_section += "\nSession messages (chronological):\n"
+            for msg in messages:
+                session_section += f"{msg}\n"
+    
+    prompt = f"""System: You are a curriculum-aware Indian law tutor. Use the following session history and pinned preferences to respond.
+{session_section}
+Context (from curriculum):
 - Course: {student.get('course', 'N/A')}
 - Semester: {student.get('semester', 'N/A')}
 - Active subjects: {subject_list}
@@ -80,7 +92,12 @@ User context:
 - Weak topics: {weak_topics_str}
 - Recent activity: {json.dumps(context.get('recent_activity', {}))}
 
-Student question: {question}
+Student new question: {question}
+
+Constraints:
+- Obey curriculum boundaries
+- Respect pinned preferences
+- Provide compact answer + optionally ask one clarifying question only if required
 
 Response requirements:
 1) Provide a single concise answer paragraph (<= 100 words) labeled 'answer'.
@@ -102,29 +119,40 @@ async def process_adaptive_chat(
     user_id: int, 
     question: str, 
     mode: str, 
-    db: AsyncSession
+    db: AsyncSession,
+    session_id: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Main entry point for adaptive chat processing."""
+    """Main entry point for adaptive chat processing with session support."""
     # 1. Fetch tutor context
     context = await assemble_context(user_id, db)
     
-    # 2. Determine depth
+    # 2. Build session context if session_id provided
+    session_context = None
+    session_warning = None
+    if session_id:
+        session_context = await build_session_context(session_id, user_id, db)
+        if not session_context.get("session_available"):
+            session_warning = session_context.get("warning", "Session history not available")
+            session_context = None
+    
+    # 3. Determine depth
     if mode == "adaptive":
         depth = await determine_depth(user_id, question, context, db)
     else:
         depth = mode if mode in ["concise", "standard", "scaffolded"] else "standard"
         
-    # 3. Build prompt
-    prompt = build_adaptive_prompt(question, context, depth)
+    # 4. Build prompt with session context
+    prompt = build_adaptive_prompt(question, context, depth, session_context)
     
-    # 4. Call AI service
+    # 5. Call AI service
     ai_result = await call_gemini_deterministic(prompt, user_id)
     
     if not ai_result.get("success"):
         return {
             "answer": None,
             "error": ai_result.get("error", "AI service unavailable"),
-            "fallback": "I'm having trouble connecting. Please review your active modules for guidance."
+            "fallback": "I'm having trouble connecting. Please review your active modules for guidance.",
+            "session_warning": session_warning
         }
         
     try:
@@ -138,13 +166,28 @@ async def process_adaptive_chat(
             "model": ai_result["model"]
         }
         
+        if session_warning:
+            response_json["session_warning"] = session_warning
+            
+        # Store messages in session if session_id provided
+        if session_id and session_context:
+            await append_message(session_id, user_id, "student", question, db)
+            await append_message(
+                session_id, user_id, "assistant", 
+                response_json.get("answer", ""),
+                db,
+                provenance=response_json.get("provenance"),
+                confidence_score=response_json.get("confidence_score")
+            )
+        
         return response_json
     except Exception as e:
         logger.error(f"Failed to parse AI response: {str(e)}")
         return {
             "answer": "Error parsing response",
             "error": "Invalid JSON from AI",
-            "fallback": ai_result["text"]
+            "fallback": ai_result["text"],
+            "session_warning": session_warning
         }
 
 async def get_remediation_pack(user_id: int, topic_tag: str, db: AsyncSession) -> Dict[str, Any]:

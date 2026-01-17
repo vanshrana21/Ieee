@@ -14,6 +14,7 @@ from backend.routes import practice
 from backend.routes import study_plan
 from backend.routes import analytics
 from backend.routes import study
+from backend.routes import tutor_session
 
 
 
@@ -199,6 +200,7 @@ app.include_router(practice.router)
 app.include_router(study_plan.router)
 app.include_router(analytics.router, prefix="/api")
 app.include_router(study.router)
+app.include_router(tutor_session.router)
 
 
 if __name__ == "__main__":
