@@ -430,3 +430,55 @@ async def get_evaluation(
             evaluation=None,
             message="Evaluation in unknown state. Please contact support."
         )
+
+
+questions_router = APIRouter(prefix="/practice/questions", tags=["Practice Questions"])
+
+
+@questions_router.get("/{question_id}/attempts")
+async def get_question_attempts(
+    question_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all attempts for a specific question by the current user.
+    
+    Phase 5.4: Supports attempt history and comparison view.
+    
+    Args:
+        question_id: Practice question ID
+    
+    Returns:
+        List of attempts with evaluation data
+    """
+    logger.info(f"Get question attempts: question_id={question_id}, user={current_user.email}")
+    
+    stmt = (
+        select(PracticeAttempt)
+        .options(joinedload(PracticeAttempt.practice_evaluation))
+        .where(
+            PracticeAttempt.practice_question_id == question_id,
+            PracticeAttempt.user_id == current_user.id
+        )
+        .order_by(PracticeAttempt.created_at.desc())
+    )
+    
+    result = await db.execute(stmt)
+    attempts = result.scalars().unique().all()
+    
+    return [
+        {
+            "id": attempt.id,
+            "practice_question_id": attempt.practice_question_id,
+            "selected_option": attempt.selected_option[:100] + "..." if attempt.selected_option and len(attempt.selected_option) > 100 else attempt.selected_option,
+            "created_at": attempt.created_at.isoformat() if attempt.created_at else None,
+            "evaluation": {
+                "id": attempt.practice_evaluation.id,
+                "status": attempt.practice_evaluation.status,
+                "score": attempt.practice_evaluation.score,
+                "confidence_score": attempt.practice_evaluation.confidence_score
+            } if attempt.practice_evaluation else None
+        }
+        for attempt in attempts
+    ]

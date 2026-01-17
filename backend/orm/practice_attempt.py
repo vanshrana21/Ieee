@@ -148,6 +148,14 @@ class PracticeAttempt(BaseModel):
         cascade="all, delete-orphan"
     )
 
+    practice_evaluation = relationship(
+        "PracticeEvaluation",
+        back_populates="practice_attempt",
+        uselist=False,
+        viewonly=True,
+        overlaps="evaluation"
+    )
+
     # Database Constraints
     __table_args__ = (
         # Composite index for user's attempt history
