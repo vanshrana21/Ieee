@@ -13,6 +13,7 @@ from .practice_attempt import PracticeAttempt
 from .practice_evaluation import PracticeEvaluation
 from .exam_session import ExamSession, ExamSessionStatus
 from .exam_answer import ExamAnswer
+from .exam_evaluation import ExamAnswerEvaluation, ExamSessionEvaluation
 
 
 
@@ -25,4 +26,6 @@ __all__ = [
     "ExamSession",
     "ExamSessionStatus",
     "ExamAnswer",
+    "ExamAnswerEvaluation",
+    "ExamSessionEvaluation",
 ]
