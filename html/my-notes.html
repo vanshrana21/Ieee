@@ -3,232 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Notes - LegalAI Research</title>
-    <link rel="stylesheet" href="my-notes.css">
+    <title>My Notes - Juris AI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=IBM+Plex+Serif:wght@400;500;600&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard-v2.css">
     <link rel="stylesheet" href="../css/my-notes.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="app-header">
-        <div class="header-content">
-            <button class="back-btn" id="backBtn">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" opacity="0.3"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span>Back to Dashboard</span>
-            </button>
-            <h1 class="app-title">LegalAI Research</h1>
-            <div class="header-actions">
-                <button class="exam-toggle" id="examToggle">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <path d="M9 2L11.5 7L17 7.75L13 11.5L14 17L9 14.25L4 17L5 11.5L1 7.75L6.5 7L9 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span>Exam Mode</span>
-                </button>
-                <button class="new-note-btn" id="newNoteBtn">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <path d="M9 4V14M4 9H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <span>New Note</span>
-                </button>
+                <span>Juris AI</span>
             </div>
         </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="main-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>Subjects</h2>
-            </div>
+        
+        <nav class="sidebar-nav">
+            <a href="./dashboard-student.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="./start-studying.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                <span>Subjects</span>
+            </a>
+            <a href="./case-simplifier.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>Case Simplifier</span>
+            </a>
+            <a href="./practice-content.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>Practice</span>
+            </a>
+            <a href="./my-notes.html" class="nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <span>My Notes</span>
+            </a>
             
-            <div class="subject-cards">
-                <div class="subject-card" data-subject="constitutional">
-                    <div class="subject-icon">§</div>
-                    <div class="subject-info">
-                        <h3>Constitutional Law</h3>
-                        <div class="subject-meta">
-                            <span class="note-count">0 notes</span>
-                            <span class="last-updated">Never updated</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="nav-divider"></div>
+            
+            <a href="./settings.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="nav-item nav-logout" id="logoutBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </aside>
 
-                <div class="subject-card" data-subject="criminal">
-                    <div class="subject-icon">⚖</div>
-                    <div class="subject-info">
-                        <h3>Criminal Law</h3>
-                        <div class="subject-meta">
-                            <span class="note-count">0 notes</span>
-                            <span class="last-updated">Never updated</span>
-                        </div>
-                    </div>
-                </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-                <div class="subject-card" data-subject="contract">
-                    <div class="subject-icon">◊</div>
-                    <div class="subject-info">
-                        <h3>Contract Law</h3>
-                        <div class="subject-meta">
-                            <span class="note-count">0 notes</span>
-                            <span class="last-updated">Never updated</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <main class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" id="menuToggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            
+            <h1 class="page-title">My Notes</h1>
 
-            <div class="sidebar-filters">
-                <h3>Filters</h3>
-                <div class="filter-group">
-                    <label class="filter-option">
-                        <input type="checkbox" id="filterCaseLinked">
-                        <span>Case-Linked Only</span>
-                    </label>
-                </div>
-                
-                <div class="sort-group">
-                    <label>Sort By</label>
-                    <select id="sortSelect">
-                        <option value="recent">Most Recent</option>
-                        <option value="alphabetical">Alphabetical</option>
-                        <option value="oldest">Oldest First</option>
-                    </select>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Notes Panel -->
-        <section class="notes-panel">
-            <div class="panel-header">
-                <h2 id="panelTitle">All Notes</h2>
-                <div class="search-box">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
-                        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <div class="top-bar-actions">
+                <button class="btn btn-primary" id="newNoteBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
-                    <input type="text" id="searchInput" placeholder="Search notes...">
-                </div>
-            </div>
-
-            <div class="notes-list" id="notesList">
-                <div class="empty-state">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                        <rect x="12" y="8" width="40" height="48" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <line x1="20" y1="20" x2="44" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="20" y1="28" x2="38" y2="28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="20" y1="36" x2="42" y2="36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <h3>No notes yet</h3>
-                    <p>Create your first note to get started with your legal research.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Editor Panel -->
-        <section class="editor-panel" id="editorPanel">
-            <div class="editor-header">
-                <h2 id="editorTitle">Create New Note</h2>
-                <button class="close-editor" id="closeEditor">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M5 5L15 15M5 15L15 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
+                    New Note
                 </button>
-            </div>
-
-            <div class="editor-content">
-                <div class="form-group">
-                    <label for="noteTitle">Note Title</label>
-                    <input type="text" id="noteTitle" placeholder="e.g., Marbury v. Madison - Judicial Review">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Student</span>
                 </div>
+            </div>
+        </header>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="noteSubject">Subject</label>
-                        <select id="noteSubject">
-                            <option value="constitutional">Constitutional Law</option>
-                            <option value="criminal">Criminal Law</option>
-                            <option value="contract">Contract Law</option>
+        <div class="notes-container">
+            <!-- Left Panel: Filters & Notes List -->
+            <aside class="notes-sidebar">
+                <div class="filters-section">
+                    <h3>Filters</h3>
+                    
+                    <div class="filter-group">
+                        <label for="filterSubject">Subject</label>
+                        <select id="filterSubject" class="filter-select">
+                            <option value="">All Subjects</option>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <label for="linkedCase">Linked Case (Optional)</label>
-                        <input type="text" id="linkedCase" placeholder="e.g., Miranda v. Arizona">
+                    
+                    <div class="filter-group">
+                        <label for="filterModule">Module</label>
+                        <select id="filterModule" class="filter-select" disabled>
+                            <option value="">All Modules</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filterCase">Case</label>
+                        <select id="filterCase" class="filter-select">
+                            <option value="">All Cases</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-group">
+                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="searchNotes" class="search-input" placeholder="Search notes...">
+                    </div>
+                    
+                    <button class="btn btn-text" id="clearFiltersBtn">Clear Filters</button>
+                </div>
+                
+                <div class="notes-list-section">
+                    <div class="notes-list-header">
+                        <span id="notesCount">0 notes</span>
+                    </div>
+                    <div class="notes-list" id="notesList">
+                        <!-- Notes will be populated here -->
                     </div>
                 </div>
+            </aside>
 
-                <div class="form-group">
-                    <label for="noteTags">Tags (Optional)</label>
-                    <input type="text" id="noteTags" placeholder="e.g., judicial review, separation of powers">
-                </div>
-
-                <div class="form-group">
-                    <label>Note Content</label>
-                    <div class="editor-toolbar">
-                        <button type="button" class="toolbar-btn" data-command="bold" title="Bold">
-                            <strong>B</strong>
-                        </button>
-                        <button type="button" class="toolbar-btn" data-command="italic" title="Italic">
-                            <em>I</em>
-                        </button>
-                        <button type="button" class="toolbar-btn" data-command="underline" title="Underline">
-                            <u>U</u>
-                        </button>
-                        <div class="toolbar-divider"></div>
-                        <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <circle cx="3" cy="4" r="1.5" fill="currentColor"/>
-                                <circle cx="3" cy="8" r="1.5" fill="currentColor"/>
-                                <circle cx="3" cy="12" r="1.5" fill="currentColor"/>
-                                <line x1="6" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5"/>
-                                <line x1="6" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5"/>
-                                <line x1="6" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/>
-                            </svg>
-                        </button>
-                        <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <text x="1" y="6" font-size="8" fill="currentColor">1.</text>
-                                <text x="1" y="11" font-size="8" fill="currentColor">2.</text>
-                                <text x="1" y="16" font-size="8" fill="currentColor">3.</text>
-                                <line x1="6" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5"/>
-                                <line x1="6" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5"/>
-                                <line x1="6" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/>
-                            </svg>
-                        </button>
+            <!-- Right Panel: Note Editor -->
+            <section class="note-editor-section">
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
                     </div>
-                    <div class="editor-area" id="noteContent" contenteditable="true" data-placeholder="Begin typing your legal notes here..."></div>
+                    <h3>Start taking notes while studying</h3>
+                    <p>Your notes will appear here. Create notes linked to subjects, modules, or cases to organize your revision.</p>
+                    <button class="btn btn-primary" id="emptyNewNoteBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Create Your First Note
+                    </button>
                 </div>
 
-                <div class="editor-actions">
-                    <button class="btn-secondary" id="cancelBtn">Cancel</button>
-                    <button class="btn-primary" id="saveBtn">Save Note</button>
+                <!-- Note Editor -->
+                <div id="noteEditor" class="note-editor hidden">
+                    <div class="editor-header">
+                        <input type="text" id="noteTitle" class="note-title-input" placeholder="Note title...">
+                        <div class="editor-actions">
+                            <button class="btn btn-icon" id="deleteNoteBtn" title="Delete note">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="metadata-badges" id="metadataBadges">
+                        <!-- Badges will be populated dynamically -->
+                    </div>
+                    
+                    <div class="link-selectors">
+                        <div class="link-group">
+                            <label for="noteSubject">Subject</label>
+                            <select id="noteSubject" class="link-select">
+                                <option value="">-- Select Subject --</option>
+                            </select>
+                        </div>
+                        <div class="link-group">
+                            <label for="noteModule">Module (optional)</label>
+                            <select id="noteModule" class="link-select" disabled>
+                                <option value="">-- Select Module --</option>
+                            </select>
+                        </div>
+                        <div class="link-group">
+                            <label for="noteCase">Case (optional)</label>
+                            <select id="noteCase" class="link-select">
+                                <option value="">-- Select Case --</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <textarea id="noteContent" class="note-content-input" placeholder="Write your notes here..."></textarea>
+                    
+                    <div class="editor-footer">
+                        <span class="save-status" id="saveStatus"></span>
+                        <div class="footer-actions">
+                            <button class="btn btn-secondary" id="cancelNoteBtn">Cancel</button>
+                            <button class="btn btn-primary" id="saveNoteBtn">Save Note</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
     </main>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Delete Note</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this note? This action cannot be undone.</p>
-            </div>
+    <div id="deleteModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3>Delete Note</h3>
+            <p>Are you sure you want to delete this note? This action cannot be undone.</p>
             <div class="modal-actions">
-                <button class="btn-secondary" id="cancelDelete">Cancel</button>
-                <button class="btn-danger" id="confirmDelete">Delete Note</button>
+                <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
             </div>
         </div>
     </div>
 
-    <script src="../js/my-notes.js"></script>
-    <script src="../js/my-notes-enhanced.js"></script>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
 
+    <script src="../js/api.js"></script>
+    <script src="../js/notes.js"></script>
 </body>
 </html>
