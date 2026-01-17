@@ -38,6 +38,13 @@ from backend.orm.subject_progress import SubjectProgress
 from backend.orm.practice_attempt import PracticeAttempt
 from backend.orm.practice_question import PracticeQuestion
 from backend.orm.practice_evaluation import PracticeEvaluation
+from backend.services.mistake_pattern_service import (
+    get_patterns_for_topic,
+    get_quick_diagnosis,
+    PatternType,
+    Severity,
+    MistakePattern,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +212,8 @@ class StudentContext:
         strong_topics: List[str],
         recent_mistakes: List[Dict[str, Any]],
         total_attempts: int,
-        study_priorities: List[Dict[str, Any]]
+        study_priorities: List[Dict[str, Any]],
+        diagnostic_patterns: List[Dict[str, Any]] = None
     ):
         self.user_id = user_id
         self.course_name = course_name
@@ -217,6 +225,7 @@ class StudentContext:
         self.recent_mistakes = recent_mistakes
         self.total_attempts = total_attempts
         self.study_priorities = study_priorities
+        self.diagnostic_patterns = diagnostic_patterns or []
     
     def get_mastery_level(self, topic_tag: str) -> MasteryLevel:
         """Get mastery level for a topic."""
@@ -276,6 +285,14 @@ class StudentContext:
             lines.append("Recent Mistakes:")
             for mistake in self.recent_mistakes[:3]:
                 lines.append(f"- {mistake.get('topic', 'Unknown')}: {mistake.get('feedback', '')[:100]}")
+        
+        if self.diagnostic_patterns:
+            lines.append("")
+            lines.append("Detected Learning Patterns (from diagnostic analysis):")
+            for pattern in self.diagnostic_patterns[:3]:
+                pattern_type = pattern.get("pattern_type", "").replace("_", " ").title()
+                severity = pattern.get("severity", "")
+                lines.append(f"- [{severity.upper()}] {pattern_type}: {pattern.get('explanation', '')[:150]}")
         
         return "\n".join(lines)
 
@@ -429,6 +446,19 @@ async def assemble_student_context(user_id: int, db: AsyncSession) -> StudentCon
     
     study_priorities.sort(key=lambda x: {"High": 0, "Medium": 1, "Low": 2}.get(x["priority"], 3))
     
+    diagnostic_patterns = []
+    try:
+        quick_diag = await get_quick_diagnosis(user_id, db)
+        if quick_diag and quick_diag.get("pattern_types"):
+            for pt in quick_diag.get("pattern_types", [])[:3]:
+                diagnostic_patterns.append({
+                    "pattern_type": pt,
+                    "severity": "high" if quick_diag.get("critical_patterns", 0) > 0 else "medium",
+                    "explanation": quick_diag.get("top_recommendation", ""),
+                })
+    except Exception as e:
+        logger.warning(f"Failed to fetch diagnostic patterns: {e}")
+    
     return StudentContext(
         user_id=user_id,
         course_name=course_name,
@@ -439,7 +469,8 @@ async def assemble_student_context(user_id: int, db: AsyncSession) -> StudentCon
         strong_topics=strong_topics,
         recent_mistakes=recent_mistakes,
         total_attempts=total_attempts,
-        study_priorities=study_priorities[:5]
+        study_priorities=study_priorities[:5],
+        diagnostic_patterns=diagnostic_patterns
     )
 
 
