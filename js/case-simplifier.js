@@ -300,10 +300,19 @@ function setLoadingState(isLoading) {
 }
 
 /**
- * Placeholder functions
+ * Add current case to notes - Phase 3.4 integration
  */
 function addToNotes() {
-    showToast('📝 Integration with My Notes coming in Phase 4!');
+    if (!currentCase || !currentCase.case) {
+        showToast('⚠️ No case loaded to add notes to');
+        return;
+    }
+
+    const caseId = currentCase.case.id;
+    const subjectId = currentCase.case.subject_id || '';
+    
+    const notesUrl = `./my-notes.html?action=new&case_id=${caseId}${subjectId ? `&subject_id=${subjectId}` : ''}`;
+    window.location.href = notesUrl;
 }
 
 function showToast(message) {

@@ -1,524 +1,587 @@
 /**
- * notes.js
- * Phase 7: Smart Notes Management
+ * Notes - Phase 3.4
+ * Smart Notes System for Law Students
  */
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
-// ============================================================================
-// NOTES API
-// ============================================================================
+let state = {
+    notes: [],
+    filteredNotes: [],
+    subjects: [],
+    modules: [],
+    cases: [],
+    currentNote: null,
+    isNewNote: false,
+    searchQuery: ''
+};
 
-async function createNote(noteData) {
-    try {
-        const token = window.auth.getToken();
-        if (!token) throw new Error('Not authenticated');
+document.addEventListener('DOMContentLoaded', function() {
+    initializePage();
+});
 
-        const response = await fetch(`${API_BASE_URL}/api/notes`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(noteData)
+async function initializePage() {
+    setupEventListeners();
+    setupSidebarToggle();
+    await loadUserInfo();
+    await Promise.all([
+        loadSubjects(),
+        loadCases(),
+        loadNotes()
+    ]);
+    checkURLParams();
+}
+
+function setupEventListeners() {
+    document.getElementById('newNoteBtn').addEventListener('click', createNewNote);
+    document.getElementById('emptyNewNoteBtn').addEventListener('click', createNewNote);
+    document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
+    document.getElementById('cancelNoteBtn').addEventListener('click', cancelEdit);
+    document.getElementById('deleteNoteBtn').addEventListener('click', showDeleteModal);
+    document.getElementById('confirmDeleteBtn').addEventListener('click', deleteNote);
+    document.getElementById('cancelDeleteBtn').addEventListener('click', hideDeleteModal);
+    document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    document.getElementById('filterSubject').addEventListener('change', handleFilterSubjectChange);
+    document.getElementById('filterModule').addEventListener('change', applyFilters);
+    document.getElementById('filterCase').addEventListener('change', applyFilters);
+    document.getElementById('searchNotes').addEventListener('input', handleSearch);
+
+    document.getElementById('noteSubject').addEventListener('change', handleNoteSubjectChange);
+
+    document.querySelector('.modal-overlay')?.addEventListener('click', hideDeleteModal);
+}
+
+function setupSidebarToggle() {
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
         });
-
-        const data = await response.json();
-        return response.ok ? { success: true, data } : { success: false, error: data.detail };
-
-    } catch (error) {
-        return { success: false, error: error.message };
     }
-}
 
-async function listNotes(filters = {}) {
-    try {
-        const token = window.auth.getToken();
-        if (!token) throw new Error('Not authenticated');
-
-        const params = new URLSearchParams();
-        if (filters.entity_type) params.append('entity_type', filters.entity_type);
-        if (filters.entity_id) params.append('entity_id', filters.entity_id);
-        if (filters.tags) params.append('tags', filters.tags);
-        if (filters.search) params.append('search', filters.search);
-        if (filters.importance) params.append('importance', filters.importance);
-        if (filters.pinned_only) params.append('pinned_only', 'true');
-        params.append('page', filters.page || 1);
-        params.append('page_size', filters.page_size || 20);
-
-        const response = await fetch(
-            `${API_BASE_URL}/api/notes?${params.toString()}`,
-            {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }
-        );
-
-        const data = await response.json();
-        return response.ok ? { success: true, data } : { success: false, error: data.detail };
-
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
-async function getNote(noteId) {
-    try {
-        const token = window.auth.getToken();
-        if (!token) throw new Error('Not authenticated');
-
-        const response = await fetch(`${API_BASE_URL}/api/notes/${noteId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
         });
-
-        const data = await response.json();
-        return response.ok ? { success: true, data } : { success: false, error: data.detail };
-
-    } catch (error) {
-        return { success: false, error: error.message };
     }
 }
 
-async function updateNote(noteId, updates) {
+async function loadUserInfo() {
     try {
-        const token = window.auth.getToken();
-        if (!token) throw new Error('Not authenticated');
-
-        const response = await fetch(`${API_BASE_URL}/api/notes/${noteId}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updates)
-        });
-
-        const data = await response.json();
-        return response.ok ? { success: true, data } : { success: false, error: data.detail };
-
-    } catch (error) {
-        return { success: false, error: error.message };
+        const response = await apiRequest('/api/users/me');
+        if (response && response.email) {
+            document.getElementById('userName').textContent = response.full_name || response.email.split('@')[0];
+        }
+    } catch (err) {
+        console.error('Failed to load user info:', err);
     }
 }
 
-async function deleteNote(noteId) {
+async function loadSubjects() {
     try {
-        const token = window.auth.getToken();
-        if (!token) throw new Error('Not authenticated');
+        const response = await apiRequest('/api/curriculum/my-subjects');
+        state.subjects = response.subjects || [];
 
-        const response = await fetch(`${API_BASE_URL}/api/notes/${noteId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
+        const filterSelect = document.getElementById('filterSubject');
+        const noteSelect = document.getElementById('noteSubject');
+
+        filterSelect.innerHTML = '<option value="">All Subjects</option>';
+        noteSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+
+        state.subjects.forEach(subject => {
+            const filterOpt = document.createElement('option');
+            filterOpt.value = subject.id;
+            filterOpt.textContent = subject.title;
+            filterSelect.appendChild(filterOpt);
+
+            const noteOpt = document.createElement('option');
+            noteOpt.value = subject.id;
+            noteOpt.textContent = subject.title;
+            noteSelect.appendChild(noteOpt);
         });
-
-        return response.ok || response.status === 204 
-            ? { success: true } 
-            : { success: false, error: 'Failed to delete' };
-
-    } catch (error) {
-        return { success: false, error: error.message };
+    } catch (err) {
+        console.error('Failed to load subjects:', err);
     }
 }
 
-async function getAIAssist(noteId, action) {
-    try {
-        const token = window.auth.getToken();
-        if (!token) throw new Error('Not authenticated');
-
-        const response = await fetch(`${API_BASE_URL}/api/notes/ai-assist`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ note_id: noteId, action })
-        });
-
-        const data = await response.json();
-        return response.ok ? { success: true, data } : { success: false, error: data.detail };
-
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
-// ============================================================================
-// UI FUNCTIONS
-// ============================================================================
-
-let noteDraft = null; // Autosave draft storage
-
-function openNoteModal(entityType = null, entityId = null, entityTitle = null) {
-    const modal = document.getElementById('noteModal');
-    if (!modal) {
-        console.error('Note modal not found');
+async function loadModulesForSubject(subjectId, targetSelect) {
+    if (!subjectId) {
+        targetSelect.innerHTML = '<option value="">All Modules</option>';
+        targetSelect.disabled = true;
         return;
     }
 
-    // Reset form
+    try {
+        const response = await apiRequest(`/api/content/subjects/${subjectId}/modules`);
+        const modules = response.modules || [];
+
+        state.modules = modules;
+        targetSelect.innerHTML = '<option value="">All Modules</option>';
+
+        modules.forEach(module => {
+            const option = document.createElement('option');
+            option.value = module.id;
+            option.textContent = module.title;
+            targetSelect.appendChild(option);
+        });
+
+        targetSelect.disabled = false;
+    } catch (err) {
+        console.error('Failed to load modules:', err);
+        targetSelect.disabled = true;
+    }
+}
+
+async function loadCases() {
+    try {
+        const response = await apiRequest('/api/case-detail/recent?limit=50');
+        state.cases = response.cases || [];
+
+        const filterSelect = document.getElementById('filterCase');
+        const noteSelect = document.getElementById('noteCase');
+
+        filterSelect.innerHTML = '<option value="">All Cases</option>';
+        noteSelect.innerHTML = '<option value="">-- Select Case --</option>';
+
+        state.cases.forEach(caseItem => {
+            const filterOpt = document.createElement('option');
+            filterOpt.value = caseItem.id;
+            filterOpt.textContent = caseItem.title;
+            filterSelect.appendChild(filterOpt);
+
+            const noteOpt = document.createElement('option');
+            noteOpt.value = caseItem.id;
+            noteOpt.textContent = caseItem.title;
+            noteSelect.appendChild(noteOpt);
+        });
+    } catch (err) {
+        console.error('Failed to load cases:', err);
+    }
+}
+
+async function loadNotes() {
+    try {
+        const response = await apiRequest('/api/notes');
+        state.notes = response.notes || [];
+        state.filteredNotes = [...state.notes];
+        renderNotesList();
+        updateUI();
+    } catch (err) {
+        console.error('Failed to load notes:', err);
+        showToast('Failed to load notes');
+    }
+}
+
+function renderNotesList() {
+    const listEl = document.getElementById('notesList');
+    const countEl = document.getElementById('notesCount');
+
+    if (state.filteredNotes.length === 0) {
+        listEl.innerHTML = `
+            <div class="empty-list-msg" style="padding: 1.5rem; text-align: center; color: #666;">
+                No notes found
+            </div>
+        `;
+        countEl.textContent = '0 notes';
+        return;
+    }
+
+    countEl.textContent = `${state.filteredNotes.length} note${state.filteredNotes.length !== 1 ? 's' : ''}`;
+
+    listEl.innerHTML = state.filteredNotes.map(note => {
+        const subjectName = getSubjectName(note.entity_type === 'subject' ? note.entity_id : note.subject_id);
+        const moduleName = note.entity_type === 'module' ? getModuleName(note.entity_id) : '';
+        const caseName = note.entity_type === 'case' ? getCaseName(note.entity_id) : '';
+
+        return `
+            <div class="note-item ${state.currentNote?.id === note.id ? 'active' : ''}" 
+                 data-note-id="${note.id}" onclick="selectNote(${note.id})">
+                <div class="note-item-title">${escapeHtml(note.title)}</div>
+                <div class="note-item-preview">${escapeHtml(note.content?.substring(0, 100) || '')}</div>
+                <div class="note-item-meta">
+                    ${subjectName ? `<span class="note-item-badge subject">${escapeHtml(subjectName)}</span>` : ''}
+                    ${moduleName ? `<span class="note-item-badge module">${escapeHtml(moduleName)}</span>` : ''}
+                    ${caseName ? `<span class="note-item-badge case">${escapeHtml(caseName)}</span>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateUI() {
+    const hasNotes = state.notes.length > 0;
+    const hasCurrentNote = state.currentNote !== null || state.isNewNote;
+
+    document.getElementById('emptyState').classList.toggle('hidden', hasNotes || hasCurrentNote);
+    document.getElementById('noteEditor').classList.toggle('hidden', !hasCurrentNote);
+
+    if (!hasCurrentNote && hasNotes) {
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('noteEditor').classList.add('hidden');
+    }
+}
+
+function selectNote(noteId) {
+    const note = state.notes.find(n => n.id === noteId);
+    if (!note) return;
+
+    state.currentNote = note;
+    state.isNewNote = false;
+
+    document.getElementById('noteTitle').value = note.title || '';
+    document.getElementById('noteContent').value = note.content || '';
+
+    const subjectId = note.entity_type === 'subject' ? note.entity_id : note.subject_id;
+    document.getElementById('noteSubject').value = subjectId || '';
+
+    if (subjectId) {
+        loadModulesForSubject(subjectId, document.getElementById('noteModule')).then(() => {
+            if (note.entity_type === 'module') {
+                document.getElementById('noteModule').value = note.entity_id || '';
+            }
+        });
+    }
+
+    if (note.entity_type === 'case') {
+        document.getElementById('noteCase').value = note.entity_id || '';
+    } else {
+        document.getElementById('noteCase').value = '';
+    }
+
+    updateMetadataBadges();
+    renderNotesList();
+    updateUI();
+
+    document.getElementById('deleteNoteBtn').style.display = 'block';
+    document.getElementById('saveStatus').textContent = '';
+}
+
+function createNewNote() {
+    state.currentNote = null;
+    state.isNewNote = true;
+
     document.getElementById('noteTitle').value = '';
     document.getElementById('noteContent').value = '';
-    document.getElementById('noteTags').value = '';
-    document.getElementById('noteImportance').value = 'medium';
-    document.getElementById('noteIsPinned').checked = false;
-    document.getElementById('noteId').value = '';
+    document.getElementById('noteSubject').value = '';
+    document.getElementById('noteModule').value = '';
+    document.getElementById('noteModule').disabled = true;
+    document.getElementById('noteCase').value = '';
 
-    // Set entity link if provided
-    if (entityType && entityId) {
-        document.getElementById('linkedEntityType').value = entityType;
-        document.getElementById('linkedEntityId').value = entityId;
-        
-        const linkInfo = document.getElementById('entityLinkInfo');
-        if (linkInfo) {
-            const icon = {
-                'subject': '📚',
-                'case': '⚖️',
-                'learn': '📖',
-                'practice': '✏️'
-            }[entityType] || '📄';
-            
-            linkInfo.innerHTML = `${icon} Linked to: ${entityTitle || 'Unknown'}`;
-            linkInfo.style.display = 'block';
-        }
-    } else {
-        document.getElementById('linkedEntityType').value = '';
-        document.getElementById('linkedEntityId').value = '';
-        const linkInfo = document.getElementById('entityLinkInfo');
-        if (linkInfo) linkInfo.style.display = 'none';
-    }
+    document.getElementById('metadataBadges').innerHTML = '';
+    document.getElementById('deleteNoteBtn').style.display = 'none';
+    document.getElementById('saveStatus').textContent = '';
 
-    // Load draft if exists
-    if (noteDraft) {
-        if (confirm('Restore unsaved draft?')) {
-            document.getElementById('noteTitle').value = noteDraft.title || '';
-            document.getElementById('noteContent').value = noteDraft.content || '';
-        } else {
-            noteDraft = null;
-        }
-    }
+    renderNotesList();
+    updateUI();
 
-    modal.style.display = 'block';
-    
-    // Start autosave
-    startAutosave();
-}
-
-function closeNoteModal() {
-    const modal = document.getElementById('noteModal');
-    if (modal) modal.style.display = 'none';
-    stopAutosave();
-    noteDraft = null;
-}
-
-let autosaveInterval;
-
-function startAutosave() {
-    stopAutosave();
-    autosaveInterval = setInterval(() => {
-        const title = document.getElementById('noteTitle').value;
-        const content = document.getElementById('noteContent').value;
-        
-        if (title || content) {
-            noteDraft = { title, content };
-            console.log('Draft autosaved');
-        }
-    }, 5000); // Every 5 seconds
-}
-
-function stopAutosave() {
-    if (autosaveInterval) {
-        clearInterval(autosaveInterval);
-        autosaveInterval = null;
-    }
+    document.getElementById('noteTitle').focus();
 }
 
 async function saveNote() {
-    const noteId = document.getElementById('noteId').value;
     const title = document.getElementById('noteTitle').value.trim();
     const content = document.getElementById('noteContent').value.trim();
-    const tags = document.getElementById('noteTags').value
-        .split(',')
-        .map(t => t.trim())
-        .filter(t => t);
-    const importance = document.getElementById('noteImportance').value;
-    const isPinned = document.getElementById('noteIsPinned').checked;
-    const linkedEntityType = document.getElementById('linkedEntityType').value || null;
-    const linkedEntityId = document.getElementById('linkedEntityId').value || null;
+    const subjectId = document.getElementById('noteSubject').value;
+    const moduleId = document.getElementById('noteModule').value;
+    const caseId = document.getElementById('noteCase').value;
 
-    if (!title || !content) {
-        alert('Please provide both title and content');
+    if (!title) {
+        showToast('Please enter a title');
         return;
     }
 
-    const saveBtn = document.getElementById('saveNoteBtn');
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Saving...';
+    if (!subjectId) {
+        showToast('Please select a subject');
+        return;
     }
+
+    let entityType = 'subject';
+    let entityId = parseInt(subjectId);
+
+    if (caseId) {
+        entityType = 'case';
+        entityId = parseInt(caseId);
+    } else if (moduleId) {
+        entityType = 'module';
+        entityId = parseInt(moduleId);
+    }
+
+    const payload = {
+        title,
+        content,
+        entity_type: entityType,
+        entity_id: entityId,
+        subject_id: parseInt(subjectId)
+    };
 
     try {
-        let result;
+        document.getElementById('saveStatus').textContent = 'Saving...';
 
-        if (noteId) {
-            // Update existing note
-            result = await updateNote(noteId, {
-                title,
-                content,
-                tags,
-                importance,
-                is_pinned: isPinned
-            });
+        let response;
+        if (state.isNewNote) {
+            response = await apiRequest('/api/notes', 'POST', payload);
+            showToast('Note created successfully');
         } else {
-            // Create new note
-            result = await createNote({
-                title,
-                content,
-                linked_entity_type: linkedEntityType,
-                linked_entity_id: linkedEntityId ? parseInt(linkedEntityId) : null,
-                tags,
-                importance,
-                is_pinned: isPinned
+            response = await apiRequest(`/api/notes/${state.currentNote.id}`, 'PUT', payload);
+            showToast('Note saved successfully');
+        }
+
+        document.getElementById('saveStatus').textContent = 'Saved';
+        document.getElementById('saveStatus').classList.add('saved');
+
+        await loadNotes();
+
+        if (response.note) {
+            selectNote(response.note.id);
+        }
+
+    } catch (err) {
+        console.error('Failed to save note:', err);
+        showToast('Failed to save note');
+        document.getElementById('saveStatus').textContent = 'Error saving';
+    }
+}
+
+function cancelEdit() {
+    if (state.isNewNote) {
+        state.isNewNote = false;
+        state.currentNote = null;
+        updateUI();
+    } else if (state.currentNote) {
+        selectNote(state.currentNote.id);
+    }
+}
+
+function showDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function hideDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+async function deleteNote() {
+    if (!state.currentNote) return;
+
+    try {
+        await apiRequest(`/api/notes/${state.currentNote.id}`, 'DELETE');
+        showToast('Note deleted');
+
+        state.currentNote = null;
+        state.isNewNote = false;
+
+        hideDeleteModal();
+        await loadNotes();
+        updateUI();
+
+    } catch (err) {
+        console.error('Failed to delete note:', err);
+        showToast('Failed to delete note');
+    }
+}
+
+function handleFilterSubjectChange(e) {
+    const subjectId = e.target.value;
+    loadModulesForSubject(subjectId, document.getElementById('filterModule'));
+    applyFilters();
+}
+
+function handleNoteSubjectChange(e) {
+    const subjectId = e.target.value;
+    loadModulesForSubject(subjectId, document.getElementById('noteModule'));
+    updateMetadataBadges();
+}
+
+function handleSearch(e) {
+    state.searchQuery = e.target.value.toLowerCase();
+    applyFilters();
+}
+
+function applyFilters() {
+    const subjectId = document.getElementById('filterSubject').value;
+    const moduleId = document.getElementById('filterModule').value;
+    const caseId = document.getElementById('filterCase').value;
+
+    state.filteredNotes = state.notes.filter(note => {
+        if (subjectId) {
+            const noteSubjectId = note.entity_type === 'subject' ? note.entity_id : note.subject_id;
+            if (noteSubjectId != subjectId) return false;
+        }
+
+        if (moduleId && note.entity_type === 'module' && note.entity_id != moduleId) {
+            return false;
+        }
+
+        if (caseId && note.entity_type === 'case' && note.entity_id != caseId) {
+            return false;
+        }
+
+        if (state.searchQuery) {
+            const searchIn = `${note.title} ${note.content}`.toLowerCase();
+            if (!searchIn.includes(state.searchQuery)) return false;
+        }
+
+        return true;
+    });
+
+    renderNotesList();
+}
+
+function clearFilters() {
+    document.getElementById('filterSubject').value = '';
+    document.getElementById('filterModule').value = '';
+    document.getElementById('filterModule').disabled = true;
+    document.getElementById('filterCase').value = '';
+    document.getElementById('searchNotes').value = '';
+    state.searchQuery = '';
+    state.filteredNotes = [...state.notes];
+    renderNotesList();
+}
+
+function updateMetadataBadges() {
+    const subjectId = document.getElementById('noteSubject').value;
+    const moduleId = document.getElementById('noteModule').value;
+    const caseId = document.getElementById('noteCase').value;
+
+    const badges = [];
+
+    if (subjectId) {
+        const subjectName = getSubjectName(subjectId);
+        if (subjectName) {
+            badges.push(`<span class="metadata-badge subject">${escapeHtml(subjectName)}</span>`);
+        }
+    }
+
+    if (moduleId) {
+        const moduleName = getModuleName(moduleId);
+        if (moduleName) {
+            badges.push(`<span class="metadata-badge module">${escapeHtml(moduleName)}</span>`);
+        }
+    }
+
+    if (caseId) {
+        const caseName = getCaseName(caseId);
+        if (caseName) {
+            badges.push(`<span class="metadata-badge case">${escapeHtml(caseName)}</span>`);
+        }
+    }
+
+    document.getElementById('metadataBadges').innerHTML = badges.join('');
+}
+
+function getSubjectName(id) {
+    const subject = state.subjects.find(s => s.id == id);
+    return subject?.title || '';
+}
+
+function getModuleName(id) {
+    const module = state.modules.find(m => m.id == id);
+    return module?.title || '';
+}
+
+function getCaseName(id) {
+    const caseItem = state.cases.find(c => c.id == id);
+    return caseItem?.title || '';
+}
+
+function checkURLParams() {
+    const params = new URLSearchParams(window.location.search);
+    const subjectId = params.get('subject_id');
+    const moduleId = params.get('module_id');
+    const caseId = params.get('case_id');
+    const action = params.get('action');
+
+    if (action === 'new') {
+        createNewNote();
+
+        if (subjectId) {
+            document.getElementById('noteSubject').value = subjectId;
+            loadModulesForSubject(subjectId, document.getElementById('noteModule')).then(() => {
+                if (moduleId) {
+                    document.getElementById('noteModule').value = moduleId;
+                }
+                updateMetadataBadges();
             });
         }
 
-        if (result.success) {
-            noteDraft = null;
-            closeNoteModal();
-            
-            // Refresh notes list if exists
-            if (typeof refreshNotesList === 'function') {
-                refreshNotesList();
-            }
-            
-            alert(noteId ? 'Note updated!' : 'Note created!');
-        } else {
-            alert(result.error || 'Failed to save note');
+        if (caseId) {
+            document.getElementById('noteCase').value = caseId;
+            updateMetadataBadges();
         }
-
-    } catch (error) {
-        alert('An error occurred: ' + error.message);
-    } finally {
-        if (saveBtn) {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Save Note';
+    } else if (subjectId || caseId) {
+        if (subjectId) {
+            document.getElementById('filterSubject').value = subjectId;
+            loadModulesForSubject(subjectId, document.getElementById('filterModule'));
         }
-    }
-}
-
-async function renderNotesList(containerId, filters = {}) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    container.innerHTML = '<div class="loading">Loading notes...</div>';
-
-    const result = await listNotes(filters);
-
-    if (!result.success) {
-        container.innerHTML = `<div class="error">${result.error}</div>`;
-        return;
-    }
-
-    const notes = result.data.notes;
-
-    if (notes.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <p>📝 No notes yet</p>
-                <p>Start taking notes to organize your learning!</p>
-                <button onclick="openNoteModal()" class="btn-primary">Create First Note</button>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = '';
-    notes.forEach(note => {
-        const card = createNoteCard(note);
-        container.appendChild(card);
-    });
-}
-
-function createNoteCard(note) {
-    const card = document.createElement('div');
-    card.className = 'note-card';
-    if (note.is_pinned) card.classList.add('pinned');
-    
-    const importanceColors = {
-        'high': '🔴',
-        'medium': '🟡',
-        'low': '🟢'
-    };
-    
-    const entityIcon = note.linked_entity_type ? {
-        'subject': '📚',
-        'case': '⚖️',
-        'learn': '📖',
-        'practice': '✏️'
-    }[note.linked_entity_type] || '📄' : '';
-
-    card.innerHTML = `
-        <div class="note-header">
-            <div class="note-title">
-                ${note.is_pinned ? '📌 ' : ''}
-                ${importanceColors[note.importance]} 
-                ${escapeHtml(note.title)}
-            </div>
-            <div class="note-actions">
-                <button onclick="editNote(${note.id})" class="btn-sm">Edit</button>
-                <button onclick="confirmDeleteNote(${note.id})" class="btn-sm btn-danger">Delete</button>
-            </div>
-        </div>
-        
-        ${note.entity_title ? `
-            <div class="note-link">
-                ${entityIcon} ${escapeHtml(note.entity_title)}
-                ${note.entity_subtitle ? `<span class="subtitle">${escapeHtml(note.entity_subtitle)}</span>` : ''}
-            </div>
-        ` : ''}
-        
-        <div class="note-content">
-            ${escapeHtml(note.content.substring(0, 200))}${note.content.length > 200 ? '...' : ''}
-        </div>
-        
-        ${note.tags && note.tags.length > 0 ? `
-            <div class="note-tags">
-                ${note.tags.map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join(' ')}
-            </div>
-        ` : ''}
-        
-        <div class="note-meta">
-            <span>${formatDate(note.created_at)}</span>
-            ${note.updated_at !== note.created_at ? `<span>• Updated ${formatDate(note.updated_at)}</span>` : ''}
-        </div>
-        
-        <div class="ai-assist-btns" style="margin-top: 0.5rem;">
-            <button onclick="requestAIAssist(${note.id}, 'summarize')" class="btn-sm">✨ Summarize</button>
-            <button onclick="requestAIAssist(${note.id}, 'exam_format')" class="btn-sm">📝 Exam Format</button>
-            <button onclick="requestAIAssist(${note.id}, 'revision_bullets')" class="btn-sm">📋 Revision Points</button>
-        </div>
-    `;
-
-    return card;
-}
-
-async function editNote(noteId) {
-    const result = await getNote(noteId);
-    
-    if (!result.success) {
-        alert('Failed to load note');
-        return;
-    }
-
-    const note = result.data;
-    
-    document.getElementById('noteId').value = note.id;
-    document.getElementById('noteTitle').value = note.title;
-    document.getElementById('noteContent').value = note.content;
-    document.getElementById('noteTags').value = note.tags.join(', ');
-    document.getElementById('noteImportance').value = note.importance;
-    document.getElementById('noteIsPinned').checked = note.is_pinned;
-    
-    const modal = document.getElementById('noteModal');
-    if (modal) modal.style.display = 'block';
-    
-    startAutosave();
-}
-
-async function confirmDeleteNote(noteId) {
-    if (!confirm('Delete this note permanently?')) return;
-
-    const result = await deleteNote(noteId);
-    
-    if (result.success) {
-        if (typeof refreshNotesList === 'function') {
-            refreshNotesList();
+        if (caseId) {
+            document.getElementById('filterCase').value = caseId;
         }
-    } else {
-        alert(result.error || 'Failed to delete note');
+        applyFilters();
     }
 }
 
-async function requestAIAssist(noteId, action) {
-    const result = await getAIAssist(noteId, action);
-    
-    if (!result.success) {
-        alert(result.error || 'AI assist failed');
-        return;
-    }
-
-    // Show AI result in modal
-    showAIResultModal(result.data.result, action);
-}
-
-function showAIResultModal(content, action) {
-    const actionTitles = {
-        'summarize': 'AI Summary',
-        'exam_format': 'Exam Format',
-        'revision_bullets': 'Revision Points'
+async function apiRequest(endpoint, method = 'GET', body = null) {
+    const token = localStorage.getItem('access_token');
+    const headers = {
+        'Content-Type': 'application/json'
     };
 
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>${actionTitles[action]}</h3>
-                <button onclick="this.closest('.modal').remove()" class="close-btn">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="ai-result">${escapeHtml(content).replace(/\n/g, '<br>')}</div>
-                <p class="note">💡 Your original note is preserved. Copy this if you want to use it.</p>
-            </div>
-            <div class="modal-footer">
-                <button onclick="copyToClipboard(\`${content.replace(/`/g, '\\`')}\`)" class="btn-secondary">Copy</button>
-                <button onclick="this.closest('.modal').remove()" class="btn-primary">Close</button>
-            </div>
-        </div>
-    `;
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
 
-    document.body.appendChild(modal);
-    modal.style.display = 'block';
-}
+    const config = {
+        method,
+        headers
+    };
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Copied to clipboard!');
-    });
+    if (body) {
+        config.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    
+    if (method === 'DELETE' && response.status === 204) {
+        return {};
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('access_token');
+            window.location.href = '/html/login.html';
+        }
+        throw new Error(data.detail || 'API request failed');
+    }
+
+    return data;
 }
 
 function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-function formatDate(isoString) {
-    const date = new Date(isoString);
-    const now = new Date();
-    const diff = now - date;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) return 'today';
-    if (days === 1) return 'yesterday';
-    if (days < 7) return `${days} days ago`;
-    return date.toLocaleDateString();
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ============================================================================
-// GLOBAL EXPORTS
-// ============================================================================
+function logout() {
+    localStorage.removeItem('access_token');
+    window.location.href = '/html/login.html';
+}
 
-window.notes = {
-    createNote,
-    listNotes,
-    getNote,
-    updateNote,
-    deleteNote,
-    getAIAssist,
-    openNoteModal,
-    closeNoteModal,
-    saveNote,
-    renderNotesList,
-    editNote,
-    confirmDeleteNote,
-    requestAIAssist
-};
+window.selectNote = selectNote;
