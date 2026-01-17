@@ -16,6 +16,7 @@ from backend.routes import analytics
 from backend.routes import study
 from backend.routes import tutor_session
 from backend.routes import evaluation
+from backend.routes import tutor_chat
 
 
 # ============================================
@@ -203,6 +204,7 @@ app.include_router(study.router)
 app.include_router(tutor_session.router)
 app.include_router(evaluation.router, prefix="/api")
 app.include_router(evaluation.questions_router, prefix="/api")
+app.include_router(tutor_chat.router)
 
 
 if __name__ == "__main__":
