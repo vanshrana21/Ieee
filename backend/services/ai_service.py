@@ -1,13 +1,85 @@
 import logging
+import os
+import json
+import hashlib
+import time
+from datetime import datetime
 from typing import List, Optional, Dict, Any
+import google.generativeai as genai
 from backend.models.search import SearchRequest, SearchResult, CaseDetail
 
 # Initialize logger for this module
 logger = logging.getLogger(__name__)
 
-# TODO: Replace MOCK_CASES with real database query from SearchHistory ORM model
-# TODO: Integrate with Indian legal case databases (e.g., Indian Kanoon API, SCC Online)
-# TODO: Add proper indexing and full-text search capabilities
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+else:
+    logger.error("GEMINI_API_KEY not found in environment")
+    model = None
+
+# Log file path
+TUTOR_LOG_FILE = "backend/logging/tutor_calls.log"
+
+async def call_gemini_deterministic(
+    prompt: str, 
+    user_id: int, 
+    endpoint: str = "/api/tutor/chat",
+    response_mime_type: str = "application/json"
+) -> Dict[str, Any]:
+    """
+    Deterministic AI call wrapper with logging and hashing.
+    """
+    if not model:
+        return {"error": "AI service uninitialized", "success": False}
+
+    prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()
+    start_time = time.time()
+    
+    try:
+        # Temperature=0 for determinism
+        response = await model.generate_content_async(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0,
+                response_mime_type=response_mime_type
+            )
+        )
+        
+        latency = time.time() - start_time
+        response_text = response.text
+        response_hash = hashlib.sha256(response_text.encode()).hexdigest()
+        
+        # Log the call
+        log_entry = (
+            f"{datetime.utcnow().isoformat()} | user_id={user_id} | endpoint={endpoint} | "
+            f"prompt_hash={prompt_hash} | response_hash={response_hash} | "
+            f"latency={latency:.2f}s | model=gemini-1.5-flash\n"
+        )
+        
+        with open(TUTOR_LOG_FILE, "a") as f:
+            f.write(log_entry)
+            
+        return {
+            "success": True,
+            "text": response_text,
+            "prompt_hash": prompt_hash,
+            "response_hash": response_hash,
+            "latency": latency,
+            "model": "gemini-1.5-flash"
+        }
+        
+    except Exception as e:
+        logger.error(f"AI Service Error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "fallback": "AI service unavailable"
+        }
+
+# Existing mock functions maintained for compatibility
 MOCK_CASES = [
     {
         "id": "case-001",
@@ -29,32 +101,12 @@ MOCK_CASES = [
     },
 ]
 
-
 async def search_cases(search_request: SearchRequest) -> List[SearchResult]:
-    """
-    Search legal cases based on query and filters.
-    Currently returns mock data for development.
-    
-    Args:
-        search_request: SearchRequest containing query and optional filters
-        
-    Returns:
-        List of SearchResult objects matching the query
-    """
     logger.info(f"Searching cases with query: '{search_request.query}'")
-    
     results = []
-    
-    # Normalize query for case-insensitive matching
     query = search_request.query.lower()
-    
-    # TODO: Replace simple string matching with proper search engine (Elasticsearch/PostgreSQL FTS)
-    # TODO: Implement filtering by jurisdiction, court, and year from search_request
-    # TODO: Add relevance scoring algorithm based on multiple factors
     for case in MOCK_CASES:
-        # Simple substring search in title and summary
         if query in case["title"].lower() or query in case["summary"].lower():
-            # TODO: Calculate actual relevance score based on query match quality
             results.append(SearchResult(
                 id=case["id"],
                 title=case["title"],
@@ -63,34 +115,13 @@ async def search_cases(search_request: SearchRequest) -> List[SearchResult]:
                 summary=case["summary"],
                 citations=case["citations"],
                 tags=case["tags"],
-                relevance_score=10.0  # Mock score - replace with real scoring
+                relevance_score=10.0
             ))
-    
-    logger.info(f"Found {len(results)} matching cases for query: '{search_request.query}'")
-    
     return results
 
-
 async def get_case_by_id(case_id: str) -> Optional[CaseDetail]:
-    """
-    Retrieve detailed information about a specific case by ID.
-    Currently returns mock data for development.
-    
-    Args:
-        case_id: Unique identifier for the case
-        
-    Returns:
-        CaseDetail object if found, None otherwise
-    """
-    logger.info(f"Retrieving case details for ID: {case_id}")
-    
-    # TODO: Replace with database query: SELECT * FROM cases WHERE id = case_id
-    # TODO: Add caching layer (Redis) for frequently accessed cases
     for case in MOCK_CASES:
         if case["id"] == case_id:
-            logger.info(f"Case found: {case['title']}")
-            
-            # TODO: Fetch real holdings and key points from database
             return CaseDetail(
                 id=case["id"],
                 title=case["title"],
@@ -99,37 +130,13 @@ async def get_case_by_id(case_id: str) -> Optional[CaseDetail]:
                 summary=case["summary"],
                 citations=case["citations"],
                 tags=case["tags"],
-                holdings="Mock holding",  # TODO: Replace with actual case holdings
-                key_points=["Point 1", "Point 2"]  # TODO: Replace with extracted key points
+                holdings="Mock holding",
+                key_points=["Point 1", "Point 2"]
             )
-    
-    logger.warning(f"Case not found for ID: {case_id}")
-    
     return None
 
-
 async def generate_ai_summary(case: CaseDetail) -> Dict[str, Any]:
-    """
-    Generate AI-powered summary and key points for a case.
-    Currently returns mock data for development.
-    
-    Args:
-        case: CaseDetail object containing case information
-        
-    Returns:
-        Dictionary with 'summary' and 'key_points' keys
-    """
-    logger.info(f"Generating AI summary for case: {case.title}")
-    
-    # TODO: Integrate with Gemini API via ai_service.generate_case_summary()
-    # TODO: Pass case.title, case.summary, case.holdings to AI service
-    # TODO: Implement proper error handling for AI service failures
-    # TODO: Add verification step to ensure AI summary accuracy
-    mock_summary = {
+    return {
         "summary": f"AI summary for {case.title} (mock)",
         "key_points": ["Mock point 1", "Mock point 2"]
     }
-    
-    logger.info(f"AI summary generated successfully for case: {case.title}")
-    
-    return mock_summary
