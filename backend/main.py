@@ -19,6 +19,7 @@ from backend.routes import evaluation
 from backend.routes import tutor_chat
 from backend.routes import diagnostics
 from backend.routes import study_planner
+from backend.routes import exam_blueprint
 
 
 # ============================================
@@ -209,6 +210,7 @@ app.include_router(evaluation.questions_router, prefix="/api")
 app.include_router(tutor_chat.router)
 app.include_router(diagnostics.router)
 app.include_router(study_planner.router)
+app.include_router(exam_blueprint.router)
 
 
 if __name__ == "__main__":
