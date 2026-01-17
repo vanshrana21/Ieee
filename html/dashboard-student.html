@@ -8,42 +8,77 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/dashboard-student.css">
-    
 </head>
 <body>
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>⚖️ Menu</h2>
+            <div class="logo-sidebar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>LegalAI</span>
+            </div>
         </div>
         <nav class="sidebar-nav">
             <a href="./dashboard-student.html" class="nav-item active">
-                <span class="nav-icon">🏠</span>
+                <svg class="nav-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
                 <span class="nav-text">Dashboard</span>
             </a>
             <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.startStudying();">
-                <span class="nav-icon">📘</span>
-                <span class="nav-text">Start Studying</span>
+                <svg class="nav-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="nav-text">Library</span>
             </a>
             <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.openCaseSimplifier();">
-                <span class="nav-icon">📚</span>
+                <svg class="nav-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
                 <span class="nav-text">Case Simplifier</span>
             </a>
             <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.practiceAnswers();">
-                <span class="nav-icon">✏️</span>
-                <span class="nav-text">Answer Writing Practice</span>
+                <svg class="nav-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span class="nav-text">Practice</span>
             </a>
             <a href="#" class="nav-item" onclick="event.preventDefault(); window.dashboardStudent.openNotes();">
-                <span class="nav-icon">📝</span>
+                <svg class="nav-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
                 <span class="nav-text">My Notes</span>
             </a>
+            <div class="nav-divider"></div>
             <a href="#" class="nav-item" onclick="event.preventDefault(); alert('Settings coming soon!');">
-                <span class="nav-icon">⚙️</span>
+                <svg class="nav-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6m5.657-13.657l-4.243 4.243m-2.828 2.828l-4.243 4.243m13.071 0l-4.243-4.243m-2.828-2.828l-4.243-4.243"></path>
+                </svg>
                 <span class="nav-text">Settings</span>
             </a>
-            <div class="nav-divider"></div>
             <a href="#" class="nav-item nav-logout" onclick="event.preventDefault(); handleLogout();">
-                <span class="nav-icon">🚪</span>
+                <svg class="nav-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
                 <span class="nav-text">Logout</span>
             </a>
         </nav>
@@ -58,291 +93,280 @@
         <nav class="navbar">
             <div class="navbar-content">
                 <div class="navbar-left">
-                    <!-- Hamburger Button -->
                     <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
                         <span class="hamburger-line"></span>
                         <span class="hamburger-line"></span>
                         <span class="hamburger-line"></span>
                     </button>
                     
-                    <div class="logo">
-                        ⚖️ LegalAI Research
+                    <div class="search-container-top">
+                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="search-input-top" 
+                            placeholder="Search subjects, cases, topics..."
+                            aria-label="Search content"
+                        >
                     </div>
                 </div>
-                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                <div class="navbar-right">
+                    <button class="profile-btn" onclick="alert('Profile settings coming soon!')">
+                        <span class="profile-avatar" id="studentName">S</span>
+                    </button>
+                </div>
             </div>
         </nav>
 
         <!-- Main Container -->
         <div class="container">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <div class="welcome-content">
-                    <h1>Welcome back<span id="studentName"></span>! 👋</h1>
-                    <div class="student-info">
-                        <!-- Add after welcome section, before subject progress -->
-<div class="search-section">
-    <div class="search-container">
-        <input 
-            type="text" 
-            id="searchInput" 
-            class="search-input" 
-            placeholder="Search subjects, cases, topics, practice questions..."
-            aria-label="Search content"
-        >
-        <button id="searchButton" class="search-button">
-            🔍 Search
-        </button>
-    </div>
-    
-    <!-- Optional: Filter toggles -->
-    <div class="search-filters">
-        <label class="filter-label">
-            <input type="checkbox" class="content-type-filter filter-checkbox" value="subject" checked>
-            Subjects
-        </label>
-        <label class="filter-label">
-            <input type="checkbox" class="content-type-filter filter-checkbox" value="learn" checked>
-            Learn
-        </label>
-        <label class="filter-label">
-            <input type="checkbox" class="content-type-filter filter-checkbox" value="case" checked>
-            Cases
-        </label>
-        <label class="filter-label">
-            <input type="checkbox" class="content-type-filter filter-checkbox" value="practice" checked>
-            Practice
-        </label>
-    </div>
-    
-    <!-- Search results container -->
-    <div id="searchResults" class="search-results-container"></div>
-</div>
-
-                        <!-- Dynamic badges populated by JavaScript -->
+            <!-- Welcome Hero Section -->
+            <div class="hero-section">
+                <div class="hero-content">
+                    <h1 class="hero-title">Welcome back<span id="studentNameFull"></span></h1>
+                    <p class="hero-subtitle">Your personalized learning journey continues</p>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Days to Finals</div>
+                        <div class="stat-value">42</div>
                     </div>
-                    <p class="motivation-text">Let's prepare smarter today and ace those exams! 🎯</p>
-                </div>
-            </div>
-
-            <!-- Primary Action Cards -->
-            <div class="section-title">
-                ⚡ Quick Actions
-            </div>
-            <div class="primary-actions">
-                <div class="action-card" onclick="window.dashboardStudent.startStudying()">
-                    <span class="action-icon">📘</span>
-                    <h3>Start Studying</h3>
-                    <p>Access subject-wise materials: Constitutional Law, Criminal Law, Contracts & more</p>
-                </div>
-
-                <div class="action-card" onclick="window.dashboardStudent.openCaseSimplifier()">
-                    <span class="action-icon">📚</span>
-                    <h3>Case Simplifier</h3>
-                    <p>Get simplified breakdowns: Facts, Issues, Judgment, Ratio Decidendi & Exam Tips</p>
-                </div>
-
-                <div class="action-card" onclick="window.dashboardStudent.practiceAnswers()">
-                    <span class="action-icon">✏️</span>
-                    <h3>Answer Writing Practice</h3>
-                    <p>Practice 5-mark and 10-mark answers with AI-powered feedback</p>
-                </div>
-
-                <div class="action-card" onclick="window.dashboardStudent.openNotes()">
-                    <span class="action-icon">📝</span>
-                    <h3>My Notes</h3>
-                    <p>Organize case-linked and subject-specific notes in one place</p>
-                </div>
-            </div>
-
-            <!-- Two Column Layout: AI Assistant + Progress -->
-            <div class="two-column">
-                <!-- AI Study Assistant -->
-                <div class="ai-section">
-                    <div class="ai-header">
-                        <span style="font-size: 32px;">🤖</span>
-                        <h2>AI Study Assistant</h2>
+                    <div class="stat-card">
+                        <div class="stat-label">Study Streak</div>
+                        <div class="stat-value">7</div>
                     </div>
-                    <div class="ai-input-container">
+                    <div class="stat-card">
+                        <div class="stat-label">Mastery Score</div>
+                        <div class="stat-value">78%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Results Container -->
+            <div id="searchResults" class="search-results-container"></div>
+
+            <!-- Legal Toolkit - Quick Actions -->
+            <section class="section-wrapper">
+                <div class="section-header">
+                    <h2 class="section-title">Legal Toolkit</h2>
+                    <p class="section-description">Your essential study resources</p>
+                </div>
+                <div class="toolkit-grid">
+                    <div class="toolkit-card" id="startStudyingCard" onclick="window.dashboardStudent.startStudying()">
+                        <div class="toolkit-icon toolkit-icon-blue">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="toolkit-content">
+                            <h3 class="toolkit-title">Subject Library</h3>
+                            <p class="toolkit-desc">Constitutional, Criminal, Contract Law & more</p>
+                        </div>
+                    </div>
+
+                    <div class="toolkit-card" id="caseSimplifierCard" onclick="window.dashboardStudent.openCaseSimplifier()">
+                        <div class="toolkit-icon toolkit-icon-purple">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                        </div>
+                        <div class="toolkit-content">
+                            <h3 class="toolkit-title">Case Simplifier</h3>
+                            <p class="toolkit-desc">Break down complex judgments into exam notes</p>
+                        </div>
+                    </div>
+
+                    <div class="toolkit-card" id="practiceModeCard" onclick="window.dashboardStudent.practiceAnswers()">
+                        <div class="toolkit-icon toolkit-icon-green">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </div>
+                        <div class="toolkit-content">
+                            <h3 class="toolkit-title">Answer Practice</h3>
+                            <p class="toolkit-desc">5-mark & 10-mark questions with AI feedback</p>
+                        </div>
+                    </div>
+
+                    <div class="toolkit-card" id="myNotesCard" onclick="window.dashboardStudent.openNotes()">
+                        <div class="toolkit-icon toolkit-icon-orange">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                        </div>
+                        <div class="toolkit-content">
+                            <h3 class="toolkit-title">My Notes</h3>
+                            <p class="toolkit-desc">Case-linked and subject-specific annotations</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Two Column Layout -->
+            <div class="two-column-layout">
+                <!-- AI Mentor -->
+                <section class="section-wrapper ai-mentor-section">
+                    <div class="section-header">
+                        <h2 class="section-title">AI Study Mentor</h2>
+                        <p class="section-description">Ask anything about your curriculum</p>
+                    </div>
+                    <div class="ai-input-wrapper">
                         <input 
                             type="text" 
-                            class="ai-input" 
-                            placeholder="Ask anything about law in simple terms..."
-                            id="aiQuery"
+                            id="aiQuery" 
+                            class="ai-input-field" 
+                            placeholder="e.g., Explain Article 21 in simple terms..."
+                            maxlength="500"
                         >
-                        <button class="ai-submit" onclick="window.dashboardStudent.askAI()">➤</button>
+                        <button class="ai-send-btn" id="sendAIBtn" onclick="window.dashboardStudent.askAI()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
                     </div>
-                    <div class="example-queries">
-                        <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;">💡 Try asking:</div>
-                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
-                            "Explain Article 21 in simple words"
+                    <div class="ai-suggestions">
+                        <div class="suggestion-chip" onclick="window.dashboardStudent.setQuery(this)">
+                            "Explain Article 21 simply"
                         </div>
-                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
-                            "Why is Kesavananda Bharati important for exams?"
+                        <div class="suggestion-chip" onclick="window.dashboardStudent.setQuery(this)">
+                            "Kesavananda case importance"
                         </div>
-                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
-                            "What's the difference between IPC and CrPC?"
-                        </div>
-                        <div class="example-query" onclick="window.dashboardStudent.setQuery(this)">
-                            "Summarize doctrine of basic structure"
+                        <div class="suggestion-chip" onclick="window.dashboardStudent.setQuery(this)">
+                            "IPC vs CrPC difference"
                         </div>
                     </div>
+                </section>
+
+                <!-- Academic Progress -->
+                <section class="section-wrapper progress-wrapper">
+                    <div class="section-header">
+                        <h2 class="section-title">Academic Progress</h2>
+                    </div>
+                    <div class="subject-progress" id="subjectProgressContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Study Plan Widget -->
+            <section class="section-wrapper">
+                <div id="studyPlanContainer">
+                    <!-- Populated by JS -->
                 </div>
+            </section>
 
-                <!-- Progress & Learning Path -->
-                <div class="progress-section">
-                    <h2>📊 Your Progress</h2>
-                    
-                    <div class="today-task">
-                        <h4>✨ Today's Suggested Task</h4>
-                        <p>Review landmark cases in Constitutional Law (Maneka Gandhi, ADM Jabalpur)</p>
+            <!-- Today's Focus & Recent Activity -->
+            <div class="two-column-layout">
+                <!-- Today's Focus -->
+                <section class="section-wrapper">
+                    <div class="section-header">
+                        <h2 class="section-title">Today's Focus</h2>
                     </div>
-
-                    <!-- Dynamic subject progress container -->
-                    <div class="subject-progress">
-                        <!-- Populated by dashboard-student.js -->
+                    <div class="focus-card">
+                        <div class="focus-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="focus-content">
+                            <h4 class="focus-title">Constitutional Law Review</h4>
+                            <p class="focus-desc">Review Maneka Gandhi & ADM Jabalpur cases</p>
+                        </div>
                     </div>
-
-                    <ul class="checklist">
-                        <li class="checklist-item completed" onclick="window.dashboardStudent.toggleCheck(this)">
-                            <div class="checkbox checked"></div>
-                            <span class="checklist-text">Read Kesavananda Bharati case</span>
+                    <ul class="task-list">
+                        <li class="task-item completed" onclick="window.dashboardStudent.toggleCheck(this)">
+                            <div class="task-checkbox checked"></div>
+                            <span class="task-text">Read Kesavananda Bharati judgment</span>
                         </li>
-                        <li class="checklist-item completed" onclick="window.dashboardStudent.toggleCheck(this)">
-                            <div class="checkbox checked"></div>
-                            <span class="checklist-text">Revise Articles 14-21</span>
+                        <li class="task-item completed" onclick="window.dashboardStudent.toggleCheck(this)">
+                            <div class="task-checkbox checked"></div>
+                            <span class="task-text">Revise Articles 14-21 notes</span>
                         </li>
-                        <li class="checklist-item" onclick="window.dashboardStudent.toggleCheck(this)">
-                            <div class="checkbox"></div>
-                            <span class="checklist-text">Complete Contract Law notes</span>
+                        <li class="task-item" onclick="window.dashboardStudent.toggleCheck(this)">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Complete Contract Law annotations</span>
                         </li>
-                        <li class="checklist-item" onclick="window.dashboardStudent.toggleCheck(this)">
-                            <div class="checkbox"></div>
-                            <span class="checklist-text">Practice 10-mark answers</span>
+                        <li class="task-item" onclick="window.dashboardStudent.toggleCheck(this)">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Practice 10-mark answer writing</span>
                         </li>
                     </ul>
-                </div>
+                </section>
+
+                <!-- Recent Activity -->
+                <section class="section-wrapper">
+                    <div class="section-header">
+                        <h2 class="section-title">Recent Activity</h2>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item" onclick="window.dashboardStudent.openItem('case1')">
+                            <div class="activity-icon activity-icon-case">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">Kesavananda Bharati v. State of Kerala</div>
+                                <div class="activity-meta">Constitutional Law • 2h ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item" onclick="window.dashboardStudent.openItem('note1')">
+                            <div class="activity-icon activity-icon-note">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">Article 21 - Right to Life Notes</div>
+                                <div class="activity-meta">My Notes • Yesterday</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item" onclick="window.dashboardStudent.openItem('case2')">
+                            <div class="activity-icon activity-icon-case">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">Maneka Gandhi v. Union of India</div>
+                                <div class="activity-meta">Constitutional Law • 3 days ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item" onclick="window.dashboardStudent.openItem('practice1')">
+                            <div class="activity-icon activity-icon-practice">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">Basic Structure Doctrine Practice</div>
+                                <div class="activity-meta">Practice Session • Last week</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-
-            <!-- Recently Viewed / Saved -->
-            <div class="recent-section">
-                <h2>🕐 Recently Viewed</h2>
-                <div class="recent-items">
-                    <div class="recent-item" onclick="window.dashboardStudent.openItem('case1')">
-                        <div class="recent-icon">⚖️</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Kesavananda Bharati v. State of Kerala</div>
-                            <div class="recent-meta">Constitutional Law • Viewed 2 hours ago</div>
-                        </div>
-                    </div>
-
-                    <div class="recent-item" onclick="window.dashboardStudent.openItem('note1')">
-                        <div class="recent-icon">📝</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Article 21 - Right to Life Notes</div>
-                            <div class="recent-meta">My Notes • Updated yesterday</div>
-                        </div>
-                    </div>
-
-                    <div class="recent-item" onclick="window.dashboardStudent.openItem('case2')">
-                        <div class="recent-icon">⚖️</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Maneka Gandhi v. Union of India</div>
-                            <div class="recent-meta">Constitutional Law • Viewed 3 days ago</div>
-                        </div>
-                    </div>
-
-                    <div class="recent-item" onclick="window.dashboardStudent.openItem('practice1')">
-                        <div class="recent-icon">✏️</div>
-                        <div class="recent-details">
-                            <div class="recent-title">Answer Practice - Basic Structure Doctrine</div>
-                            <div class="recent-meta">Practice Session • Last week</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="quick-card" id="startStudyingCard">...</div>
-    <div class="quick-card" id="caseSimplifierCard">...</div>
-    <div class="quick-card" id="practiceCard">...</div>
-    <div class="quick-card" id="notesCard">...</div>
-    <!-- MINIMAL HTML EDITS for dashboard-student.html -->
-<!-- Replace Quick Action Cards section with IDs: -->
-
-<div class="quick-actions-grid">
-    <div class="quick-action-card" id="startStudyingCard">
-        <div class="card-icon">📚</div>
-        <div class="card-content">
-            <h3>Start Studying</h3>
-            <p>Access subject-wise materials: Constitutional Law, Criminal Law, Contracts & more</p>
         </div>
     </div>
 
-    <div class="quick-action-card" id="caseSimplifierCard">
-        <div class="card-icon">⚖️</div>
-        <div class="card-content">
-            <h3>Case Simplifier</h3>
-            <p>Get simplified breakdowns: Facts, Issues, Judgment, Ratio Decidendi & Exam Tips</p>
-        </div>
-    </div>
-
-    <div class="quick-action-card" id="practiceModeCard">
-        <div class="card-icon">✍️</div>
-        <div class="card-content">
-            <h3>Answer Writing Practice</h3>
-            <p>Practice 5-mark and 10-mark answers with AI-powered feedback</p>
-        </div>
-    </div>
-
-    <div class="quick-action-card" id="myNotesCard">
-        <div class="card-icon">📝</div>
-        <div class="card-content">
-            <h3>My Notes</h3>
-            <p>Organize case-linked and subject-specific notes in one place</p>
-        </div>
-    </div>
-    
-    <div class="quick-action-card" id="aiTutorCard">
-        <div class="card-icon">🤖</div>
-        <div class="card-content">
-            <h3>AI Tutor</h3>
-            <p>Ask questions and get instant curriculum-aware explanations</p>
-        </div>
-    </div>
-</div>
-
-<!-- Replace AI Assistant input section: -->
-<div class="ai-assistant-section">
-    <h2>🤖 AI Study Assistant</h2>
-    <div class="ai-input-container">
-        <input 
-            type="text" 
-            id="aiInput" 
-            placeholder="Ask me anything about your course..."
-            maxlength="500"
-        >
-        <button id="sendAIBtn" class="send-btn">→</button>
-    </div>
-    <div class="suggestion-chips">
-        <span class="chip">"Explain Article 21 in simple words"</span>
-        <span class="chip">"Why is Kesavananda Bharati important for exams?"</span>
-        <span class="chip">"What's the difference between IPC and CrPC?"</span>
-        <span class="chip">"Summarize doctrine of basic structure"</span>
-    </div>
-</div>
-
-<!-- Add container for study plan (if not exists): -->
-<div id="studyPlanContainer"></div>
-
-
-    
     <!-- Load auth.js FIRST (required dependency) -->
     <script src="../js/auth.js"></script>
     <!-- Load dashboard logic SECOND -->
     <script src="../js/dashboard-student.js"></script>
-    <script src="../js/search.js"></script>
-    <script src="../js/notes.js"></script>
-
 </body>
 </html>

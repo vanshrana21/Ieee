@@ -1,32 +1,12 @@
 /**
  * dashboard-student.js
- * Full, connected dashboard client for JurisAI
- *
- * - Exposes window.dashboardStudent with all methods referenced by HTML:
- *    startStudying(), openCaseSimplifier(), practiceAnswers(), openNotes(),
- *    askAI(), setQuery(el), toggleCheck(el), openItem(id), generateStudyPlan()
- * - Handles search box, filters, quick-action cards, study plan, subject progress,
- *   AI assistant, navigation/hamburger, logout, and basic graceful fallbacks.
- *
- * IMPORTANT:
- * - This assumes an existing `window.auth` helper (auth.js) that provides:
- *     - isAuthenticated() -> boolean
- *     - getToken() -> string (JWT)
- *     - logout() -> void
- *     - getUserCurriculum() -> { success, data } OR fallback
- *     - getUserFirstName() -> string
- * - Adjust API_BASE to your backend if different.
- *
- * Copy-paste this file into ../js/dashboard-student.js and ensure auth.js is loaded first.
+ * Enhanced dashboard with improved UI/UX
  */
 
-/* eslint-disable no-console */
 (function () {
-  // Configuration
   const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
   const MIN_SEARCH_LENGTH = 2;
 
-  // Internal state
   let state = {
     sessionInitialized: false,
     curriculum: null,
@@ -36,7 +16,6 @@
     userFirstName: '',
   };
 
-  // DOM shortcuts (populated at init)
   const DOM = {};
 
   // Utilities
@@ -55,38 +34,27 @@
       .replace(/>/g, '&gt;');
   }
 
-  function formatDateRelative(dateString) {
-    if (!dateString) return '';
-    const d = new Date(dateString);
-    const now = new Date();
-    const diff = Math.floor((now - d) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
-    return d.toLocaleDateString();
-  }
-
   function showToast(message, type = 'info', ms = 3500) {
-    // Minimal toast UI if not present
     let container = document.getElementById('toastContainer');
     if (!container) {
       container = document.createElement('div');
       container.id = 'toastContainer';
       container.style.position = 'fixed';
-      container.style.right = '16px';
-      container.style.bottom = '16px';
+      container.style.right = '20px';
+      container.style.bottom = '20px';
       container.style.zIndex = 9999;
       document.body.appendChild(container);
     }
     const el = document.createElement('div');
     el.textContent = message;
-    el.style.background = type === 'error' ? '#fee2e2' : '#111827';
+    el.style.background = type === 'error' ? '#fee2e2' : '#0F172A';
     el.style.color = type === 'error' ? '#991b1b' : '#fff';
-    el.style.padding = '10px 14px';
-    el.style.marginTop = '8px';
-    el.style.borderRadius = '8px';
-    el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+    el.style.padding = '12px 20px';
+    el.style.marginTop = '10px';
+    el.style.borderRadius = '10px';
+    el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+    el.style.fontSize = '14px';
+    el.style.fontWeight = '500';
     container.appendChild(el);
     setTimeout(() => {
       el.style.transition = 'opacity 300ms';
@@ -119,20 +87,18 @@
     }
   }
 
-  // ---------------------------
-  // UI Rendering helpers
-  // ---------------------------
-
+  // UI Rendering
   function renderSubjectProgress(subjects = []) {
-    const container = DOM.subjectProgress;
+    const container = q('#subjectProgressContainer');
     if (!container) return;
     container.innerHTML = '';
 
     if (!subjects || subjects.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <p>📚 No subjects available</p>
-          <p class="text-muted">Subjects will appear here once you're enrolled.</p>
+          <p style="font-size:48px;margin-bottom:12px;">📚</p>
+          <p style="font-weight:600;margin-bottom:6px;">No subjects available</p>
+          <p class="text-muted">Subjects will appear once you're enrolled.</p>
         </div>
       `;
       return;
@@ -158,7 +124,6 @@
         </div>
       `;
       card.addEventListener('click', () => {
-        // Navigate to start-studying with subject id
         window.location.href = `start-studying.html?subject=${subject.id}`;
       });
       frag.appendChild(card);
@@ -173,7 +138,8 @@
     if (!plan || !plan.weeks || plan.weeks.length === 0) {
       container.innerHTML = `
         <div class="study-plan-widget empty">
-          <h4>📅 No Active Study Plan</h4>
+          <h4 style="font-size:48px;margin-bottom:12px;">📅</h4>
+          <h4>No Active Study Plan</h4>
           <p>Generate a personalized study plan based on your mastery scores and practice history.</p>
           <button class="generate-plan-btn" id="generatePlanBtn">Generate Study Plan</button>
         </div>
@@ -226,9 +192,11 @@
     if (!container) return;
     container.innerHTML = '';
     if (!results || results.length === 0) {
-      container.innerHTML = `<div class="search-empty">No results</div>`;
+      container.innerHTML = `<div class="search-empty">No results found</div>`;
+      container.style.display = 'none';
       return;
     }
+    container.style.display = 'block';
     const frag = document.createDocumentFragment();
     results.forEach((r) => {
       const item = document.createElement('div');
@@ -240,7 +208,6 @@
         <div class="search-result-meta">${meta}</div>
       `;
       item.addEventListener('click', () => {
-        // route depending on type
         if (r.type === 'subject' || r.doc_type === 'subject') {
           window.location.href = `start-studying.html?subject=${r.id}`;
         } else if (r.doc_type === 'case') {
@@ -250,7 +217,6 @@
         } else if (r.doc_type === 'practice') {
           window.location.href = `practice-content.html?id=${r.id}`;
         } else {
-          // default fallback
           showToast('Opening item', 'info');
           window.location.href = `/html/item.html?id=${r.id}`;
         }
@@ -260,10 +226,7 @@
     container.appendChild(frag);
   }
 
-  // ---------------------------
-  // Actions called by HTML (exposed)
-  // ---------------------------
-
+  // Actions
   const dashboardStudent = {
     startStudying,
     openCaseSimplifier,
@@ -276,18 +239,13 @@
     generateStudyPlan,
   };
 
-  window.dashboardStudent = dashboardStudent; // expose
-
-  // ---------------------------
-  // Action Implementations
-  // ---------------------------
+  window.dashboardStudent = dashboardStudent;
 
   function ensureAuthOrRedirect() {
     if (!window.auth || !window.auth.isAuthenticated || !window.auth.isAuthenticated()) {
-      // Redirect to login (use html login if present)
       const loginUrls = ['/html/login.html', '/login.html', '/index.html'];
       const candidate = loginUrls.find(u => !!u);
-      showToast('You are not authenticated. Redirecting to login...', 'error', 2000);
+      showToast('You are not authenticated. Redirecting...', 'error', 2000);
       setTimeout(() => {
         window.location.href = candidate;
       }, 900);
@@ -298,7 +256,6 @@
 
   function startStudying() {
     if (!ensureAuthOrRedirect()) return;
-    // If subjects available, go to start-studying; else go to onboarding
     const firstSubject = state.subjects && state.subjects[0];
     if (firstSubject) {
       window.location.href = `start-studying.html?subject=${firstSubject.id}`;
@@ -331,11 +288,9 @@
       return;
     }
 
-    // Basic UI disabled while fetching
     const btn = DOM.aiSubmit;
     if (btn) btn.disabled = true;
     try {
-      // Use tutor/chat endpoint if available, else fallback to simple search
       const payload = {
         session_id: null,
         input: qText,
@@ -347,10 +302,8 @@
       }).catch(() => null);
 
       if (json && json.content) {
-        // Show result in a simple modal or new page; for now use alert / toast + console
         showModalAnswer(json.content, json.provenance || [], json.confidence_score || null);
       } else {
-        // fallback: call search endpoint and show top result snippet
         const searchRes = await fetchJson(`${API_BASE}/api/search?q=${encodeURIComponent(qText)}&limit=3`, { method: 'GET' }).catch(() => null);
         if (searchRes && Array.isArray(searchRes.results) && searchRes.results.length > 0) {
           const top = searchRes.results[0];
@@ -370,21 +323,20 @@
   function setQuery(el) {
     const text = el && (el.textContent || el.innerText) ? el.textContent.trim() : '';
     if (DOM.aiQuery) {
-      DOM.aiQuery.value = text.replace(/^["“”']|["“”']$/g, '');
+      DOM.aiQuery.value = text.replace(/^[""]|[""]$/g, '');
       DOM.aiQuery.focus();
     }
   }
 
   function toggleCheck(el) {
     if (!el) return;
-    const checkbox = el.querySelector('.checkbox');
+    const checkbox = el.querySelector('.task-checkbox');
     if (!checkbox) return;
     checkbox.classList.toggle('checked');
     el.classList.toggle('completed');
   }
 
   function openItem(id) {
-    // Map quick demo ids to pages
     const mapping = {
       case1: 'case-detail.html?id=kesavananda',
       case2: 'case-detail.html?id=maneka',
@@ -395,30 +347,18 @@
     window.location.href = path;
   }
 
-  // ---------------------------
-  // Search handling
-  // ---------------------------
-
-  function collectSearchFilters() {
-    const checked = qa('.content-type-filter.filter-checkbox').filter(i => i.checked).map(i => i.value);
-    return checked;
-  }
-
   async function handleSearch() {
     const qText = DOM.searchInput.value.trim();
     if (!qText || qText.length < MIN_SEARCH_LENGTH) {
-      showToast('Type at least 2 characters to search', 'error', 1200);
+      DOM.searchResults.style.display = 'none';
       return;
     }
-    const filters = collectSearchFilters();
     try {
-      // Prefer backend search route
-      const url = `${API_BASE}/api/search?q=${encodeURIComponent(qText)}&types=${encodeURIComponent(filters.join(','))}&limit=20`;
+      const url = `${API_BASE}/api/search?q=${encodeURIComponent(qText)}&limit=20`;
       const res = await fetchJson(url, { method: 'GET' }).catch(() => null);
       if (res && Array.isArray(res.results)) {
         renderSearchResults(res.results);
       } else {
-        // fallback: client-side fuzzy search of loaded curriculum
         const local = (state.curriculum && (state.curriculum.learn || [])).concat(state.subjects || []);
         const lower = qText.toLowerCase();
         const matches = (local || []).filter(item => {
@@ -435,10 +375,6 @@
       showToast('Search failed', 'error');
     }
   }
-
-  // ---------------------------
-  // Study Plan generation (client -> API)
-  // ---------------------------
 
   async function generateStudyPlan() {
     if (!ensureAuthOrRedirect()) return;
@@ -463,12 +399,7 @@
     }
   }
 
-  // ---------------------------
-  // Modal for AI answers
-  // ---------------------------
-
   function showModalAnswer(content, provenance = [], confidence = null) {
-    // Create simple modal
     let modal = document.getElementById('aiAnswerModal');
     if (!modal) {
       modal = document.createElement('div');
@@ -478,26 +409,26 @@
       modal.style.top = '0';
       modal.style.right = '0';
       modal.style.bottom = '0';
-      modal.style.background = 'rgba(0,0,0,0.4)';
+      modal.style.background = 'rgba(0,0,0,0.5)';
       modal.style.display = 'flex';
       modal.style.alignItems = 'center';
       modal.style.justifyContent = 'center';
       modal.style.zIndex = 99999;
       modal.innerHTML = `
-        <div id="aiAnswerBox" style="max-width:900px;width:90%;background:#fff;border-radius:12px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,0.15);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <h3 style="margin:0">AI Assistant</h3>
-            <button id="closeAiAnswerBtn" style="border:none;background:#eee;padding:8px 10px;border-radius:8px;cursor:pointer">Close</button>
+        <div id="aiAnswerBox" style="max-width:800px;width:90%;background:#fff;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h3 style="margin:0;font-size:20px;font-weight:700;">AI Assistant</h3>
+            <button id="closeAiAnswerBtn" style="border:none;background:#f8fafc;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;">Close</button>
           </div>
-          <div id="aiAnswerContent" style="max-height:60vh;overflow:auto;padding-bottom:10px;"></div>
-          <div id="aiAnswerProvenance" style="margin-top:12px;color:#374151;font-size:13px;"></div>
+          <div id="aiAnswerContent" style="max-height:60vh;overflow:auto;padding-bottom:16px;line-height:1.7;"></div>
+          <div id="aiAnswerProvenance" style="margin-top:16px;color:#64748b;font-size:13px;"></div>
         </div>
       `;
       document.body.appendChild(modal);
       q('#closeAiAnswerBtn', modal).addEventListener('click', () => modal.remove());
     }
     const contentBox = q('#aiAnswerContent', modal);
-    contentBox.innerHTML = (typeof content === 'string') ? `<div style="white-space:pre-wrap;line-height:1.5">${escapeHtml(content)}</div>` : `<pre>${escapeHtml(JSON.stringify(content, null, 2))}</pre>`;
+    contentBox.innerHTML = (typeof content === 'string') ? `<div style="white-space:pre-wrap;">${escapeHtml(content)}</div>` : `<pre>${escapeHtml(JSON.stringify(content, null, 2))}</pre>`;
     const provBox = q('#aiAnswerProvenance', modal);
     if (provenance && provenance.length) {
       provBox.innerHTML = `<strong>Sources:</strong> ${provenance.map(p => escapeHtml(p.title || `${p.doc_type}:${p.doc_id}`)).join(', ')}`;
@@ -507,29 +438,25 @@
     modal.style.display = 'flex';
   }
 
-  // ---------------------------
-  // Initialization
-  // ---------------------------
-
   async function init() {
     if (state.sessionInitialized) return;
     state.sessionInitialized = true;
 
-    // Query DOM elements referenced in HTML
     DOM.searchInput = q('#searchInput');
     DOM.searchButton = q('#searchButton');
     DOM.searchResults = q('#searchResults');
-    DOM.subjectProgress = q('.subject-progress');
+    DOM.subjectProgress = q('#subjectProgressContainer');
     DOM.studyPlanContainer = q('#studyPlanContainer');
-    DOM.aiQuery = q('#aiQuery') || q('#aiInput');
-    DOM.aiSubmit = q('#sendAIBtn') || q.querySelector && q('#sendAIBtn');
-    DOM.generatePlanBtn = q('#generatePlanBtn');
+    DOM.aiQuery = q('#aiQuery');
+    DOM.aiSubmit = q('#sendAIBtn');
 
-    // Wire search
-    if (DOM.searchButton && DOM.searchInput) {
-      DOM.searchButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        handleSearch();
+    if (DOM.searchInput) {
+      DOM.searchInput.addEventListener('input', () => {
+        if (DOM.searchInput.value.trim().length >= MIN_SEARCH_LENGTH) {
+          handleSearch();
+        } else {
+          DOM.searchResults.style.display = 'none';
+        }
       });
       DOM.searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -539,7 +466,6 @@
       });
     }
 
-    // Wire ai submit
     if (DOM.aiSubmit) {
       DOM.aiSubmit.addEventListener('click', (e) => {
         e.preventDefault();
@@ -547,23 +473,15 @@
       });
     }
 
-    // Quick action cards (IDs from HTML)
-    const quickMap = [
-      ['#startStudyingCard', startStudying],
-      ['#caseSimplifierCard', openCaseSimplifier],
-      ['#practiceModeCard', practiceAnswers],
-      ['#myNotesCard', openNotes],
-      ['#aiTutorCard', () => window.location.href = 'tutor.html'],
-    ];
-    quickMap.forEach(([sel, fn]) => {
-      const el = q(sel);
-      if (el) el.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        fn();
+    if (DOM.aiQuery) {
+      DOM.aiQuery.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          askAI();
+        }
       });
-    });
+    }
 
-    // Top nav / logout
     const logoutBtn = q('.logout-btn') || q('.nav-logout');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', (e) => {
@@ -572,58 +490,57 @@
       });
     }
 
-    // Hamburger toggle
     const hamburger = q('#hamburgerBtn');
     const sidebar = q('#sidebar');
     const overlay = q('#sidebarOverlay');
     if (hamburger && sidebar) {
       hamburger.addEventListener('click', () => {
         sidebar.classList.toggle('open');
-        if (overlay) overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        if (overlay) overlay.classList.toggle('active');
       });
       if (overlay) overlay.addEventListener('click', () => {
         sidebar.classList.remove('open');
-        overlay.style.display = 'none';
+        overlay.classList.remove('active');
       });
     }
 
-    // Suggestion chips (if present)
-    qa('.chip').forEach(chip => {
+    qa('.suggestion-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const text = chip.textContent || chip.innerText || '';
         if (DOM.aiQuery) {
-          DOM.aiQuery.value = text.replace(/^["“”']|["“”']$/g, '');
+          DOM.aiQuery.value = text.replace(/^[""]|[""]$/g, '');
           DOM.aiQuery.focus();
         }
       });
     });
 
-    // Example queries clickable
-    qa('.example-query').forEach(el => {
-      el.addEventListener('click', () => {
-        setQuery(el);
-        if (DOM.aiQuery) DOM.aiQuery.focus();
-      });
-    });
-
-    // Initialize user and curriculum data
     try {
       if (!window.auth || !window.auth.isAuthenticated || !window.auth.getUserCurriculum) {
-        // Minimal fallback: populate only UI name
         state.userFirstName = (window.auth && window.auth.getUserFirstName && window.auth.getUserFirstName()) || '';
-        q('#studentName') && (q('#studentName').textContent = state.userFirstName ? ` ${state.userFirstName}` : '');
-        // don't fail initialization
+        const nameEl = q('#studentNameFull');
+        if (nameEl && state.userFirstName) {
+          nameEl.textContent = `, ${state.userFirstName}`;
+        }
+        const avatarEl = q('#studentName');
+        if (avatarEl && state.userFirstName) {
+          avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
+        }
       } else {
-        // call auth helper to get curriculum
         const curriculumResult = await window.auth.getUserCurriculum();
         if (curriculumResult && curriculumResult.success && curriculumResult.data) {
           state.curriculum = curriculumResult.data;
           state.subjects = curriculumResult.data.subjects || [];
           state.userFirstName = window.auth.getUserFirstName ? window.auth.getUserFirstName() : '';
-          q('#studentName') && (q('#studentName').textContent = state.userFirstName ? ` ${state.userFirstName}` : '');
+          const nameEl = q('#studentNameFull');
+          if (nameEl && state.userFirstName) {
+            nameEl.textContent = `, ${state.userFirstName}`;
+          }
+          const avatarEl = q('#studentName');
+          if (avatarEl && state.userFirstName) {
+            avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
+          }
           renderSubjectProgress(state.subjects);
         } else {
-          // fallback: attempt to fetch from backend
           const res = await fetchJson(`${API_BASE}/api/user/curriculum`, { method: 'GET' }).catch(()=>null);
           if (res && res.data) {
             state.curriculum = res.data;
@@ -633,13 +550,11 @@
         }
       }
 
-      // Load active study plan from backend if any
       const plan = await fetchJson(`${API_BASE}/api/study-plan/active`, { method: 'GET' }).catch(()=>null);
       if (plan && plan.has_active_plan && plan.plan) {
         state.studyPlan = plan.plan;
         renderStudyPlan(plan.plan);
       } else {
-        // render empty placeholder
         renderStudyPlan(null);
       }
     } catch (err) {
@@ -648,9 +563,6 @@
     }
   }
 
-  // ---------------------------
-  // Logout handler
-  // ---------------------------
   function handleLogout() {
     if (window.auth && window.auth.logout) {
       try {
@@ -659,7 +571,6 @@
         console.error('auth.logout failed', e);
       }
     }
-    // try to clear token storage and redirect to login
     try {
       localStorage.removeItem('token');
     } catch (e) {}
@@ -669,27 +580,10 @@
     }, 700);
   }
 
-  // ---------------------------
-  // Wire DOMContentLoaded
-  // ---------------------------
   document.addEventListener('DOMContentLoaded', () => {
-    // basic element mapping
-    DOM.searchInput = q('#searchInput');
-    DOM.searchButton = q('#searchButton');
-    DOM.searchResults = q('#searchResults');
-    DOM.subjectProgress = q('.subject-progress');
-    DOM.studyPlanContainer = q('#studyPlanContainer');
-    DOM.aiQuery = q('#aiQuery') || q('#aiInput');
-    DOM.aiSubmit = q('#sendAIBtn') || q('#sendAIBtn') || q('#sendAIBtn');
-    DOM.generatePlanBtn = q('#generatePlanBtn');
-
-    // Initialize after slight delay to ensure auth.js loaded
     setTimeout(init, 80);
   });
 
-  // ---------------------------
-  // Defensive exports for testing or console usage
-  // ---------------------------
   window.__JURIS_DASH__ = {
     state,
     init,
