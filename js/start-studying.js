@@ -200,6 +200,150 @@
         document.getElementById('subjectTitle').textContent = subject.title;
 
         document.getElementById('contentArea').classList.add('hidden');
+        
+        loadStudyMap(subjectId);
+    }
+    
+    async function loadStudyMap(subjectId) {
+        const studyMapContainer = document.getElementById('studyMapContainer');
+        if (!studyMapContainer) return;
+        
+        studyMapContainer.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div style="width: 32px; height: 32px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+                <p style="color: #64748b; font-size: 14px;">Loading your personalized study map...</p>
+            </div>
+        `;
+        
+        try {
+            const studyMapData = await fetchJson(`${API_BASE}/api/curriculum/subjects/${subjectId}/study-map`);
+            renderStudyMap(studyMapContainer, studyMapData);
+        } catch (err) {
+            console.error('Failed to load study map:', err);
+            studyMapContainer.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 32px; margin-bottom: 12px;">📋</div>
+                    <p style="color: #64748b;">Unable to load study map. Continue with study modes above.</p>
+                </div>
+            `;
+        }
+    }
+    
+    function renderStudyMap(container, data) {
+        if (!data.success) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <p style="color: #ef4444;">${escapeHtml(data.error || 'Failed to load study map')}</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const studyMap = data.study_map || [];
+        
+        if (studyMap.length === 0) {
+            container.innerHTML = `
+                <div class="study-map-empty">
+                    <div style="font-size: 40px; margin-bottom: 12px;">🚀</div>
+                    <h4>Getting Started</h4>
+                    <p>${escapeHtml(data.message || 'Select a study mode above to begin learning this subject!')}</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const html = `
+            <div class="study-map-header">
+                <h3>📍 Your Study Roadmap</h3>
+                <p>Personalized modules ordered by priority</p>
+            </div>
+            <div class="study-map-modules">
+                ${studyMap.map((module, index) => renderStudyMapModule(module, index)).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = html;
+    }
+    
+    function renderStudyMapModule(module, index) {
+        const priorityColors = {
+            'High': '#ef4444',
+            'Medium': '#f59e0b',
+            'Low': '#22c55e'
+        };
+        const priorityBg = {
+            'High': '#fef2f2',
+            'Medium': '#fffbeb',
+            'Low': '#f0fdf4'
+        };
+        
+        const priority = module.priority || 'Medium';
+        const masteryPercent = Math.round(module.mastery_percent || 0);
+        const moduleType = module.module_type || 'learn';
+        const items = module.items || [];
+        
+        const typeIcons = {
+            'learn': '📘',
+            'cases': '⚖️',
+            'practice': '✍️'
+        };
+        
+        return `
+            <div class="study-map-module" style="border-left: 4px solid ${priorityColors[priority]};">
+                <div class="module-header">
+                    <div class="module-rank">${index + 1}</div>
+                    <div class="module-info">
+                        <h4>${typeIcons[moduleType] || '📚'} ${escapeHtml(module.module_title)}</h4>
+                        <div class="module-meta">
+                            <span class="priority-badge" style="background: ${priorityBg[priority]}; color: ${priorityColors[priority]};">${priority} Priority</span>
+                            <span class="mastery-badge">${masteryPercent}% mastery</span>
+                            <span class="items-badge">${items.length} items</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-why">
+                    <span class="why-icon">💡</span>
+                    <span>${escapeHtml(module.why || 'Recommended for your learning path')}</span>
+                </div>
+                ${items.length > 0 ? `
+                    <div class="module-items">
+                        ${items.slice(0, 5).map(item => renderStudyMapItem(item)).join('')}
+                        ${items.length > 5 ? `<div class="more-items">+${items.length - 5} more items</div>` : ''}
+                    </div>
+                ` : ''}
+                <div class="module-actions">
+                    <button class="action-btn action-btn-primary" onclick="window.studyApp.openModuleContent(${module.module_id}, '${moduleType}')">
+                        Start Learning →
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderStudyMapItem(item) {
+        const typeLabels = {
+            'learn': '📖 Lesson',
+            'case': '⚖️ Case',
+            'practice': '✏️ Question'
+        };
+        const typeLabel = typeLabels[item.type] || item.type;
+        
+        return `
+            <div class="study-item">
+                <span class="item-type">${typeLabel}</span>
+                <span class="item-title">${escapeHtml(item.title || 'Untitled')}</span>
+            </div>
+        `;
+    }
+    
+    function openModuleContent(moduleId, moduleType) {
+        const modeMap = {
+            'learn': 'concepts',
+            'cases': 'cases',
+            'practice': 'practice'
+        };
+        const mode = modeMap[moduleType] || 'concepts';
+        openMode(mode);
     }
 
     function backToSubjects() {
@@ -431,7 +575,8 @@
         goBackToDashboard,
         openMode,
         backToModes,
-        saveNotes
+        saveNotes,
+        openModuleContent
     };
 
     window.selectSubject = selectSubject;

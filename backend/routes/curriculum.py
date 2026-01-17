@@ -22,6 +22,7 @@ from backend.orm.subject import Subject
 from backend.orm.content_module import ContentModule, ModuleStatus
 from backend.orm.subject_progress import SubjectProgress
 from backend.routes.auth import get_current_user
+from backend.services.study_map_service import generate_study_map
 
 logger = logging.getLogger(__name__)
 
@@ -575,3 +576,102 @@ async def get_subject_details(
         "modules": modules_data,
         "created_at": subject.created_at.isoformat() if subject.created_at else None,
     }
+
+
+@router.get("/subjects/{subject_id}/study-map")
+async def get_subject_study_map(
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get personalized study map for a subject.
+    
+    PHASE 3.1: Dynamic Study Map Generator
+    
+    This endpoint computes a personalized study roadmap based on:
+    - User's mastery data (topic_mastery, practice_attempts)
+    - Content structure (modules, learn/case/practice items)
+    - Curriculum relevance (current semester priority)
+    
+    The study map is COMPUTED DYNAMICALLY, not stored.
+    Same user with same data = same output (deterministic).
+    
+    Response includes:
+    - Subject metadata
+    - Ordered list of modules by priority
+    - WHY text explaining each module's priority
+    - Content items within each module
+    
+    Priority calculation:
+    - Mastery deficit (40%): Lower mastery = higher priority
+    - Content freshness (25%): Longer since last practice = higher priority
+    - Exam importance (20%): Practice modules weighted higher
+    - Curriculum relevance (15%): Current semester subjects prioritized
+    
+    Security:
+    - User must be enrolled in course containing this subject
+    - Semester access control enforced
+    
+    Example Response:
+    {
+        "success": true,
+        "subject": {
+            "id": 1,
+            "title": "Constitutional Law"
+        },
+        "study_map": [
+            {
+                "module_id": 12,
+                "module_title": "Fundamental Rights",
+                "priority": "High",
+                "why": "Focus on this module: Low mastery (32%), not yet practiced.",
+                "items": [
+                    {"type": "learn", "id": 44, "title": "Introduction to Fundamental Rights"},
+                    {"type": "case", "id": 89, "title": "Kesavananda Bharati v. State of Kerala"},
+                    {"type": "practice", "id": 132, "title": "MCQ: Article 14-18"}
+                ]
+            }
+        ]
+    }
+    """
+    logger.info(f"Study map request: subject_id={subject_id}, user={current_user.email}")
+    
+    if not current_user.course_id or not current_user.current_semester:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User enrollment incomplete. Please complete course enrollment."
+        )
+    
+    curriculum_stmt = (
+        select(CourseCurriculum)
+        .where(
+            CourseCurriculum.course_id == current_user.course_id,
+            CourseCurriculum.subject_id == subject_id,
+            CourseCurriculum.is_active == True
+        )
+    )
+    curriculum_result = await db.execute(curriculum_stmt)
+    curriculum_item = curriculum_result.scalar_one_or_none()
+    
+    if not curriculum_item:
+        logger.warning(
+            f"Subject {subject_id} not found in course {current_user.course_id}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Subject not found in your enrolled course"
+        )
+    
+    if curriculum_item.semester_number > current_user.current_semester:
+        logger.warning(
+            f"User {current_user.email} attempted to access future subject study map"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"This subject is locked. Available in Semester {curriculum_item.semester_number}."
+        )
+    
+    study_map_data = await generate_study_map(current_user.id, subject_id, db)
+    
+    return study_map_data
