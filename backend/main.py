@@ -23,6 +23,7 @@ from backend.routes import exam_blueprint
 from backend.routes import mock_exam
 from backend.routes import exam_evaluation
 from backend.routes import exam_readiness
+from backend.routes import benchmark
 
 
 # ============================================
@@ -217,6 +218,7 @@ app.include_router(exam_blueprint.router)
 app.include_router(mock_exam.router)
 app.include_router(exam_evaluation.router)
 app.include_router(exam_readiness.router)
+app.include_router(benchmark.router)
 
 
 if __name__ == "__main__":
