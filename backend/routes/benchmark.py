@@ -1,16 +1,23 @@
 """
 backend/routes/benchmark.py
-Phase 8.1: Peer Cohort Benchmarking API
+Phase 8.1 & 8.2: Peer Cohort Benchmarking API
 
-Provides anonymous cohort aggregation for benchmarking.
-NO user identifiers in output.
-NO ranks or percentiles yet (Phase 8.1 is aggregation only).
+Phase 8.1: Anonymous cohort aggregation
+Phase 8.2: Percentile comparison and performance bands
+
+Privacy guarantees:
+- NO user identifiers in output
+- NO exact ranks (never "Rank 23 of 140")
+- NO peer identities exposed
+- All comparisons are relative percentiles only
 """
 
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+
+from fastapi import Query
 
 from backend.database import get_db
 from backend.orm.user import User
@@ -22,6 +29,12 @@ from backend.services.cohort_aggregation_service import (
     ACTIVITY_WINDOW_DAYS,
     DISTRIBUTION_WEAK_THRESHOLD,
     DISTRIBUTION_STRONG_THRESHOLD,
+)
+from backend.services.benchmark_percentile_service import (
+    get_benchmark_comparison,
+    get_subject_percentile_detail,
+    MIN_COHORT_SIZE,
+    MIN_ATTEMPTS_FOR_BENCHMARK,
 )
 
 logger = logging.getLogger(__name__)
@@ -167,5 +180,118 @@ async def get_cohort_config() -> Dict[str, Any]:
             "No randomness",
             "No user identifiers in output",
             "Works with any cohort size including < 10"
+        ]
+    }
+
+
+@router.get("/compare")
+async def get_benchmark_compare(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Get benchmark comparison for the current user (Phase 8.2).
+    
+    Computes:
+    - Overall percentile (weighted avg of subject percentiles)
+    - Per-subject percentile, band, and label
+    - Weakest and strongest subject identification
+    
+    Percentile Calculation:
+    - Uses PERCENT_RANK: (count below your score) / (total - 1) × 100
+    - Cohort must have >= 10 students for valid percentile
+    - Student must have >= 3 attempts to be eligible
+    
+    Performance Bands:
+    - Bottom 25%: percentile < 25
+    - Middle 50%: 25 <= percentile < 75
+    - Top 25%: percentile >= 75
+    
+    Privacy:
+    - NO exact ranks (never "Rank 23 of 140")
+    - NO peer identities
+    - Only relative percentile position
+    
+    Deterministic: Same mastery → Same percentile
+    """
+    try:
+        result = await get_benchmark_comparison(current_user.id, db)
+        return result
+        
+    except Exception as e:
+        logger.error(f"Benchmark comparison error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to compute benchmark comparison"
+        )
+
+
+@router.get("/compare/subject/{subject_id}")
+async def get_subject_benchmark(
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Get detailed benchmark for a specific subject.
+    
+    Returns:
+    - Student's mastery vs cohort average
+    - Percentile within cohort
+    - Performance band
+    - Human-readable label
+    - Explanation of calculation
+    
+    Useful for drill-down views.
+    """
+    try:
+        result = await get_subject_percentile_detail(current_user.id, subject_id, db)
+        return result
+        
+    except Exception as e:
+        logger.error(f"Subject benchmark error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get subject benchmark"
+        )
+
+
+@router.get("/compare/config")
+async def get_compare_config() -> Dict[str, Any]:
+    """
+    Get percentile calculation configuration.
+    
+    Documents how benchmarks are calculated for transparency.
+    """
+    return {
+        "percentile_calculation": {
+            "formula": "PERCENT_RANK = (count below your score) / (total students - 1) × 100",
+            "min_cohort_size": MIN_COHORT_SIZE,
+            "min_attempts_required": MIN_ATTEMPTS_FOR_BENCHMARK,
+            "rounding": "Nearest whole number",
+            "deterministic": True
+        },
+        "performance_bands": {
+            "Bottom 25%": "percentile < 25",
+            "Middle 50%": "25 <= percentile < 75",
+            "Top 25%": "percentile >= 75"
+        },
+        "relative_labels": {
+            "Strong relative to peers": "Top 25%",
+            "Above average": "Above cohort mean",
+            "At average": "Within ±5% of cohort mean",
+            "Below average": "Below cohort mean",
+            "Needs improvement relative to peers": "Bottom 25%"
+        },
+        "edge_cases": {
+            "small_cohort": f"If cohort < {MIN_COHORT_SIZE}, percentile marked as insufficient_data",
+            "new_student": f"Benchmark available after {MIN_ATTEMPTS_FOR_BENCHMARK} attempts",
+            "no_mastery": "Subject excluded if student has no progress"
+        },
+        "privacy_guarantees": [
+            "No exact ranks (never 'Rank 23 of 140')",
+            "No peer identities exposed",
+            "No leaderboard functionality",
+            "All comparisons are relative percentiles only"
         ]
     }
