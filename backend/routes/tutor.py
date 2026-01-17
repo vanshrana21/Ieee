@@ -1,95 +1,110 @@
 """
 backend/routes/tutor.py
-Phase 9A: AI Tutor chat endpoint
-"""
+Phase 4.1: Tutor Context Engine API
 
+Provides curriculum-grounded context for AI Tutor.
+"""
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
 
 from backend.database import get_db
 from backend.orm.user import User
 from backend.routes.auth import get_current_user
-from backend.schemas.tutor_schemas import ChatRequest, ChatResponse
-from backend.services.tutor_engine import TutorEngine
-from backend.services.rag_service import rag_retrieve_for_tutor
+from backend.services.tutor_context_service import assemble_context
 
-router = APIRouter(prefix="/api/tutor", tags=["tutor"])
 logger = logging.getLogger(__name__)
 
+router = APIRouter(prefix="/api/tutor", tags=["tutor"])
 
-@router.post("/chat", response_model=ChatResponse)
-async def tutor_chat(
-    request: ChatRequest,
+
+class StudentInfo(BaseModel):
+    course: Optional[str]
+    semester: Optional[int]
+
+
+class SubjectInfo(BaseModel):
+    id: int
+    title: str
+
+
+class TopicMasteryInfo(BaseModel):
+    topic_tag: str
+    mastery_percent: float
+
+
+class RecentActivityInfo(BaseModel):
+    last_practice_days_ago: Optional[int]
+    last_subject: Optional[str]
+
+
+class StudyMapItem(BaseModel):
+    module: str
+    priority: str
+
+
+class ConstraintsInfo(BaseModel):
+    allowed_subjects_only: bool
+    no_legal_advice: bool
+    exam_oriented: bool
+
+
+class TutorContext(BaseModel):
+    student: StudentInfo
+    active_subjects: List[SubjectInfo]
+    weak_topics: List[TopicMasteryInfo]
+    strong_topics: List[TopicMasteryInfo]
+    recent_activity: RecentActivityInfo
+    study_map_snapshot: List[StudyMapItem]
+    constraints: ConstraintsInfo
+    error: Optional[str] = None
+
+
+class TutorContextResponse(BaseModel):
+    success: bool
+    context: TutorContext
+
+
+@router.get("/context", response_model=TutorContextResponse)
+async def get_tutor_context(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Chat with AI tutor using Retrieval-Augmented Generation.
+    Get curriculum-grounded context for AI Tutor.
     
-    Phase 9A: Chat only - no practice generation or grading.
+    Phase 4.1: Tutor Context Engine
     
-    Security:
-    - JWT authentication required
-    - Only retrieves content from user's course/semester
-    - Only unlocked modules
-    - User's own notes only
+    Returns deterministic context based on:
+    - User's course and semester
+    - Active subjects from curriculum
+    - Topic mastery (weak/strong topics)
+    - Recent practice activity
+    - Study map priorities
     
-    Process:
-    1. Retrieve relevant documents (RAG)
-    2. Filter by curriculum access
-    3. Generate response using Gemini
-    4. Track provenance
-    5. Store conversation
-    
-    Args:
-        request: Chat request with user input and optional context
-    
-    Returns:
-        ChatResponse with AI response, sources, and confidence
-    
-    Raises:
-        400: Invalid input
-        401: Not authenticated
-        503: AI service unavailable
+    Rules:
+    - Same user state → same context
+    - No hallucinated topics
+    - Works with empty mastery tables
+    - Zero AI calls
     """
-    
-    logger.info(f"Tutor chat request: user={current_user.email}, input_len={len(request.input)}")
-    
-    # Validate user enrollment
-    if not current_user.course_id or not current_user.current_semester:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incomplete enrollment. Please complete your course setup."
-        )
+    logger.info(f"Tutor context request: user_id={current_user.id}")
     
     try:
-        # 1. Retrieve relevant documents with curriculum filtering
-        retrieved_docs = await rag_retrieve_for_tutor(
-            query=request.input,
-            user=current_user,
-            db=db,
-            subject_id=request.context.subject_id if request.context else None,
-            top_k=5
+        context = await assemble_context(current_user.id, db)
+        
+        has_error = "error" in context
+        
+        return TutorContextResponse(
+            success=not has_error,
+            context=TutorContext(**context)
         )
         
-        logger.info(f"Retrieved {len(retrieved_docs)} documents for tutor")
-        
-        # 2. Initialize tutor engine
-        tutor = TutorEngine(db=db, user=current_user)
-        
-        # 3. Generate response
-        response = await tutor.chat(
-            user_input=request.input,
-            session_id=request.session_id,
-            retrieved_docs=retrieved_docs
-        )
-        
-        return response
-    
     except Exception as e:
-        logger.error(f"Tutor chat error: {str(e)}", exc_info=True)
+        logger.error(f"Failed to assemble tutor context: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI tutor service is temporarily unavailable. Please try again."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to assemble tutor context"
         )
