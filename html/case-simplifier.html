@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Case Simplifier - LegalAI Research</title>
+    <title>Case Simplifier - JurisAI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
     <nav class="navbar">
         <div class="navbar-content">
             <div class="logo">
-                ⚖️ LegalAI Research
+                ⚖️ JurisAI
             </div>
             <button class="back-btn" onclick="goBackToDashboard()">← Back to Dashboard</button>
         </div>
@@ -22,14 +22,14 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Page Header -->
-        <div class="page-header">
+        <!-- Page Header (Search/Input Mode) -->
+        <div id="searchHeader" class="page-header">
             <h1>📚 Case Simplifier</h1>
             <p>Transform complex judgments into structured, exam-ready notes</p>
         </div>
 
-        <!-- Case Input Section -->
-        <div class="input-section">
+        <!-- Case Input Section (Search/Input Mode) -->
+        <div id="inputSection" class="input-section">
             <div class="input-card">
                 <h2>Enter Case Details</h2>
                 
@@ -52,7 +52,6 @@
                         <option value="criminal">Criminal Law</option>
                         <option value="contract">Contract Law</option>
                         <option value="tort">Tort Law</option>
-                        <option value="property">Property Law</option>
                     </select>
                 </div>
 
@@ -87,138 +86,100 @@
             <!-- Case Header -->
             <div class="case-header">
                 <div class="case-title-section">
-                    <h2 id="outputCaseName">Case Name</h2>
+                    <div class="header-top">
+                        <h2 id="outputCaseName">Case Name</h2>
+                        <span id="syllabusWarning" class="warning-badge hidden">⚠️ Not in Syllabus</span>
+                    </div>
                     <div class="case-meta">
-                        <span class="meta-badge" id="outputSubject">Constitutional Law</span>
-                        <span class="meta-badge importance">High Importance</span>
+                        <span class="meta-badge" id="outputCourt">Supreme Court of India</span>
+                        <span class="meta-badge" id="outputYear">2024</span>
+                        <span class="meta-badge importance" id="outputImportance">High Importance</span>
                     </div>
                 </div>
                 
                 <div class="case-actions">
-                    <button class="action-btn" onclick="saveCase()" title="Save Case">
-                        💾 Save
-                    </button>
-                    <button class="action-btn" onclick="exportPDF()" title="Export as PDF">
-                        📄 Export PDF
-                    </button>
-                    <button class="action-btn" onclick="addToNotes()" title="Add to Notes">
-                        📝 Add to Notes
-                    </button>
+                    <button class="action-btn" onclick="saveCase()" title="Save Case">💾 Save</button>
+                    <button class="action-btn" onclick="addToNotes()" title="Add to Notes">📝 Notes</button>
+                    <button class="action-btn secondary" onclick="resetForm()">🔄 New Case</button>
                 </div>
             </div>
 
-            <!-- Collapsible Content Cards -->
-            <div class="content-cards">
-                <!-- Facts of the Case -->
-                <div class="collapse-card">
-                    <div class="collapse-header" onclick="toggleCollapse(this)">
-                        <div class="collapse-title">
-                            <span class="collapse-icon">📋</span>
-                            <h3>Facts of the Case</h3>
+            <!-- Redesigned Reading Experience -->
+            <div class="reading-experience">
+                <!-- Left Panel: Full Judgment -->
+                <div class="judgment-panel">
+                    <div class="panel-header">
+                        <h3>⚖️ Full Judgment</h3>
+                        <div class="panel-actions">
+                            <input type="text" id="judgmentSearch" placeholder="Search in text..." onkeyup="searchInJudgment()">
                         </div>
-                        <span class="collapse-arrow">▼</span>
                     </div>
-                    <div class="collapse-content">
-                        <div id="factsContent" class="content-body"></div>
-                        <button class="copy-btn" onclick="copySection('factsContent')">📋 Copy</button>
+                    <div id="fullJudgmentText" class="judgment-content">
+                        <!-- Full text will be injected here -->
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>Loading authoritative judgment...</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Issues Involved -->
-                <div class="collapse-card">
-                    <div class="collapse-header" onclick="toggleCollapse(this)">
-                        <div class="collapse-title">
-                            <span class="collapse-icon">❓</span>
-                            <h3>Issues Involved</h3>
-                        </div>
-                        <span class="collapse-arrow">▼</span>
+                <!-- Right Panel: Exam-Ready Breakdown -->
+                <div class="summary-panel">
+                    <div class="panel-header">
+                        <h3>🎯 Exam-Ready Breakdown</h3>
                     </div>
-                    <div class="collapse-content">
-                        <div id="issuesContent" class="content-body"></div>
-                        <button class="copy-btn" onclick="copySection('issuesContent')">📋 Copy</button>
+                    
+                    <div id="summaryContent" class="summary-scrollable">
+                        <!-- Summary Sections -->
+                        <div class="summary-section" data-section="facts">
+                            <div class="section-header" onclick="toggleSummarySection(this)">
+                                <h4>• Facts</h4>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="factsText" class="section-content"></div>
+                        </div>
+
+                        <div class="summary-section" data-section="issues">
+                            <div class="section-header" onclick="toggleSummarySection(this)">
+                                <h4>• Issues</h4>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="issuesText" class="section-content"></div>
+                        </div>
+
+                        <div class="summary-section" data-section="arguments">
+                            <div class="section-header" onclick="toggleSummarySection(this)">
+                                <h4>• Arguments</h4>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="argumentsText" class="section-content"></div>
+                        </div>
+
+                        <div class="summary-section" data-section="judgment">
+                            <div class="section-header" onclick="toggleSummarySection(this)">
+                                <h4>• Judgment</h4>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="judgmentText" class="section-content"></div>
+                        </div>
+
+                        <div class="summary-section highlight" data-section="ratio">
+                            <div class="section-header" onclick="toggleSummarySection(this)">
+                                <h4>• Ratio Decidendi</h4>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="ratioText" class="section-content"></div>
+                        </div>
+
+                        <div class="summary-section exam" data-section="significance">
+                            <div class="section-header" onclick="toggleSummarySection(this)">
+                                <h4>• Why This Case Matters for Exams</h4>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div id="significanceText" class="section-content"></div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Judgment Summary -->
-                <div class="collapse-card">
-                    <div class="collapse-header" onclick="toggleCollapse(this)">
-                        <div class="collapse-title">
-                            <span class="collapse-icon">⚖️</span>
-                            <h3>Judgment Summary</h3>
-                        </div>
-                        <span class="collapse-arrow">▼</span>
-                    </div>
-                    <div class="collapse-content">
-                        <div id="judgmentContent" class="content-body"></div>
-                        <button class="copy-btn" onclick="copySection('judgmentContent')">📋 Copy</button>
-                    </div>
-                </div>
-
-                <!-- Ratio Decidendi -->
-                <div class="collapse-card highlighted">
-                    <div class="collapse-header" onclick="toggleCollapse(this)">
-                        <div class="collapse-title">
-                            <span class="collapse-icon">💡</span>
-                            <h3>Ratio Decidendi (Legal Principle)</h3>
-                        </div>
-                        <span class="collapse-arrow">▼</span>
-                    </div>
-                    <div class="collapse-content">
-                        <div id="ratioContent" class="content-body"></div>
-                        <button class="copy-btn" onclick="copySection('ratioContent')">📋 Copy</button>
-                    </div>
-                </div>
-
-                <!-- Relevant Articles/Sections -->
-                <div class="collapse-card">
-                    <div class="collapse-header" onclick="toggleCollapse(this)">
-                        <div class="collapse-title">
-                            <span class="collapse-icon">📜</span>
-                            <h3>Relevant Articles / Sections</h3>
-                        </div>
-                        <span class="collapse-arrow">▼</span>
-                    </div>
-                    <div class="collapse-content">
-                        <div id="articlesContent" class="content-body"></div>
-                        <button class="copy-btn" onclick="copySection('articlesContent')">📋 Copy</button>
-                    </div>
-                </div>
-
-                <!-- Exam Importance -->
-                <div class="collapse-card exam-card">
-                    <div class="collapse-header" onclick="toggleCollapse(this)">
-                        <div class="collapse-title">
-                            <span class="collapse-icon">🎯</span>
-                            <h3>Exam Importance & Tips</h3>
-                        </div>
-                        <span class="collapse-arrow">▼</span>
-                    </div>
-                    <div class="collapse-content">
-                        <div id="examContent" class="content-body"></div>
-                        <button class="copy-btn" onclick="copySection('examContent')">📋 Copy</button>
-                    </div>
-                </div>
-
-                <!-- Answer Writing Format -->
-                <div class="collapse-card answer-card">
-                    <div class="collapse-header" onclick="toggleCollapse(this)">
-                        <div class="collapse-title">
-                            <span class="collapse-icon">✍️</span>
-                            <h3>Answer Writing Format</h3>
-                        </div>
-                        <span class="collapse-arrow">▼</span>
-                    </div>
-                    <div class="collapse-content">
-                        <div id="answerContent" class="content-body"></div>
-                        <button class="copy-btn" onclick="copySection('answerContent')">📋 Copy</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Bar at Bottom -->
-            <div class="bottom-actions">
-                <button class="btn-secondary" onclick="resetForm()">🔄 Simplify Another Case</button>
-                <button class="btn-primary" onclick="saveCase()">💾 Save This Case</button>
             </div>
         </div>
     </div>
@@ -226,6 +187,7 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
+    <script src="../js/api.js"></script>
     <script src="../js/case-simplifier.js"></script>
 </body>
 </html>

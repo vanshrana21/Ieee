@@ -4,16 +4,22 @@ Case detail endpoint for comprehensive case information with AI analysis.
 Supports both opinion and cluster IDs with proper fallback handling.
 """
 import logging
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Any
+import json
+
+from backend.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from backend.orm.case_content import CaseContent
 
 from backend.services.courtlistener_service import (
     get_case_details, 
     get_cluster_details,
     get_jurisdiction_from_court
 )
-from backend.services.ai_analysis_service import generate_case_brief
+from backend.services.ai_analysis_service import generate_case_brief, generate_indian_case_summary
 
 router = APIRouter(prefix="/cases", tags=["Case Details"])
 logger = logging.getLogger(__name__)
@@ -60,6 +66,119 @@ class CaseDetailResponse(BaseModel):
     ai_brief_available: bool
     full_judgment: FullJudgment
     success: bool = True
+
+
+class FullCaseResponse(BaseModel):
+    """Simplified case response for Indian students"""
+    case: Dict[str, Any]
+    full_text: str
+    summary: Dict[str, str]
+    is_curriculum_case: bool = False
+
+
+@router.get("/{case_id}/full", response_model=FullCaseResponse)
+async def get_full_case_view(
+    case_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get full judgment and structured summary for a case.
+    Prioritizes curriculum cases from database, fallbacks to CourtListener.
+    Caches AI-generated summaries in the database for curriculum cases.
+    """
+    logger.info(f"Full case view requested for ID: {case_id}")
+    
+    # 1. Check if it's a curriculum case (Integer ID)
+    try:
+        case_id_int = int(case_id)
+        stmt = select(CaseContent).where(CaseContent.id == case_id_int)
+        result = await db.execute(stmt)
+        case_record = result.scalar_one_or_none()
+        
+        if case_record:
+            logger.info(f"Found curriculum case: {case_record.case_name}")
+            
+            # Use 'judgment' field for full text as per plan
+            full_text = case_record.judgment
+            
+            # Check if summary is already cached in 'facts' field
+            # We assume it's cached if 'facts' starts with '{' (JSON)
+            summary_data = None
+            if case_record.facts and case_record.facts.strip().startswith('{'):
+                try:
+                    summary_data = json.loads(case_record.facts)
+                except json.JSONDecodeError:
+                    logger.warning(f"Failed to parse cached summary for case {case_id}")
+            
+            # If no cached summary, generate and save it
+            if not summary_data:
+                logger.info(f"Generating summary for curriculum case: {case_record.case_name}")
+                summary_data = await generate_indian_case_summary(
+                    case_record.case_name,
+                    full_text
+                )
+                
+                # Cache it in the database (facts field)
+                case_record.facts = json.dumps(summary_data)
+                await db.commit()
+                logger.info(f"Cached summary for case {case_id}")
+            
+            return FullCaseResponse(
+                case={
+                    "title": case_record.case_name,
+                    "court": case_record.court or "Unknown Court",
+                    "year": str(case_record.year),
+                    "citation": case_record.citation
+                },
+                full_text=full_text,
+                summary=summary_data,
+                is_curriculum_case=True
+            )
+    except (ValueError, TypeError):
+        # Not an integer ID, continue to CourtListener
+        pass
+
+    # 2. Fallback to CourtListener (already implemented in original get_case_detail but we need structured view)
+    logger.info(f"Falling back to CourtListener for case ID: {case_id}")
+    try:
+        case_id_int = int(case_id)
+        # Try cluster first
+        case_data = get_cluster_details(case_id_int)
+        if not case_data:
+            case_data = get_case_details(case_id_int)
+            
+        if not case_data or not case_data.get('has_full_text'):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Case full text not available"
+            )
+            
+        full_text = case_data.get('plain_text') or case_data.get('html', '')
+        
+        # Generate summary (not caching for CourtListener cases to avoid data proliferation)
+        summary_data = await generate_indian_case_summary(
+            case_data.get('case_name', 'Unknown'),
+            full_text
+        )
+        
+        return FullCaseResponse(
+            case={
+                "title": case_data.get('case_name', 'Unknown'),
+                "court": case_data.get('court', 'Unknown'),
+                "year": str(case_data.get('date_filed', ''))[:4],
+                "citation": case_data.get('docket_number', '')
+            },
+            full_text=full_text,
+            summary=summary_data,
+            is_curriculum_case=False
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch/summarize CourtListener case: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case details not available: {str(e)}"
+        )
 
 
 @router.get("/{case_id}", response_model=CaseDetailResponse)

@@ -328,3 +328,100 @@ def _parse_structured_brief(brief_text: str) -> Dict:
         sections["outcome"] = "See full brief below"
     
     return sections
+
+
+async def generate_indian_case_summary(case_name: str, full_judgment: str) -> Dict[str, str]:
+    """
+    Generate a structured, exam-oriented summary for an Indian legal case.
+    
+    Args:
+        case_name: Name of the case
+        full_judgment: Full text of the judgment
+        
+    Returns:
+        Dictionary with keys: facts, issues, arguments, judgment, ratio, exam_significance
+    """
+    if not GEMINI_API_KEY:
+        raise ValueError("AI API key not configured")
+    
+    if not full_judgment or len(full_judgment.strip()) < 200:
+        logger.warning(f"Insufficient judgment text for case: {case_name}")
+        return {
+            "facts": "Insufficient text to generate summary.",
+            "issues": "N/A",
+            "arguments": "N/A",
+            "judgment": "N/A",
+            "ratio": "N/A",
+            "exam_significance": "N/A"
+        }
+
+    # Limit text length for API efficiency
+    opinion_text = full_judgment[:20000]
+    
+    prompt = f"""You are a specialized legal education assistant for Indian law students.
+Generate a structured, exam-oriented summary for the following landmark Indian case.
+
+CASE NAME: {case_name}
+
+FULL JUDGMENT TEXT:
+{opinion_text}
+
+Your goal is to provide a "law-student correct" breakdown that helps in both understanding and exam preparation.
+
+STRICT INSTRUCTIONS:
+1. Provide the summary in EXACTLY the following JSON format.
+2. Ensure the language is professional yet accessible for students.
+3. NO HALLUCINATIONS. Use only the provided text.
+4. If a section is not clearly identifiable, provide a logical deduction based on the text.
+
+JSON FORMAT:
+{{
+  "facts": "Concise summary of material facts of the case.",
+  "issues": "The core legal questions/issues the court had to decide.",
+  "arguments": "Brief summary of arguments from both sides (Petitioners/Appellants vs. Respondents).",
+  "judgment": "The final decision of the court and a summary of the reasoning.",
+  "ratio": "The 'Ratio Decidendi' - the legal principle or rule established by the case.",
+  "exam_significance": "Why this case is important for law exams and what specific topic it relates to."
+}}
+
+Respond ONLY with the JSON object. Do not include any preamble or postamble."""
+
+    try:
+        logger.info(f"Generating Indian case summary for: {case_name}")
+        
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = await model.generate_content_async(prompt)
+        
+        if not response or not response.text:
+            raise RuntimeError("AI returned empty response")
+            
+        import json
+        import re
+        
+        # Extract JSON from response (handling potential markdown blocks)
+        text = response.text.strip()
+        json_match = re.search(r'(\{.*\})', text, re.DOTALL)
+        if json_match:
+            text = json_match.group(1)
+            
+        summary_data = json.loads(text)
+        
+        # Validate keys
+        required_keys = ["facts", "issues", "arguments", "judgment", "ratio", "exam_significance"]
+        for key in required_keys:
+            if key not in summary_data:
+                summary_data[key] = "Not found in judgment text."
+                
+        logger.info(f"Successfully generated structured summary for: {case_name}")
+        return summary_data
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Indian case summary: {str(e)}")
+        return {
+            "facts": "Summary generation failed due to an internal error.",
+            "issues": "Error",
+            "arguments": "Error",
+            "judgment": "Error",
+            "ratio": "Error",
+            "exam_significance": "Error"
+        }
