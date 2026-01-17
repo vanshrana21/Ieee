@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Planner - JurisAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/study-planner.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">JurisAI</div>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="answer-practice.html">Practice</a>
+                <a href="tutor-chat.html">AI Tutor</a>
+                <a href="study-planner.html" class="active">Study Planner</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <div class="header-content">
+                <h1>Your Study Plan</h1>
+                <p>Personalized, data-driven recommendations based on your progress</p>
+            </div>
+            <div class="header-actions">
+                <select id="planType" onchange="changePlanType()">
+                    <option value="daily">Daily Plan</option>
+                    <option value="weekly" selected>Weekly Plan</option>
+                </select>
+                <button class="btn-regenerate" onclick="regeneratePlan()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                    </svg>
+                    Regenerate
+                </button>
+            </div>
+        </header>
+
+        <div class="quick-stats" id="quickStats">
+            <div class="stat-card">
+                <div class="stat-icon learn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value" id="totalItems">-</span>
+                    <span class="stat-label">Study Items</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon time">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value" id="totalTime">-</span>
+                    <span class="stat-label">Total Minutes</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon weak">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value" id="weakTopics">-</span>
+                    <span class="stat-label">Weak Topics</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon subjects">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value" id="subjectsCovered">-</span>
+                    <span class="stat-label">Subjects</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations-bar" id="recommendationsBar">
+            <h3>Recommendations</h3>
+            <div class="recommendations-list" id="recommendationsList"></div>
+        </div>
+
+        <main class="plan-content">
+            <div class="plan-days" id="planDays">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Generating your personalized study plan...</p>
+                </div>
+            </div>
+        </main>
+
+        <aside class="next-item-panel" id="nextItemPanel">
+            <div class="panel-header">
+                <h3>What to Study Next</h3>
+            </div>
+            <div class="next-item-content" id="nextItemContent">
+                <div class="loading-skeleton"></div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="item-modal" id="itemModal">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-header">
+                <span class="modal-activity-badge" id="modalActivityBadge">Learn</span>
+                <span class="modal-priority-badge" id="modalPriorityBadge">High</span>
+            </div>
+            <h2 id="modalTitle">Title</h2>
+            <div class="modal-subject" id="modalSubject">Subject</div>
+            
+            <div class="modal-section">
+                <h4>Why This Item?</h4>
+                <p id="modalWhy">-</p>
+            </div>
+            
+            <div class="modal-section">
+                <h4>What to Focus On</h4>
+                <p id="modalFocus">-</p>
+            </div>
+            
+            <div class="modal-section">
+                <h4>Success Criteria</h4>
+                <p id="modalSuccess">-</p>
+            </div>
+            
+            <div class="modal-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Estimated Time</span>
+                    <span class="meta-value" id="modalTime">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Mastery</span>
+                    <span class="meta-value" id="modalMastery">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Last Practice</span>
+                    <span class="meta-value" id="modalLastPractice">-</span>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-start" id="modalStartBtn" onclick="startStudying()">Start Studying</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/study-planner.js"></script>
+</body>
+</html>
