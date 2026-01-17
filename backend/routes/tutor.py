@@ -14,6 +14,8 @@ from backend.database import get_db
 from backend.orm.user import User
 from backend.routes.auth import get_current_user
 from backend.services.tutor_context_service import assemble_context
+from backend.schemas.tutor import TutorChatRequest, TutorChatResponse
+from backend.services.tutor_chat_service import process_tutor_chat
 
 logger = logging.getLogger(__name__)
 
@@ -107,4 +109,35 @@ async def get_tutor_context(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to assemble tutor context"
+        )
+
+
+@router.post("/chat", response_model=TutorChatResponse)
+async def tutor_chat(
+    request: TutorChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Curriculum-aware AI Tutor Chat.
+    
+    Phase 4.2: Curriculum-Aware AI Tutor Chat
+    
+    Steps:
+    1. Fetch tutor context
+    2. Validate question against syllabus
+    3. Generate response using curriculum context
+    4. Format and return response
+    """
+    logger.info(f"Tutor chat request: user_id={current_user.id}, question='{request.question[:50]}...'")
+    
+    try:
+        response_data = await process_tutor_chat(current_user.id, request.question, db)
+        return TutorChatResponse(**response_data)
+        
+    except Exception as e:
+        logger.error(f"Tutor chat error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Tutor chat service currently unavailable"
         )
