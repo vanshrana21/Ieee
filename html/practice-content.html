@@ -3,92 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Practice Question | JurisAI</title>
-
-    <link rel="stylesheet" href="../css/global.css">
-    <link rel="stylesheet" href="../css/content-detail.css">
+    <title>Practice Mode - Juris AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard-v2.css">
+    <link rel="stylesheet" href="../css/practice-content.css">
 </head>
 <body>
-
-<div class="dashboard-container">
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2 class="logo">JurisAI</h2>
+            <div class="logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" opacity="0.3"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Juris AI</span>
+            </div>
         </div>
+        
         <nav class="sidebar-nav">
-            <a href="dashboard-student.html" class="nav-item">
-                📚 Dashboard
+            <a href="./dashboard-student.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Dashboard</span>
             </a>
-            <a href="#" class="nav-item" onclick="handleLogout(); return false;">
-                🚪 Logout
+            <a href="./start-studying.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                <span>Subjects</span>
+            </a>
+            <a href="./case-simplifier.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>Case Simplifier</span>
+            </a>
+            <a href="./practice-content.html" class="nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>Practice</span>
+            </a>
+            <a href="./my-notes.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <span>My Notes</span>
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <a href="./settings.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="nav-item nav-logout" id="logoutBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Logout</span>
             </a>
         </nav>
     </aside>
 
-    <!-- Main Content -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <main class="main-content">
-        <div id="contentContainer" class="content-detail-container">
+        <header class="top-bar">
+            <button class="menu-toggle" id="menuToggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            
+            <h1 class="page-title">Practice Mode</h1>
 
-            <!-- Loading -->
-            <div id="loadingState" class="loading-state">
-                <div class="loading-spinner"></div>
-                <p>Loading question...</p>
+            <div class="top-bar-actions">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Student</span>
+                </div>
             </div>
+        </header>
 
-            <!-- Error -->
-            <div id="errorState" class="error-state" style="display:none;">
-                <h3>⚠️ Unable to load practice question</h3>
-                <p id="errorMessage"></p>
-                <a href="dashboard-student.html">← Back to Dashboard</a>
-            </div>
+        <div class="practice-container">
+            <!-- Module Selection (Initial State) -->
+            <section id="moduleSelectionSection" class="practice-section">
+                <div class="section-header">
+                    <h2>Select a Module to Practice</h2>
+                    <p>Choose a subject and module from your Study Map</p>
+                </div>
+                
+                <div class="module-selector">
+                    <div class="form-group">
+                        <label for="subjectSelect">Subject</label>
+                        <select id="subjectSelect" class="form-select">
+                            <option value="">-- Select Subject --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="moduleSelect">Practice Module</label>
+                        <select id="moduleSelect" class="form-select" disabled>
+                            <option value="">-- Select Module --</option>
+                        </select>
+                    </div>
+                    
+                    <button id="startPracticeBtn" class="btn btn-primary" disabled>
+                        Start Practice
+                    </button>
+                </div>
+            </section>
 
+            <!-- Practice Quiz (Hidden Initially) -->
+            <section id="quizSection" class="practice-section hidden">
+                <div class="quiz-header">
+                    <div class="quiz-info">
+                        <h2 id="moduleTitle">Module Title</h2>
+                        <div class="quiz-meta">
+                            <span class="question-counter" id="questionCounter">Q1 / Q5</span>
+                            <span class="difficulty-badge" id="difficultyBadge">Medium</span>
+                            <span class="topic-tag" id="topicTag">Topic</span>
+                        </div>
+                    </div>
+                    <div class="quiz-timer" id="quizTimer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span id="timerDisplay">00:00</span>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <div class="question-text" id="questionText">
+                        Loading question...
+                    </div>
+
+                    <!-- MCQ Options -->
+                    <div id="mcqOptions" class="options-container">
+                        <button class="option-btn" data-option="A">
+                            <span class="option-letter">A</span>
+                            <span class="option-text" id="optionA">Option A</span>
+                        </button>
+                        <button class="option-btn" data-option="B">
+                            <span class="option-letter">B</span>
+                            <span class="option-text" id="optionB">Option B</span>
+                        </button>
+                        <button class="option-btn" data-option="C">
+                            <span class="option-letter">C</span>
+                            <span class="option-text" id="optionC">Option C</span>
+                        </button>
+                        <button class="option-btn" data-option="D">
+                            <span class="option-letter">D</span>
+                            <span class="option-text" id="optionD">Option D</span>
+                        </button>
+                    </div>
+
+                    <!-- Short Answer / Essay -->
+                    <div id="textAnswerContainer" class="text-answer-container hidden">
+                        <textarea id="textAnswer" class="text-answer" placeholder="Type your answer here..."></textarea>
+                    </div>
+
+                    <button id="submitAnswerBtn" class="btn btn-primary submit-btn" disabled>
+                        Submit Answer
+                    </button>
+                </div>
+
+                <!-- Feedback Panel (Hidden until submission) -->
+                <div id="feedbackPanel" class="feedback-panel hidden">
+                    <div class="feedback-header">
+                        <span class="feedback-icon" id="feedbackIcon"></span>
+                        <span class="feedback-status" id="feedbackStatus">Result</span>
+                    </div>
+                    <div class="feedback-body">
+                        <div class="correct-answer" id="correctAnswerSection">
+                            <strong>Correct Answer:</strong>
+                            <span id="correctAnswerText"></span>
+                        </div>
+                        <div class="explanation" id="explanationSection">
+                            <strong>Explanation:</strong>
+                            <p id="explanationText"></p>
+                        </div>
+                        <div class="mastery-update" id="masteryUpdate">
+                            <strong>Mastery Update:</strong>
+                            <span id="masteryText"></span>
+                        </div>
+                    </div>
+                    <button id="nextQuestionBtn" class="btn btn-secondary">
+                        Next Question
+                    </button>
+                </div>
+            </section>
+
+            <!-- Empty State -->
+            <section id="emptyStateSection" class="practice-section hidden">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
+                    <h3>No Questions Available</h3>
+                    <p>Practice questions for this module are coming soon. Check back later!</p>
+                    <button class="btn btn-secondary" onclick="goToModuleSelection()">
+                        Choose Another Module
+                    </button>
+                </div>
+            </section>
+
+            <!-- Quiz Complete State -->
+            <section id="quizCompleteSection" class="practice-section hidden">
+                <div class="quiz-complete">
+                    <div class="complete-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <h3>Practice Complete!</h3>
+                    <div class="quiz-results">
+                        <div class="result-stat">
+                            <span class="stat-value" id="correctCount">0</span>
+                            <span class="stat-label">Correct</span>
+                        </div>
+                        <div class="result-stat">
+                            <span class="stat-value" id="totalCount">0</span>
+                            <span class="stat-label">Total</span>
+                        </div>
+                        <div class="result-stat">
+                            <span class="stat-value" id="accuracyPercent">0%</span>
+                            <span class="stat-label">Accuracy</span>
+                        </div>
+                    </div>
+                    <div class="complete-actions">
+                        <button class="btn btn-primary" onclick="retryQuiz()">
+                            Retry Quiz
+                        </button>
+                        <button class="btn btn-secondary" onclick="goToModuleSelection()">
+                            Choose Another Module
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
-</div>
 
-<script src="../js/auth.js"></script>
-<script src="../js/content-detail.js"></script>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
 
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-
-    /* 1️⃣ Require auth */
-    if (!window.auth || !window.auth.requireAuth()) return;
-
-    /* 2️⃣ Get ID */
-    const params = new URLSearchParams(window.location.search);
-    const rawId = params.get('id');
-    const contentId = Number(rawId);
-
-    if (!rawId || Number.isNaN(contentId)) {
-        showError("No valid practice question ID provided.");
-        return;
-    }
-
-    /* 3️⃣ Validate JS module */
-    if (!window.contentDetail || typeof window.contentDetail.loadPracticeContent !== 'function') {
-        showError("Practice module not loaded (content-detail.js missing).");
-        return;
-    }
-
-    /* 4️⃣ Load content */
-    try {
-        await window.contentDetail.loadPracticeContent(contentId);
-    } catch (err) {
-        console.error(err);
-        showError("Failed to fetch practice question from server.");
-    }
-});
-
-/* ✅ Local error renderer (FIXES your crash) */
-function showError(message) {
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('errorState').style.display = 'block';
-    document.getElementById('errorMessage').innerText = message;
-}
-</script>
-
+    <script src="../js/api.js"></script>
+    <script src="../js/practice-content.js"></script>
 </body>
 </html>
