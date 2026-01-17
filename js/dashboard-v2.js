@@ -1,16 +1,18 @@
 (function () {
+    'use strict';
+
     const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
 
     const state = {
         user: null,
         curriculum: null,
         subjects: [],
+        archiveSubjects: [],
         analytics: null,
+        recentActivity: [],
         lastActivity: null,
         isLoading: true
     };
-
-    const DOM = {};
 
     function q(sel, parent = document) {
         return parent.querySelector(sel);
@@ -64,7 +66,9 @@
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(20px)';
             toast.style.transition = 'all 0.3s ease';
-            setTimeout(() => container.removeChild(toast), 300);
+            setTimeout(() => {
+                if (container.contains(toast)) container.removeChild(toast);
+            }, 300);
         }, duration);
     }
 
@@ -74,16 +78,12 @@
         if (token) headers['Authorization'] = `Bearer ${token}`;
         headers['Content-Type'] = headers['Content-Type'] || 'application/json';
 
-        try {
-            const resp = await fetch(url, { ...opts, headers });
-            const text = await resp.text();
-            let json;
-            try { json = text ? JSON.parse(text) : null; } catch { json = null; }
-            if (!resp.ok) throw new Error(json?.detail || json?.error || resp.statusText);
-            return json;
-        } catch (err) {
-            throw err;
-        }
+        const resp = await fetch(url, { ...opts, headers });
+        const text = await resp.text();
+        let json;
+        try { json = text ? JSON.parse(text) : null; } catch { json = null; }
+        if (!resp.ok) throw new Error(json?.detail || json?.error || resp.statusText);
+        return json;
     }
 
     function getGreeting() {
@@ -114,9 +114,7 @@
         }
     }
 
-    function updateStats(analytics) {
-        if (!analytics) return;
-
+    function updateStats(curriculum, analytics) {
         const progressEl = q('#overallProgress');
         const progressFillEl = q('#overallProgressFill');
         const accuracyEl = q('#practiceAccuracy');
@@ -124,38 +122,68 @@
         const streakEl = q('#streakCount');
         const courseEl = q('#currentCourse');
 
-        const snapshot = analytics.snapshot || {};
-        const consistency = analytics.consistency || {};
+        if (courseEl && curriculum?.course) {
+            courseEl.textContent = curriculum.course.name || 'Your Course';
+        }
+
+        const allSubjects = [...(state.subjects || []), ...(state.archiveSubjects || [])];
+        let overallProgress = 0;
+        if (allSubjects.length > 0) {
+            const totalCompletion = allSubjects.reduce((sum, s) => sum + (s.completion_percentage || 0), 0);
+            overallProgress = Math.round(totalCompletion / allSubjects.length);
+        }
 
         if (progressEl && progressFillEl) {
-            const completion = Math.round(snapshot.overall_completion || 0);
-            progressEl.textContent = `${completion}% Complete`;
-            progressFillEl.style.width = `${completion}%`;
+            progressEl.textContent = `${overallProgress}% Complete`;
+            progressFillEl.style.width = `${overallProgress}%`;
         }
 
-        if (accuracyEl) {
-            const accuracy = Math.round(snapshot.overall_accuracy || 0);
-            accuracyEl.textContent = `${accuracy}%`;
-        }
+        if (analytics) {
+            const snapshot = analytics.snapshot || {};
+            const consistency = analytics.consistency || {};
 
-        if (timeEl) {
-            const hours = Math.floor((consistency.total_time_spent_hours || 0));
-            const minutes = Math.round(((consistency.total_time_spent_hours || 0) % 1) * 60);
-            timeEl.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-        }
+            if (accuracyEl) {
+                const accuracy = Math.round(snapshot.overall_accuracy || 0);
+                accuracyEl.textContent = `${accuracy}%`;
+            }
 
-        if (streakEl) {
-            streakEl.textContent = consistency.current_streak || 0;
-        }
+            if (timeEl) {
+                const hours = Math.floor(consistency.total_time_spent_hours || 0);
+                const minutes = Math.round(((consistency.total_time_spent_hours || 0) % 1) * 60);
+                timeEl.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+            }
 
-        if (courseEl && state.curriculum?.course) {
-            courseEl.textContent = state.curriculum.course.name || 'BA LLB';
+            if (streakEl) {
+                streakEl.textContent = consistency.current_streak || 0;
+            }
+        } else {
+            if (accuracyEl) accuracyEl.textContent = '—';
+            if (timeEl) timeEl.textContent = '0m';
+            if (streakEl) streakEl.textContent = '0';
         }
+    }
+
+    function renderSubjectsEmpty() {
+        const grid = q('#subjectsGrid');
+        if (!grid) return;
+
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <div style="font-size: 48px; margin-bottom: 12px;">📚</div>
+                <h3 style="color: #0F172A; margin-bottom: 8px; font-size: 16px;">No Subjects Yet</h3>
+                <p style="color: #64748B; font-size: 14px;">Your curriculum will appear here once it's set up.</p>
+            </div>
+        `;
     }
 
     function renderSubjects(subjects) {
         const grid = q('#subjectsGrid');
-        if (!grid || !subjects?.length) return;
+        if (!grid) return;
+
+        if (!subjects || subjects.length === 0) {
+            renderSubjectsEmpty();
+            return;
+        }
 
         const colors = ['blue', 'green', 'orange', 'purple'];
 
@@ -196,29 +224,47 @@
         if (!section) return;
 
         const subjects = state.subjects || [];
+        
+        if (subjects.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
         const inProgress = subjects.find(s => s.completion_percentage > 0 && s.completion_percentage < 100) || subjects[0];
 
         if (inProgress) {
-            q('#resumeSubject').textContent = inProgress.title || 'Constitutional Law';
-            q('#resumeTopic').textContent = inProgress.last_topic || 'Continue your learning journey';
+            const resumeSubject = q('#resumeSubject');
+            const resumeTopic = q('#resumeTopic');
+            const resumeProgressLabel = q('#resumeProgressLabel');
+            const resumeProgressFill = q('#resumeProgressFill');
+
+            if (resumeSubject) resumeSubject.textContent = inProgress.title || 'Continue Learning';
+            if (resumeTopic) resumeTopic.textContent = inProgress.description || 'Pick up where you left off';
+            
             const progress = Math.round(inProgress.completion_percentage || 0);
-            q('#resumeProgressLabel').textContent = `${progress}% complete`;
-            q('#resumeProgressFill').style.width = `${progress}%`;
+            if (resumeProgressLabel) resumeProgressLabel.textContent = `${progress}% complete`;
+            if (resumeProgressFill) resumeProgressFill.style.width = `${progress}%`;
+            
             section.style.display = 'block';
             state.lastActivity = inProgress;
+        } else {
+            section.style.display = 'none';
         }
     }
 
-    function renderRecentActivity() {
+    function renderRecentActivity(activities) {
         const list = q('#activityList');
         if (!list) return;
 
-        const activities = [
-            { type: 'case', title: 'Kesavananda Bharati v. State of Kerala', meta: 'Constitutional Law • 2h ago' },
-            { type: 'note', title: 'Article 21 - Right to Life Notes', meta: 'My Notes • Yesterday' },
-            { type: 'practice', title: 'Basic Structure Doctrine - 5 Mark', meta: 'Practice • 3 days ago' },
-            { type: 'case', title: 'Maneka Gandhi v. Union of India', meta: 'Constitutional Law • 5 days ago' }
-        ];
+        if (!activities || activities.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
+                    <p style="color: #64748B; font-size: 13px;">No recent activity yet.<br>Start learning to see your history here.</p>
+                </div>
+            `;
+            return;
+        }
 
         const iconMap = {
             case: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -232,20 +278,31 @@
             practice: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>`,
+            learn: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
             </svg>`
         };
 
-        list.innerHTML = activities.map(act => `
-            <div class="activity-item" onclick="window.jurisDashboard.openActivity('${act.type}')">
-                <div class="activity-icon activity-icon-${act.type}">
-                    ${iconMap[act.type]}
+        list.innerHTML = activities.slice(0, 5).map(act => {
+            const type = act.type || act.activity_type || 'learn';
+            const icon = iconMap[type] || iconMap.learn;
+            const title = act.title || act.subject_title || 'Activity';
+            const meta = act.meta || act.timestamp || '';
+
+            return `
+                <div class="activity-item" onclick="window.jurisDashboard.openActivity('${type}', ${act.id || 0})">
+                    <div class="activity-icon activity-icon-${type === 'case' ? 'case' : type === 'note' ? 'note' : 'practice'}">
+                        ${icon}
+                    </div>
+                    <div class="activity-details">
+                        <span class="activity-title">${escapeHtml(title)}</span>
+                        <span class="activity-meta">${escapeHtml(meta)}</span>
+                    </div>
                 </div>
-                <div class="activity-details">
-                    <span class="activity-title">${escapeHtml(act.title)}</span>
-                    <span class="activity-meta">${escapeHtml(act.meta)}</span>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function setupSidebar() {
@@ -455,13 +512,23 @@
             window.location.href = url;
         },
 
-        openActivity(type) {
-            const routes = {
-                case: 'case-detail.html',
-                note: 'my-notes.html',
-                practice: 'practice-content.html'
-            };
-            window.location.href = routes[type] || 'start-studying.html';
+        openActivity(type, id) {
+            if (id) {
+                const routes = {
+                    case: `case-detail.html?id=${id}`,
+                    note: `my-notes.html?id=${id}`,
+                    practice: `practice-content.html?id=${id}`,
+                    learn: `start-studying.html?subject=${id}`
+                };
+                window.location.href = routes[type] || 'start-studying.html';
+            } else {
+                const routes = {
+                    case: 'case-simplifier.html',
+                    note: 'my-notes.html',
+                    practice: 'practice-content.html'
+                };
+                window.location.href = routes[type] || 'start-studying.html';
+            }
         },
 
         openSearchResult(type, id) {
@@ -482,28 +549,38 @@
         setupAIModal();
         setupLogout();
         setupContinueLearning();
-        renderRecentActivity();
+
+        renderRecentActivity([]);
 
         try {
-            const [curriculumRes, analyticsRes] = await Promise.all([
-                fetchJson(`${API_BASE}/api/curriculum/dashboard`).catch(() => null),
-                fetchJson(`${API_BASE}/api/analytics/comprehensive`).catch(() => null)
-            ]);
+            const curriculumRes = await fetchJson(`${API_BASE}/api/curriculum/dashboard`).catch(err => {
+                console.warn('Curriculum fetch failed:', err.message);
+                return null;
+            });
 
             if (curriculumRes) {
                 state.curriculum = curriculumRes;
                 state.subjects = curriculumRes.active_subjects || [];
+                state.archiveSubjects = curriculumRes.archive_subjects || [];
+                
                 renderSubjects(state.subjects);
                 updateResumeSection();
+                updateStats(curriculumRes, null);
+            } else {
+                renderSubjectsEmpty();
+                updateStats(null, null);
             }
 
-            if (analyticsRes?.data) {
-                state.analytics = analyticsRes.data;
-                updateStats(analyticsRes.data);
+            const progressRes = await fetchJson(`${API_BASE}/api/progress/recent?limit=5`).catch(() => null);
+            if (progressRes?.activities) {
+                state.recentActivity = progressRes.activities;
+                renderRecentActivity(progressRes.activities);
             }
 
         } catch (err) {
             console.error('Dashboard init error:', err);
+            renderSubjectsEmpty();
+            renderRecentActivity([]);
         }
 
         state.isLoading = false;
