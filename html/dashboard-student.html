@@ -161,7 +161,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">Current Course</span>
-                        <span class="stat-value" id="currentCourse">Constitutional Law</span>
+                        <span class="stat-value" id="currentCourse">Loading...</span>
                     </div>
                 </div>
                 <div class="stat-card stat-progress">
@@ -215,8 +215,8 @@
                             </svg>
                         </div>
                         <div class="resume-info">
-                            <h3 class="resume-subject" id="resumeSubject">Constitutional Law</h3>
-                            <p class="resume-topic" id="resumeTopic">Article 21 - Right to Life and Personal Liberty</p>
+                            <h3 class="resume-subject" id="resumeSubject">Loading...</h3>
+                            <p class="resume-topic" id="resumeTopic">Loading your progress...</p>
                             <div class="resume-meta">
                                 <span class="resume-progress-label" id="resumeProgressLabel">65% complete</span>
                                 <div class="resume-progress">
@@ -240,27 +240,10 @@
                     <a href="./start-studying.html" class="view-all-link">View All</a>
                 </div>
                 <div class="subjects-grid" id="subjectsGrid">
-                    <div class="subject-card">
-                        <div class="subject-card-header">
-                            <div class="subject-icon subject-icon-blue">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                                </svg>
-                            </div>
-                            <span class="subject-semester">Sem 3</span>
-                        </div>
-                        <h3 class="subject-name">Constitutional Law</h3>
-                        <div class="subject-progress">
-                            <div class="subject-progress-fill" style="width: 65%"></div>
-                        </div>
-                        <div class="subject-meta">
-                            <span>65% complete</span>
-                        </div>
-                        <div class="subject-actions">
-                            <button class="subject-btn subject-btn-primary">Learn</button>
-                            <button class="subject-btn subject-btn-secondary">Practice</button>
-                        </div>
+                    <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                        <div style="width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                        <p style="color: #64748b; font-size: 15px;">Loading subjects...</p>
+                        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
                     </div>
                 </div>
             </section>
@@ -271,53 +254,9 @@
                         <h2 class="section-title">Recent Activity</h2>
                     </div>
                     <div class="activity-list" id="activityList">
-                        <div class="activity-item">
-                            <div class="activity-icon activity-icon-case">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                </svg>
-                            </div>
-                            <div class="activity-details">
-                                <span class="activity-title">Kesavananda Bharati v. State of Kerala</span>
-                                <span class="activity-meta">Constitutional Law • 2h ago</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon activity-icon-note">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                </svg>
-                            </div>
-                            <div class="activity-details">
-                                <span class="activity-title">Article 21 - Right to Life Notes</span>
-                                <span class="activity-meta">My Notes • Yesterday</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon activity-icon-practice">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
-                            </div>
-                            <div class="activity-details">
-                                <span class="activity-title">Basic Structure Doctrine - 5 Mark</span>
-                                <span class="activity-meta">Practice • 3 days ago</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon activity-icon-case">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                </svg>
-                            </div>
-                            <div class="activity-details">
-                                <span class="activity-title">Maneka Gandhi v. Union of India</span>
-                                <span class="activity-meta">Constitutional Law • 5 days ago</span>
-                            </div>
+                        <div class="empty-state" style="text-align: center; padding: 2rem;">
+                            <div style="width: 32px; height: 32px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+                            <p style="color: #64748B; font-size: 13px;">Loading activity...</p>
                         </div>
                     </div>
                 </section>
