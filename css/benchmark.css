@@ -542,6 +542,42 @@
     color: var(--text-muted);
 }
 
+.difficulty-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.difficulty-badge.harder {
+    background: rgba(245, 158, 11, 0.15);
+    color: #92400E;
+}
+
+.confidence-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.confidence-badge.low {
+    background: var(--bg-main);
+    color: var(--text-muted);
+}
+
+.confidence-note,
+.normalization-note {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 .subject-percentile-badge {
     padding: 6px 12px;
     border-radius: var(--radius-sm);

@@ -51,6 +51,9 @@ from backend.services.cohort_aggregation_service import (
     get_cohort_subjects,
     ACTIVITY_WINDOW_DAYS,
 )
+from backend.services.benchmark_normalization_service import (
+    apply_benchmark_normalization,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -423,10 +426,16 @@ async def get_benchmark_comparison(
     subjects = await get_cohort_subjects(course_id, semester, db)
     
     subject_benchmarks = []
+    cohort_mastery_by_subject = {}
+    
     for subject in subjects:
+        subject_id = subject["subject_id"]
+        cohort_values = await get_cohort_mastery_values(subject_id, cohort_user_ids, db)
+        cohort_mastery_by_subject[subject_id] = cohort_values
+        
         benchmark = await compute_subject_benchmark(
             user_id,
-            subject["subject_id"],
+            subject_id,
             subject["title"],
             cohort_user_ids,
             db
@@ -438,14 +447,7 @@ async def get_benchmark_comparison(
     cohort_size = len(cohort_user_ids)
     small_cohort = cohort_size < MIN_COHORT_SIZE
     
-    logger.info(
-        f"Benchmark comparison for user={user_id}: "
-        f"overall_percentile={overall['percentile']}, "
-        f"subjects_benchmarked={overall['subjects_benchmarked']}, "
-        f"cohort_size={cohort_size}"
-    )
-    
-    return {
+    result = {
         "success": True,
         "overall": overall,
         "subjects": subject_benchmarks,
@@ -464,6 +466,22 @@ async def get_benchmark_comparison(
         },
         "calculated_at": datetime.utcnow().isoformat()
     }
+    
+    result = apply_benchmark_normalization(
+        result,
+        attempt_count,
+        cohort_mastery_by_subject
+    )
+    
+    logger.info(
+        f"Benchmark comparison for user={user_id}: "
+        f"overall_percentile={overall['percentile']}, "
+        f"normalized_percentile={overall.get('normalized', {}).get('percentile')}, "
+        f"subjects_benchmarked={overall['subjects_benchmarked']}, "
+        f"cohort_size={cohort_size}"
+    )
+    
+    return result
 
 
 async def get_subject_percentile_detail(

@@ -1,12 +1,17 @@
 /**
  * benchmark.js
- * Phase 8.3: Benchmark Visualization Engine
+ * Phase 8.3 & 8.4: Benchmark Visualization Engine with Normalization
  * 
  * DESIGN PRINCIPLES:
  * - Student should understand where they stand
  * - Student should understand WHY
  * - Student should know what to do next
  * - NO ranks, NO peer names, NO demotivation
+ * 
+ * Phase 8.4 additions:
+ * - Display normalized percentile for fairness
+ * - Show confidence indicator
+ * - Display difficulty-adjusted feedback
  */
 
 const SAFE_FEEDBACK_TEMPLATES = {
@@ -20,6 +25,12 @@ const OVERALL_MESSAGES = {
     middle50Above: "You are performing above average compared to your semester peers. Good progress!",
     middle50Below: "You are performing close to the average of your peers. Consistent practice will help you improve.",
     bottom25: "There is room for improvement. Focus on your weaker subjects to catch up with your peers."
+};
+
+const CONFIDENCE_LABELS = {
+    high: "High confidence",
+    medium: "Moderate confidence",
+    low: "Low confidence"
 };
 
 let benchmarkData = null;
@@ -182,8 +193,10 @@ function renderCohortInfo(cohort) {
 function renderOverallStanding(overall, cohort) {
     if (!overall) return;
     
-    const percentile = overall.percentile;
+    const normalized = overall.normalized || {};
+    const percentile = normalized.percentile !== undefined ? normalized.percentile : overall.percentile;
     const band = overall.band;
+    const confidence = normalized.confidence || 'high';
     
     const percentileNumber = document.getElementById('percentileNumber');
     const percentileFill = document.getElementById('percentileFill');
@@ -208,7 +221,15 @@ function renderOverallStanding(overall, cohort) {
     bandValue.textContent = band || 'Calculating...';
     
     const message = getOverallMessage(percentile, band);
-    overallMessage.querySelector('p').textContent = message;
+    let messageHtml = `<p>${message}</p>`;
+    
+    if (confidence === 'low') {
+        messageHtml += `<p class="confidence-note">Benchmark accuracy improves with more practice.</p>`;
+    } else if (normalized.note) {
+        messageHtml += `<p class="normalization-note">${normalized.note}</p>`;
+    }
+    
+    overallMessage.innerHTML = messageHtml;
     
     if (overall.strongest_subject) {
         const strongestEl = document.getElementById('strongestSubject');
@@ -279,8 +300,14 @@ function createSubjectCard(subject, index) {
     const hasData = subject.student_mastery !== null && subject.student_mastery !== undefined;
     const hasPercentile = subject.percentile !== null && subject.percentile !== undefined;
     
+    const normalized = subject.normalized || {};
+    const difficulty = subject.difficulty || {};
+    const normalizedPercentile = normalized.percentile;
+    const displayPercentile = normalizedPercentile !== undefined ? normalizedPercentile : subject.percentile;
+    const confidence = normalized.confidence || 'high';
+    
     const bandClass = hasPercentile ? getBandClass(subject.band) : 'no-data';
-    const percentileText = hasPercentile ? `${subject.percentile}th` : 'N/A';
+    const percentileText = displayPercentile !== null && displayPercentile !== undefined ? `${displayPercentile}th` : 'N/A';
     
     const studentMastery = hasData ? subject.student_mastery : 0;
     const cohortAvg = subject.cohort_avg || 0;
@@ -293,11 +320,18 @@ function createSubjectCard(subject, index) {
     
     const explanation = generateExplanation(subject);
     
+    const difficultyBadge = difficulty.is_harder ? 
+        `<span class="difficulty-badge harder">Challenging subject</span>` : '';
+    
+    const confidenceBadge = confidence === 'low' ? 
+        `<span class="confidence-badge low">More data needed</span>` : '';
+    
     card.innerHTML = `
         <div class="subject-benchmark-header">
             <div>
                 <h3 class="subject-benchmark-title">${subject.title}</h3>
                 <span class="subject-benchmark-code">${subject.code || ''}</span>
+                ${difficultyBadge}
             </div>
             <span class="subject-percentile-badge ${bandClass}">${percentileText}</span>
         </div>
@@ -350,6 +384,7 @@ function createSubjectCard(subject, index) {
         
         <div class="subject-feedback ${feedbackClass}">
             <p>${feedback.message}</p>
+            ${confidenceBadge}
         </div>
         
         <div class="subject-explanation">
@@ -415,6 +450,11 @@ function generateExplanation(subject) {
     const cohortSize = subject.cohort_size || 0;
     const percentile = subject.percentile;
     
+    const normalized = subject.normalized || {};
+    const difficulty = subject.difficulty || {};
+    const normalizedPercentile = normalized.percentile;
+    const confidence = normalized.confidence;
+    
     if (!hasData) {
         return `
             <p>You haven't completed any practice in this subject yet. Once you do, we'll compare your mastery with ${cohortSize} peers in your cohort.</p>
@@ -429,6 +469,14 @@ function generateExplanation(subject) {
         explanationParts.push(`This places you at the <strong>${percentile}th percentile</strong>, meaning you are performing better than ${percentile}% of your ${cohortSize} active peers.`);
     }
     
+    if (difficulty.is_harder) {
+        explanationParts.push(`This subject is generally considered more challenging.`);
+    }
+    
+    if (normalizedPercentile !== undefined && normalizedPercentile !== percentile) {
+        explanationParts.push(`Your standing is adjusted to ensure fairness across subjects with different difficulty levels.`);
+    }
+    
     const diff = studentMastery - cohortAvg;
     if (diff > 10) {
         explanationParts.push(`Your score is significantly above average. Your consistent practice is paying off.`);
@@ -438,6 +486,10 @@ function generateExplanation(subject) {
         explanationParts.push(`You are close to the average. Regular practice will help you move ahead.`);
     } else {
         explanationParts.push(`There is room for improvement. Focus on understanding core concepts and practice regularly.`);
+    }
+    
+    if (confidence === 'low') {
+        explanationParts.push(`<em>Note: Benchmark accuracy improves with more practice.</em>`);
     }
     
     return `<p>${explanationParts.join(' ')}</p>`;
