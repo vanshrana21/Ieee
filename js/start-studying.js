@@ -22,12 +22,26 @@
     }
 
     async function fetchJson(url, opts = {}) {
-        const token = window.auth?.getToken?.() || localStorage.getItem('token');
+        const token = window.auth?.getToken?.() || localStorage.getItem('access_token');
+        
+        if (!token) {
+            window.location.href = 'login.html';
+            throw new Error('Not authenticated');
+        }
+        
         const headers = { ...opts.headers };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
         headers['Content-Type'] = headers['Content-Type'] || 'application/json';
 
         const resp = await fetch(url, { ...opts, headers });
+        
+        if (resp.status === 401) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_role');
+            window.location.href = 'login.html';
+            throw new Error('Session expired. Please log in again.');
+        }
+        
         const text = await resp.text();
         let json;
         try { json = text ? JSON.parse(text) : null; } catch { json = null; }
