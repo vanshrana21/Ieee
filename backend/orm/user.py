@@ -114,6 +114,13 @@ class User(Base):
         lazy="selectin"
     )
     
+    exam_sessions = relationship(
+        "ExamSession",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+    
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', semester={self.current_semester})>"
     
