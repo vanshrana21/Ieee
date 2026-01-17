@@ -10,7 +10,9 @@ from .learn_content import LearnContent
 from .case_content import CaseContent
 from .practice_question import PracticeQuestion
 from .practice_attempt import PracticeAttempt
-from .practice_evaluation import PracticeEvaluation  # ✅ MUST BE HERE
+from .practice_evaluation import PracticeEvaluation
+from .exam_session import ExamSession, ExamSessionStatus
+from .exam_answer import ExamAnswer
 
 
 
@@ -20,4 +22,7 @@ __all__ = [
     "CourseCurriculum",
     "ContentModule",
     "UserProgress",
+    "ExamSession",
+    "ExamSessionStatus",
+    "ExamAnswer",
 ]

@@ -20,6 +20,7 @@ from backend.routes import tutor_chat
 from backend.routes import diagnostics
 from backend.routes import study_planner
 from backend.routes import exam_blueprint
+from backend.routes import mock_exam
 
 
 # ============================================
@@ -211,6 +212,7 @@ app.include_router(tutor_chat.router)
 app.include_router(diagnostics.router)
 app.include_router(study_planner.router)
 app.include_router(exam_blueprint.router)
+app.include_router(mock_exam.router)
 
 
 if __name__ == "__main__":
