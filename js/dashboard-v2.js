@@ -341,6 +341,73 @@
         }).join('');
     }
 
+    function renderFocus(focusData) {
+        const grid = q('#focusGrid');
+        if (!grid) return;
+
+        if (!focusData?.data?.has_focus || !focusData?.data?.topics?.length) {
+            grid.innerHTML = `
+                <div class="focus-empty">
+                    <div class="focus-empty-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="6"/>
+                            <circle cx="12" cy="12" r="2"/>
+                        </svg>
+                    </div>
+                    <h3>No Focus Topics Yet</h3>
+                    <p>${focusData?.data?.message || 'Start practicing to get personalized recommendations!'}</p>
+                </div>
+            `;
+            return;
+        }
+
+        const topics = focusData.data.topics;
+
+        grid.innerHTML = topics.map(topic => {
+            const topicName = (topic.topic_tag || '').replace(/-/g, ' ').replace(/_/g, ' ');
+            const mastery = Math.round(topic.mastery_percent || 0);
+            const priority = (topic.priority || 'medium').toLowerCase();
+            
+            let masteryClass = 'weak';
+            if (mastery >= 70) masteryClass = 'strong';
+            else if (mastery >= 40) masteryClass = 'average';
+
+            const actions = topic.actions || [];
+
+            return `
+                <div class="focus-card priority-${priority}">
+                    <div class="focus-card-header">
+                        <div class="focus-rank">${topic.rank || '?'}</div>
+                        <span class="focus-priority-badge ${priority}">${topic.priority || 'Medium'}</span>
+                    </div>
+                    <h3 class="focus-topic">${escapeHtml(topicName)}</h3>
+                    <div class="focus-mastery">
+                        <div class="focus-mastery-bar">
+                            <div class="focus-mastery-fill ${masteryClass}" style="width: ${mastery}%"></div>
+                        </div>
+                        <span class="focus-mastery-percent">${mastery}%</span>
+                    </div>
+                    <div class="focus-explanation">${escapeHtml(topic.explanation || 'Focus on this topic to improve your understanding.')}</div>
+                    <div class="focus-why">${escapeHtml(topic.why_now || '')}</div>
+                    ${actions.length ? `
+                        <div class="focus-actions">
+                            ${actions.slice(0, 3).map(action => `
+                                <span class="focus-action-tag">${escapeHtml(action)}</span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    <button class="focus-btn" onclick="window.jurisDashboard.openSubject(${topic.subject_id}, 'practice')">
+                        Start Practicing
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
     function setupSidebar() {
         const menuToggle = q('#menuToggle');
         const sidebar = q('#sidebar');
@@ -615,6 +682,12 @@
             }
             
             updateStats(curriculumRes, analyticsRes);
+
+            const focusRes = await fetchJson(`${API_BASE}/api/study/focus`).catch(err => {
+                console.warn('Focus fetch failed:', err.message);
+                return null;
+            });
+            renderFocus(focusRes);
 
             const progressRes = await fetchJson(`${API_BASE}/api/progress/recent?limit=5`).catch(() => null);
             if (progressRes?.activities) {
