@@ -35,7 +35,47 @@ class EvaluationStatus(str, Enum):
     FAILED = "failed"  # Evaluation failed (retryable)
 
 class PracticeEvaluation(BaseModel):
-    ...
+    """Model for storing AI evaluation results for practice attempts"""
+    
+    __tablename__ = "practice_evaluations"
+    
+    practice_attempt_id = Column(
+        Integer,
+        ForeignKey("practice_attempts.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+    
+    evaluation_type = Column(String(50), default="ai_descriptive")
+    status = Column(String(50), default="pending", index=True)
+    
+    score = Column(Float, nullable=True)
+    feedback_text = Column(Text, nullable=True)
+    strengths = Column(JSON, nullable=True)
+    improvements = Column(JSON, nullable=True)
+    rubric_breakdown = Column(JSON, nullable=True)
+    
+    confidence_score = Column(Float, nullable=True)
+    model_version = Column(String(100), nullable=True)
+    evaluated_by = Column(String(50), default="ai")
+    error_message = Column(Text, nullable=True)
+    
+    practice_attempt = relationship(
+        "PracticeAttempt",
+        back_populates="evaluation",
+        uselist=False
+    )
+    
+    __table_args__ = (
+        UniqueConstraint('practice_attempt_id', name='uq_evaluation_attempt'),
+        Index('ix_evaluation_status', 'status'),
+    )
+    
+    def mark_processing(self):
+        """Mark evaluation as processing"""
+        self.status = "processing"
+    
     def mark_completed(
         self,
         score: float = None,
