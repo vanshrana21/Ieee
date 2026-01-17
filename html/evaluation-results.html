@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Results - JurisAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/evaluation-results.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">JurisAI</div>
+            <button class="back-btn" onclick="goBack()">Back to Practice</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="loadingState" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading evaluation results...</p>
+        </div>
+
+        <div id="pendingState" class="pending-state hidden">
+            <div class="pending-icon">
+                <div class="pulse-ring"></div>
+                <span>AI</span>
+            </div>
+            <h2>Evaluation in Progress</h2>
+            <p>Your answer is being evaluated by the AI Examiner. This typically takes 10-30 seconds.</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div id="errorState" class="error-state hidden">
+            <div class="error-icon">!</div>
+            <h2>Evaluation Failed</h2>
+            <p id="errorMessage">An error occurred during evaluation.</p>
+            <button class="btn-primary" onclick="retryEvaluation()">Retry Evaluation</button>
+        </div>
+
+        <div id="resultsContainer" class="results-container hidden">
+            <header class="results-header">
+                <div class="header-content">
+                    <h1>Evaluation Results</h1>
+                    <div class="question-meta">
+                        <span class="badge subject" id="subjectBadge">Constitutional Law</span>
+                        <span class="badge type" id="typeBadge">Essay</span>
+                        <span class="badge marks" id="marksBadge">10 Marks</span>
+                    </div>
+                </div>
+                <div class="score-summary">
+                    <div class="score-circle">
+                        <svg viewBox="0 0 36 36">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle-progress" id="scoreCircle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <div class="score-text">
+                            <span class="score-value" id="totalScore">0</span>
+                            <span class="score-max">/ <span id="maxMarks">10</span></span>
+                        </div>
+                    </div>
+                    <div class="confidence-indicator">
+                        <span class="confidence-label">AI Confidence:</span>
+                        <span class="confidence-badge" id="confidenceBadge">High</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content">
+                <div class="left-panel">
+                    <section class="card question-section">
+                        <h2>Question</h2>
+                        <p id="questionText" class="question-text"></p>
+                    </section>
+
+                    <section class="card component-breakdown">
+                        <h2>Component-wise Marks</h2>
+                        <p class="section-subtitle">IRAC Framework Evaluation</p>
+                        <div id="componentsList" class="components-list"></div>
+                    </section>
+
+                    <section class="card feedback-section">
+                        <h2>Strengths</h2>
+                        <ul id="strengthsList" class="feedback-list strengths"></ul>
+                    </section>
+
+                    <section class="card feedback-section">
+                        <h2>Areas for Improvement</h2>
+                        <ul id="missingPointsList" class="feedback-list missing"></ul>
+                    </section>
+                </div>
+
+                <div class="right-panel">
+                    <section class="card improvement-section">
+                        <h2>Improve & Reattempt</h2>
+                        <p class="section-subtitle">Key actions to improve your score</p>
+                        <ul id="improvementsList" class="improvements-list"></ul>
+                        
+                        <div class="ideal-structure">
+                            <h3>Ideal Answer Structure</h3>
+                            <p class="structure-note">Follow this outline for a comprehensive answer</p>
+                            <div id="idealStructure" class="structure-outline"></div>
+                        </div>
+
+                        <button class="btn-reattempt" onclick="startReattempt()">
+                            <span class="btn-icon">+</span>
+                            Reattempt This Question
+                        </button>
+                    </section>
+
+                    <section class="card attempts-history">
+                        <h2>Your Attempts</h2>
+                        <div id="attemptsTimeline" class="attempts-timeline"></div>
+                        <div id="noAttemptsMessage" class="empty-state hidden">
+                            <p>This is your first attempt!</p>
+                        </div>
+                    </section>
+
+                    <section class="card comparison-section hidden" id="comparisonSection">
+                        <h2>Progress Comparison</h2>
+                        <div class="comparison-chart">
+                            <div class="chart-bars" id="comparisonBars"></div>
+                        </div>
+                        <p class="comparison-summary" id="comparisonSummary"></p>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/evaluation-results.js"></script>
+</body>
+</html>
