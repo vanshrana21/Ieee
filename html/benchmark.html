@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Standing - Juris AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard-v2.css">
+    <link rel="stylesheet" href="../css/benchmark.css">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" opacity="0.3"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Juris AI</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="./dashboard-student.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="./start-studying.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                <span>Subjects</span>
+            </a>
+            <a href="./benchmark.html" class="nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10"/>
+                    <path d="M12 20V4"/>
+                    <path d="M6 20v-6"/>
+                </svg>
+                <span>My Standing</span>
+            </a>
+            <a href="./practice-content.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>Practice</span>
+            </a>
+            <a href="./my-notes.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <span>My Notes</span>
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <a href="./settings.html" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="nav-item nav-logout" id="logoutBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" id="menuToggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            
+            <div class="page-title-bar">
+                <h1>My Standing</h1>
+                <p>See how you compare with your semester peers</p>
+            </div>
+            
+            <div class="top-bar-right">
+                <button class="avatar-btn" id="profileBtn">
+                    <span id="avatarInitial">S</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="benchmark-content">
+            <div id="loadingState" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading your benchmark data...</p>
+            </div>
+
+            <div id="errorState" class="error-state" style="display: none;">
+                <div class="error-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <h3>Unable to load benchmark</h3>
+                <p id="errorMessage">Please try again later.</p>
+                <button class="retry-btn" onclick="loadBenchmarkData()">Try Again</button>
+            </div>
+
+            <div id="eligibilityState" class="eligibility-state" style="display: none;">
+                <div class="eligibility-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <h3>Benchmark Coming Soon</h3>
+                <p id="eligibilityMessage">Complete a few more practice sessions to unlock your peer comparison.</p>
+                <div class="eligibility-progress">
+                    <div class="eligibility-progress-bar">
+                        <div class="eligibility-progress-fill" id="eligibilityProgressFill"></div>
+                    </div>
+                    <span id="eligibilityProgressText">0 / 3 attempts</span>
+                </div>
+                <a href="./practice-content.html" class="start-practice-btn">Start Practicing</a>
+            </div>
+
+            <div id="benchmarkContainer" style="display: none;">
+                <section class="cohort-info-section" id="cohortInfoSection">
+                    <div class="cohort-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span id="cohortDescription">Loading cohort...</span>
+                    </div>
+                </section>
+
+                <section class="overall-standing-section">
+                    <div class="overall-card" id="overallCard">
+                        <div class="overall-header">
+                            <h2>Your Overall Standing</h2>
+                            <button class="info-btn" id="overallInfoBtn" title="How is this calculated?">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="overall-content">
+                            <div class="percentile-display">
+                                <div class="percentile-circle" id="percentileCircle">
+                                    <svg viewBox="0 0 100 100">
+                                        <circle class="percentile-bg" cx="50" cy="50" r="45"/>
+                                        <circle class="percentile-fill" id="percentileFill" cx="50" cy="50" r="45"/>
+                                    </svg>
+                                    <div class="percentile-value">
+                                        <span class="percentile-number" id="percentileNumber">--</span>
+                                        <span class="percentile-suffix">percentile</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="overall-details">
+                                <div class="band-display" id="bandDisplay">
+                                    <span class="band-label">Performance Band</span>
+                                    <span class="band-value" id="bandValue">--</span>
+                                </div>
+                                
+                                <div class="overall-message" id="overallMessage">
+                                    <p>Loading your standing...</p>
+                                </div>
+                                
+                                <div class="strength-weakness">
+                                    <div class="sw-item strongest" id="strongestSubject">
+                                        <span class="sw-label">Strongest</span>
+                                        <span class="sw-value">--</span>
+                                    </div>
+                                    <div class="sw-item weakest" id="weakestSubject">
+                                        <span class="sw-label">Needs Focus</span>
+                                        <span class="sw-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overall-tooltip" id="overallTooltip" style="display: none;">
+                            <div class="tooltip-header">
+                                <h4>How Your Standing is Calculated</h4>
+                                <button class="tooltip-close" id="tooltipClose">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="tooltip-content">
+                                <p>Your percentile shows what percentage of your peers you are performing better than, based on your mastery across all subjects.</p>
+                                <ul>
+                                    <li>Compared only with students in your <strong>same course and semester</strong></li>
+                                    <li>Based on <strong>subject mastery scores</strong> from practice</li>
+                                    <li>Updated as you and your peers practice more</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="subjects-benchmark-section">
+                    <div class="section-header">
+                        <h2>Subject-wise Comparison</h2>
+                        <p>See how you compare in each subject</p>
+                    </div>
+                    
+                    <div class="subjects-grid" id="subjectsBenchmarkGrid">
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/benchmark.js"></script>
+</body>
+</html>
