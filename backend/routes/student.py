@@ -523,52 +523,59 @@ async def mark_learn_content_complete(
     """
     Phase 4: Mark learn content as completed.
     """
+    import logging
+    logger = logging.getLogger(__name__)
     from sqlalchemy import text
     
-    # Verify content exists
-    content_result = await db.execute(
-        text("SELECT module_id FROM learn_content WHERE id = :cid"),
-        {"cid": content_id}
-    )
-    content_row = content_result.fetchone()
-    
-    if not content_row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
-    
-    module_id = content_row[0]
-    
-    # Get subject_id
-    module_result = await db.execute(
-        text("SELECT subject_id FROM content_modules WHERE id = :mid"),
-        {"mid": module_id}
-    )
-    module_row = module_result.fetchone()
-    subject_id = module_row[0] if module_row else None
-    
-    # Check/update progress
-    progress_result = await db.execute(
-        text("SELECT id, is_completed FROM user_content_progress WHERE user_id = :uid AND content_type = 'learn' AND content_id = :cid"),
-        {"uid": current_user.id, "cid": content_id}
-    )
-    progress_row = progress_result.fetchone()
-    
-    if progress_row:
-        if not progress_row[1]:
-            await db.execute(
-                text("UPDATE user_content_progress SET is_completed = 1, completed_at = datetime('now'), updated_at = datetime('now') WHERE id = :pid"),
-                {"pid": progress_row[0]}
-            )
-    else:
-        await db.execute(
-            text("INSERT INTO user_content_progress (user_id, content_type, content_id, is_completed, completed_at, view_count, last_viewed_at, created_at, updated_at) VALUES (:uid, 'learn', :cid, 1, datetime('now'), 1, datetime('now'), datetime('now'), datetime('now'))"),
+    try:
+        content_result = await db.execute(
+            text("SELECT module_id FROM learn_content WHERE id = :cid"),
+            {"cid": content_id}
+        )
+        content_row = content_result.fetchone()
+        
+        if not content_row:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
+        
+        module_id = content_row[0]
+        
+        module_result = await db.execute(
+            text("SELECT subject_id FROM content_modules WHERE id = :mid"),
+            {"mid": module_id}
+        )
+        module_row = module_result.fetchone()
+        subject_id = module_row[0] if module_row else None
+        
+        progress_result = await db.execute(
+            text("SELECT id, is_completed FROM user_content_progress WHERE user_id = :uid AND content_type = 'learn' AND content_id = :cid"),
             {"uid": current_user.id, "cid": content_id}
         )
-    
-    await db.commit()
-    
-    return {
-        "success": True,
-        "message": "Content marked as complete",
-        "content_id": content_id,
-        "subject_id": subject_id
-    }
+        progress_row = progress_result.fetchone()
+        
+        if progress_row:
+            if not progress_row[1]:
+                await db.execute(
+                    text("UPDATE user_content_progress SET is_completed = 1, completed_at = datetime('now'), updated_at = datetime('now') WHERE id = :pid"),
+                    {"pid": progress_row[0]}
+                )
+        else:
+            await db.execute(
+                text("INSERT INTO user_content_progress (user_id, content_type, content_id, is_completed, completed_at, view_count, last_viewed_at, created_at, updated_at) VALUES (:uid, 'learn', :cid, 1, datetime('now'), 1, datetime('now'), datetime('now'), datetime('now'))"),
+                {"uid": current_user.id, "cid": content_id}
+            )
+        
+        await db.commit()
+        
+        return {
+            "success": True,
+            "message": "Content marked as complete",
+            "content_id": content_id,
+            "subject_id": subject_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in mark_complete: {type(e).__name__}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise
