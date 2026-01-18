@@ -1,9 +1,10 @@
 """
 backend/ai/prompts.py
-Phase 10.1: System-Level Prompt Guards
+Phase 10.1 + 10.2: System-Level Prompt Guards & Explanation Engine
 
 PURPOSE:
 Define system prompts that enforce scope restrictions at the LLM level.
+Build explanation prompts for different learning styles.
 
 STRICT RULES FOR AI:
 1. Answer ONLY using provided curriculum content
@@ -14,7 +15,26 @@ STRICT RULES FOR AI:
 """
 
 from typing import Optional
+from enum import Enum
 from backend.ai.context import AIContext
+
+
+class ExplanationType(str, Enum):
+    """Allowed explanation types for tutor"""
+    SIMPLE = "simple"
+    EXAM = "exam_oriented"
+    SUMMARY = "summary"
+    DETAILED = "detailed"
+    EXAMPLE = "example"
+
+
+EXPLANATION_STYLE_MAP = {
+    ExplanationType.SIMPLE: "Explain in very simple language that a beginner can understand. Use everyday examples and avoid jargon.",
+    ExplanationType.EXAM: "Explain as an exam answer with proper headings, clear structure, legal precision, and relevant case citations from the content.",
+    ExplanationType.SUMMARY: "Summarize concisely in bullet points without losing legal meaning. Focus on key takeaways.",
+    ExplanationType.DETAILED: "Provide a comprehensive explanation covering all aspects, with definitions, principles, and applications.",
+    ExplanationType.EXAMPLE: "Explain using practical examples and hypothetical scenarios to illustrate the concept."
+}
 
 
 SYSTEM_GUARD_PROMPT = """You are Juris AI Tutor, an educational assistant for Indian law students.
@@ -170,3 +190,108 @@ def get_subject_specific_instructions(subject_code: str) -> str:
             return instructions
     
     return ""
+
+
+EXPLANATION_PROMPT_TEMPLATE = """You are a legal tutor for Indian law students.
+
+Subject: {subject_name}
+Module: {module_title}
+Topic: {content_title}
+
+CONTENT TO EXPLAIN:
+{content_text}
+
+TASK:
+{style_instruction}
+
+STRICT RULES:
+- Use ONLY the given content above. Do not add information from outside.
+- No new cases, sections, or doctrines not mentioned in the content.
+- Be accurate and exam-safe.
+- If the content doesn't cover something, say "This is not covered in your current material."
+- Use proper legal terminology as shown in the content.
+"""
+
+
+def build_explanation_prompt(
+    *,
+    explanation_type: str,
+    subject_name: str,
+    module_title: str,
+    content_title: str,
+    content_text: str,
+) -> str:
+    """
+    Build a prompt for explaining curriculum content.
+    
+    Phase 10.2: Tutor Explanation Engine
+    
+    Args:
+        explanation_type: Type of explanation (simple, exam_oriented, summary, detailed, example)
+        subject_name: Name of the subject
+        module_title: Title of the module
+        content_title: Title of the content being explained
+        content_text: The actual content text to explain
+    
+    Returns:
+        Complete prompt for LLM
+    """
+    try:
+        exp_type = ExplanationType(explanation_type)
+    except ValueError:
+        exp_type = ExplanationType.SIMPLE
+    
+    style_instruction = EXPLANATION_STYLE_MAP.get(exp_type, EXPLANATION_STYLE_MAP[ExplanationType.SIMPLE])
+    
+    return EXPLANATION_PROMPT_TEMPLATE.format(
+        subject_name=subject_name,
+        module_title=module_title,
+        content_title=content_title,
+        content_text=content_text[:4000],
+        style_instruction=style_instruction
+    )
+
+
+def build_question_answer_prompt(
+    *,
+    question: str,
+    subject_name: str,
+    module_title: str,
+    content_title: str,
+    content_text: str,
+) -> str:
+    """
+    Build a prompt for answering a specific question about content.
+    
+    Args:
+        question: The student's question
+        subject_name: Name of the subject
+        module_title: Title of the module
+        content_title: Title of the content
+        content_text: The content text to reference
+    
+    Returns:
+        Complete prompt for LLM
+    """
+    return f"""You are a legal tutor for Indian law students.
+
+Subject: {subject_name}
+Module: {module_title}
+Topic: {content_title}
+
+REFERENCE CONTENT:
+{content_text[:4000]}
+
+STUDENT'S QUESTION:
+{question}
+
+TASK:
+Answer the student's question using ONLY the reference content above.
+
+STRICT RULES:
+- Answer ONLY based on the given content.
+- If the question cannot be answered from the content, say "This is not covered in your current material."
+- Do not introduce new cases, sections, or concepts not in the content.
+- Be clear, accurate, and exam-appropriate.
+- Use proper legal terminology as shown in the content.
+"""
