@@ -76,6 +76,27 @@ const api = {
 
     async getLastActivity() {
         return this.get('/api/dashboard/last-activity');
+    },
+
+    // --- Student Content & Modules (Phase 4) ---
+    async getSubjectModules(subjectId) {
+        return this.get(`/api/student/subject/${subjectId}/modules`);
+    },
+
+    async getModuleContent(moduleId) {
+        return this.get(`/api/student/module/${moduleId}/content`);
+    },
+
+    async getContentDetail(contentId) {
+        return this.get(`/api/student/content/${contentId}`);
+    },
+
+    async markContentComplete(contentId) {
+        return this.post(`/api/student/content/${contentId}/complete`, {});
+    },
+
+    async getSubjectAvailability(subjectId) {
+        return this.get(`/api/student/subject/${subjectId}/availability`);
     }
 };
 

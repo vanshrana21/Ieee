@@ -1,13 +1,14 @@
 """
 backend/routes/student.py
-Phase 3: Student-facing APIs for content availability and study flow
+Phase 3 & 4: Student-facing APIs for content availability, modules, and learning content
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 
 from backend.database import get_db
 from backend.orm.user import User
@@ -17,6 +18,7 @@ from backend.orm.learn_content import LearnContent
 from backend.orm.case_content import CaseContent
 from backend.orm.practice_question import PracticeQuestion
 from backend.orm.user_notes import UserNotes
+from backend.orm.user_content_progress import UserContentProgress, ContentType
 from backend.routes.auth import get_current_user
 
 router = APIRouter(prefix="/student", tags=["Student"])
@@ -37,6 +39,40 @@ class ContentAvailabilityResponse(BaseModel):
     notes_count: int = 0
 
 
+class ModuleListItem(BaseModel):
+    module_id: int
+    title: str
+    sequence_order: int
+    content_count: int
+    is_completed: bool
+
+
+class SubjectModulesResponse(BaseModel):
+    subject_id: int
+    modules: List[ModuleListItem]
+
+
+class ContentListItem(BaseModel):
+    content_id: int
+    title: str
+    sequence_order: int
+    is_completed: bool
+
+
+class ModuleContentResponse(BaseModel):
+    module_id: int
+    content: List[ContentListItem]
+
+
+class LearnContentDetailResponse(BaseModel):
+    content_id: int
+    module_id: int
+    title: str
+    body: str
+    sequence_order: int
+    is_completed: bool
+
+
 @router.get("/subject/{subject_id}/availability", response_model=ContentAvailabilityResponse)
 async def get_subject_availability(
     subject_id: int,
@@ -44,15 +80,7 @@ async def get_subject_availability(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Phase 3: Check what content exists for a subject.
-    
-    Returns availability flags for each study mode:
-    - has_learning_content: True if LearnContent items exist
-    - has_cases: True if CaseContent items exist  
-    - has_practice: True if PracticeQuestion items exist
-    - has_notes: True if user has notes for this subject
-    
-    Also returns first content IDs for direct navigation.
+    Check what content exists for a subject.
     """
     if not current_user.course_id:
         raise HTTPException(
@@ -82,21 +110,20 @@ async def get_subject_availability(
         )
     )
     learn_module_result = await db.execute(learn_module_stmt)
-    learn_module = learn_module_result.scalar_one_or_none()
+    learn_modules = learn_module_result.scalars().all()
 
     first_learn_id = None
-    learn_count = 0
-    if learn_module:
-        learn_stmt = (
-            select(LearnContent)
-            .where(LearnContent.module_id == learn_module.id)
-            .order_by(LearnContent.order_index)
-        )
-        learn_result = await db.execute(learn_stmt)
-        learn_items = learn_result.scalars().all()
-        learn_count = len(learn_items)
-        if learn_items:
-            first_learn_id = learn_items[0].id
+    total_learn_count = 0
+    if learn_modules:
+        for module in learn_modules:
+            learn_stmt = select(func.count(LearnContent.id)).where(LearnContent.module_id == module.id)
+            learn_result = await db.execute(learn_stmt)
+            total_learn_count += (learn_result.scalar() or 0)
+            
+            if first_learn_id is None:
+                first_item_stmt = select(LearnContent.id).where(LearnContent.module_id == module.id).order_by(LearnContent.order_index).limit(1)
+                first_item_result = await db.execute(first_item_stmt)
+                first_learn_id = first_item_result.scalar()
 
     cases_module_stmt = select(ContentModule).where(
         and_(
@@ -157,15 +184,205 @@ async def get_subject_availability(
 
     return ContentAvailabilityResponse(
         subject_id=subject_id,
-        has_learning_content=learn_count > 0,
+        has_learning_content=total_learn_count > 0,
         has_cases=cases_count > 0,
         has_practice=practice_count > 0,
         has_notes=True,
         first_learning_content_id=first_learn_id,
         first_case_id=first_case_id,
         first_practice_id=first_practice_id,
-        learn_count=learn_count,
+        learn_count=total_learn_count,
         cases_count=cases_count,
         practice_count=practice_count,
         notes_count=notes_count
     )
+
+
+@router.get("/subject/{subject_id}/modules", response_model=SubjectModulesResponse)
+async def get_subject_modules(
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all LEARN modules for a subject in correct order.
+    """
+    modules_stmt = select(ContentModule).where(
+        and_(
+            ContentModule.subject_id == subject_id,
+            ContentModule.module_type == ModuleType.LEARN,
+            ContentModule.status == ModuleStatus.ACTIVE
+        )
+    ).order_by(ContentModule.order_index)
+    
+    modules_result = await db.execute(modules_stmt)
+    modules = modules_result.scalars().all()
+    
+    module_list = []
+    for module in modules:
+        content_count_stmt = select(func.count(LearnContent.id)).where(
+            LearnContent.module_id == module.id
+        )
+        content_count_result = await db.execute(content_count_stmt)
+        content_count = content_count_result.scalar() or 0
+        
+        content_ids_stmt = select(LearnContent.id).where(LearnContent.module_id == module.id)
+        content_ids_result = await db.execute(content_ids_stmt)
+        content_ids = content_ids_result.scalars().all()
+        
+        is_completed = False
+        if content_ids:
+            completed_count_stmt = select(func.count(UserContentProgress.id)).where(
+                and_(
+                    UserContentProgress.user_id == current_user.id,
+                    UserContentProgress.content_type == ContentType.LEARN,
+                    UserContentProgress.content_id.in_(content_ids),
+                    UserContentProgress.is_completed == True
+                )
+            )
+            completed_count_result = await db.execute(completed_count_stmt)
+            completed_count = completed_count_result.scalar() or 0
+            
+            is_completed = (completed_count == len(content_ids))
+        
+        module_list.append(ModuleListItem(
+            module_id=module.id,
+            title=module.title,
+            sequence_order=module.order_index,
+            content_count=content_count,
+            is_completed=is_completed
+        ))
+    
+    return SubjectModulesResponse(
+        subject_id=subject_id,
+        modules=module_list
+    )
+
+
+@router.get("/module/{module_id}/content", response_model=ModuleContentResponse)
+async def get_module_content(
+    module_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all learning content for a module in correct order.
+    """
+    content_stmt = select(LearnContent).where(
+        LearnContent.module_id == module_id
+    ).order_by(LearnContent.order_index)
+    
+    content_result = await db.execute(content_stmt)
+    contents = content_result.scalars().all()
+    
+    content_list = []
+    for content in contents:
+        progress_stmt = select(UserContentProgress).where(
+            and_(
+                UserContentProgress.user_id == current_user.id,
+                UserContentProgress.content_type == ContentType.LEARN,
+                UserContentProgress.content_id == content.id
+            )
+        )
+        progress_result = await db.execute(progress_stmt)
+        progress = progress_result.scalar_one_or_none()
+        
+        content_list.append(ContentListItem(
+            content_id=content.id,
+            title=content.title,
+            sequence_order=content.order_index,
+            is_completed=progress.is_completed if progress else False
+        ))
+    
+    return ModuleContentResponse(
+        module_id=module_id,
+        content=content_list
+    )
+
+
+@router.get("/content/{content_id}", response_model=LearnContentDetailResponse)
+async def get_content_detail(
+    content_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get detailed learning content.
+    """
+    content_stmt = select(LearnContent).where(LearnContent.id == content_id)
+    content_result = await db.execute(content_stmt)
+    content = content_result.scalar_one_or_none()
+    
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    progress_stmt = select(UserContentProgress).where(
+        and_(
+            UserContentProgress.user_id == current_user.id,
+            UserContentProgress.content_type == ContentType.LEARN,
+            UserContentProgress.content_id == content.id
+        )
+    )
+    progress_result = await db.execute(progress_stmt)
+    progress = progress_result.scalar_one_or_none()
+    
+    if not progress:
+        progress = UserContentProgress(
+            user_id=current_user.id,
+            content_type=ContentType.LEARN,
+            content_id=content.id,
+            is_completed=False,
+            last_viewed_at=datetime.utcnow()
+        )
+        db.add(progress)
+    else:
+        progress.last_viewed_at = datetime.utcnow()
+        progress.view_count += 1
+    
+    await db.commit()
+    
+    return LearnContentDetailResponse(
+        content_id=content.id,
+        module_id=content.module_id,
+        title=content.title,
+        body=content.body,
+        sequence_order=content.order_index,
+        is_completed=progress.is_completed if progress else False
+    )
+
+
+@router.post("/content/{content_id}/complete")
+async def mark_content_complete(
+    content_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Mark a learning content as completed.
+    """
+    progress_stmt = select(UserContentProgress).where(
+        and_(
+            UserContentProgress.user_id == current_user.id,
+            UserContentProgress.content_type == ContentType.LEARN,
+            UserContentProgress.content_id == content_id
+        )
+    )
+    progress_result = await db.execute(progress_stmt)
+    progress = progress_result.scalar_one_or_none()
+    
+    if not progress:
+        progress = UserContentProgress(
+            user_id=current_user.id,
+            content_type=ContentType.LEARN,
+            content_id=content_id,
+            is_completed=True,
+            completed_at=datetime.utcnow(),
+            last_viewed_at=datetime.utcnow()
+        )
+        db.add(progress)
+    else:
+        progress.is_completed = True
+        progress.completed_at = datetime.utcnow()
+    
+    await db.commit()
+    return {"status": "success", "message": "Content marked as completed"}
