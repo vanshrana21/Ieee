@@ -178,6 +178,7 @@ function renderLearnContent(container, data) {
         </div>
 
         <div class="content-body">
+            <div class="tutor-actions-bar" id="tutorActionsBar"></div>
             <div class="content-text markdown-content">
                 ${formatMarkdown(content.body)}
             </div>
@@ -198,6 +199,8 @@ function renderLearnContent(container, data) {
             </button>
         </div>
     `;
+
+    addTutorExplainButtons('learn', content.id, module.id, subject.id);
 }
 
 // ============================================================================
@@ -262,6 +265,8 @@ function renderCaseContent(container, data) {
         </div>
 
         <div class="content-body">
+            <div class="tutor-actions-bar" id="tutorActionsBar"></div>
+            
             <div class="case-section">
                 <h2 class="section-title">📋 Facts</h2>
                 <div class="section-content">
@@ -306,6 +311,8 @@ function renderCaseContent(container, data) {
             </button>
         </div>
     `;
+
+    addTutorExplainButtons('case', content.id, module.id, subject.id);
 }
 
 // ============================================================================
@@ -521,6 +528,39 @@ function goBackToModule(moduleId) {
 }
 
 // ============================================================================
+// TUTOR PANEL INTEGRATION (Phase 10.6)
+// Optional, contextual, non-blocking
+// ============================================================================
+
+function addTutorExplainButtons(contentType, contentId, moduleId, subjectId) {
+    const actionsBar = document.getElementById('tutorActionsBar');
+    if (!actionsBar || !window.TutorPanel) return;
+
+    actionsBar.style.cssText = 'display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;';
+
+    const simplifiedBtn = TutorPanel.createExplainButton({
+        contentType,
+        contentId,
+        moduleId,
+        subjectId,
+        text: 'Explain Simply',
+        explanationType: 'simplified'
+    });
+
+    const examBtn = TutorPanel.createExplainButton({
+        contentType,
+        contentId,
+        moduleId,
+        subjectId,
+        text: 'Exam Focus',
+        explanationType: 'exam_focused'
+    });
+
+    actionsBar.appendChild(simplifiedBtn);
+    actionsBar.appendChild(examBtn);
+}
+
+// ============================================================================
 // GLOBAL EXPORTS
 // ============================================================================
 
@@ -529,5 +569,6 @@ window.contentDetail = {
     loadCaseContent,
     loadPracticeContent,
     handleMarkComplete,
-    goBackToModule
+    goBackToModule,
+    addTutorExplainButtons
 };
