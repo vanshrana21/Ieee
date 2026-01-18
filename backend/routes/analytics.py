@@ -40,6 +40,14 @@ from backend.services.mastery_calculator import (
     get_topic_mastery_detail,
     get_strength_label
 )
+from backend.empty_states import (
+    wrap_with_empty_state,
+    safe_percentage,
+    safe_average,
+    safe_int,
+    get_first_time_user_guidance,
+    get_partial_progress_guidance
+)
 from backend.schemas.analytics import (
     AnalyticsAPIResponse,
     LearningSnapshotResponse,
@@ -666,7 +674,7 @@ async def get_dashboard_analytics(
         if all_topics:
             total_weighted = sum(t.mastery_score * t.attempt_count for t in all_topics)
             total_weight = sum(t.attempt_count for t in all_topics)
-            overall_mastery = round((total_weighted / total_weight * 100) if total_weight > 0 else 0.0, 2)
+            overall_mastery = round(safe_percentage(total_weighted, total_weight), 2)
         
         weakest_topics = [
             {
@@ -701,28 +709,48 @@ async def get_dashboard_analytics(
             {
                 "subject_id": sp.subject_id,
                 "subject_title": sp.subject.title if sp.subject else "Unknown",
-                "mastery_percent": round(sp.completion_percentage, 2),
-                "strength_label": get_strength_label(sp.completion_percentage),
-                "completed_topics": sp.completed_items,
-                "total_topics": sp.total_items
+                "mastery_percent": round(sp.completion_percentage or 0, 2),
+                "strength_label": get_strength_label(sp.completion_percentage or 0),
+                "completed_topics": safe_int(sp.completed_items),
+                "total_topics": safe_int(sp.total_items)
             }
             for sp in subjects_progress
         ]
         
         study_streak = await calculate_study_streak(current_user.id, db)
         
+        has_data = len(all_topics) > 0
+        has_sufficient_data = len(all_topics) >= 5
+        
+        response_data = {
+            "has_data": has_data,
+            "data_quality": "full" if has_sufficient_data else ("partial" if has_data else "empty"),
+            "overall_mastery_percent": overall_mastery,
+            "overall_strength_label": get_strength_label(overall_mastery),
+            "weakest_topics": weakest_topics,
+            "strongest_topics": strongest_topics,
+            "subjects_by_mastery": subjects_by_mastery,
+            "study_streak": study_streak,
+            "subjects_recalculated": recalc_result["subjects_recalculated"]
+        }
+        
+        if not has_data:
+            response_data["empty_state"] = {
+                "reason": "No analytics data yet",
+                "guidance": "Complete practice questions to see your analytics.",
+                "action_label": "Start Practice",
+                "action_href": "practice-content.html"
+            }
+        elif not has_sufficient_data:
+            response_data["insufficient_data_warning"] = {
+                "message": f"Limited data available ({len(all_topics)}/5 minimum for accurate insights)",
+                "guidance": "Complete more practice questions for better analytics accuracy."
+            }
+        
         return {
             "success": True,
             "message": "Dashboard analytics retrieved successfully",
-            "data": {
-                "overall_mastery_percent": overall_mastery,
-                "overall_strength_label": get_strength_label(overall_mastery),
-                "weakest_topics": weakest_topics,
-                "strongest_topics": strongest_topics,
-                "subjects_by_mastery": subjects_by_mastery,
-                "study_streak": study_streak,
-                "subjects_recalculated": recalc_result["subjects_recalculated"]
-            }
+            "data": response_data
         }
     
     except Exception as e:
