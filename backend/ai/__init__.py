@@ -1,6 +1,6 @@
 """
 backend/ai/__init__.py
-Phase 10.1 + 10.2: AI Context Binding, Guardrails & Explanation Engine
+Phase 10.1 + 10.2 + 10.3: AI Context Binding, Guardrails, Explanation & Feedback Engine
 """
 
 from backend.ai.context import resolve_ai_context, AIContext
@@ -19,6 +19,12 @@ from backend.ai.service import (
     get_available_explanation_types,
     clear_explanation_cache
 )
+from backend.ai.feedback import (
+    generate_attempt_feedback,
+    get_mcq_option_analysis,
+    clear_feedback_cache,
+    build_feedback_prompt
+)
 
 __all__ = [
     "resolve_ai_context",
@@ -34,5 +40,9 @@ __all__ = [
     "explain_content",
     "ask_about_content",
     "get_available_explanation_types",
-    "clear_explanation_cache"
+    "clear_explanation_cache",
+    "generate_attempt_feedback",
+    "get_mcq_option_analysis",
+    "clear_feedback_cache",
+    "build_feedback_prompt"
 ]
