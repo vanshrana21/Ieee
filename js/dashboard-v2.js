@@ -11,6 +11,7 @@
         analytics: null,
         recentActivity: [],
         lastActivity: null,
+        dashboardStats: null,
         isLoading: true
     };
 
@@ -128,7 +129,7 @@
         }
     }
 
-    function updateStats(curriculum, analytics) {
+    function updateStats(curriculum, analytics, dashboardStats) {
         const progressEl = q('#overallProgress');
         const progressFillEl = q('#overallProgressFill');
         const accuracyEl = q('#practiceAccuracy');
@@ -140,7 +141,28 @@
             courseEl.textContent = curriculum.course.name || 'Your Course';
         }
 
-        if (analytics?.data) {
+        if (dashboardStats) {
+            const overallProgress = Math.round(dashboardStats.overall_progress || 0);
+            if (progressEl && progressFillEl) {
+                progressEl.textContent = `${overallProgress}% Complete`;
+                progressFillEl.style.width = `${overallProgress}%`;
+            }
+
+            if (accuracyEl) {
+                accuracyEl.textContent = `${Math.round(dashboardStats.practice_accuracy || 0)}%`;
+            }
+
+            if (streakEl) {
+                streakEl.textContent = dashboardStats.study_streak || 0;
+            }
+
+            if (timeEl) {
+                const seconds = dashboardStats.total_time_spent_seconds || 0;
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                timeEl.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+            }
+        } else if (analytics?.data) {
             const data = analytics.data;
             
             const overallProgress = Math.round(data.overall_mastery_percent || 0);
@@ -172,7 +194,7 @@
             const allSubjects = [...(state.subjects || []), ...(state.archiveSubjects || [])];
             let overallProgress = 0;
             if (allSubjects.length > 0) {
-                const totalCompletion = allSubjects.reduce((sum, s) => sum + (s.completion_percentage || 0), 0);
+                const totalCompletion = allSubjects.reduce((sum, s) => sum + (s.completion_percentage || s.progress || 0), 0);
                 overallProgress = Math.round(totalCompletion / allSubjects.length);
             }
 
@@ -656,18 +678,52 @@
         renderRecentActivity([]);
 
         try {
-            const curriculumRes = await fetchJson(`${API_BASE}/api/curriculum/dashboard`).catch(err => {
-                console.warn('Curriculum fetch failed:', err.message);
+            const dashboardStatsRes = await fetchJson(`${API_BASE}/api/dashboard/stats`).catch(err => {
+                console.warn('Dashboard stats fetch failed:', err.message);
                 return null;
             });
 
-            if (curriculumRes) {
-                state.curriculum = curriculumRes;
-                state.subjects = curriculumRes.active_subjects || [];
-                state.archiveSubjects = curriculumRes.archive_subjects || [];
+            if (dashboardStatsRes) {
+                state.dashboardStats = dashboardStatsRes;
+            }
+
+            const subjectsRes = await fetchJson(`${API_BASE}/api/subjects`).catch(err => {
+                console.warn('Subjects fetch failed:', err.message);
+                return null;
+            });
+
+            if (subjectsRes && Array.isArray(subjectsRes)) {
+                state.subjects = subjectsRes.map(s => ({
+                    ...s,
+                    completion_percentage: s.progress || 0
+                }));
+                renderSubjects(state.subjects, null);
                 updateResumeSection();
             } else {
-                renderSubjectsEmpty();
+                const curriculumRes = await fetchJson(`${API_BASE}/api/curriculum/dashboard`).catch(err => {
+                    console.warn('Curriculum fetch failed:', err.message);
+                    return null;
+                });
+
+                if (curriculumRes) {
+                    state.curriculum = curriculumRes;
+                    state.subjects = curriculumRes.active_subjects || [];
+                    state.archiveSubjects = curriculumRes.archive_subjects || [];
+                    renderSubjects(state.subjects, null);
+                    updateResumeSection();
+                } else {
+                    renderSubjectsEmpty();
+                }
+            }
+
+            const lastActivityRes = await fetchJson(`${API_BASE}/api/dashboard/last-activity`).catch(err => {
+                console.warn('Last activity fetch failed:', err.message);
+                return null;
+            });
+
+            if (lastActivityRes && lastActivityRes.content_title) {
+                state.lastActivity = lastActivityRes;
+                updateResumeSectionWithActivity(lastActivityRes);
             }
 
             const analyticsRes = await fetchJson(`${API_BASE}/api/analytics/dashboard`).catch(err => {
@@ -676,12 +732,7 @@
             });
 
             state.analytics = analyticsRes;
-            
-            if (curriculumRes) {
-                renderSubjects(state.subjects, analyticsRes);
-            }
-            
-            updateStats(curriculumRes, analyticsRes);
+            updateStats(state.curriculum, analyticsRes, state.dashboardStats);
 
             const focusRes = await fetchJson(`${API_BASE}/api/study/focus`).catch(err => {
                 console.warn('Focus fetch failed:', err.message);
@@ -699,10 +750,50 @@
             console.error('Dashboard init error:', err);
             renderSubjectsEmpty();
             renderRecentActivity([]);
-            updateStats(null, null);
+            updateStats(null, null, null);
         }
 
         state.isLoading = false;
+    }
+
+    function updateResumeSectionWithActivity(activity) {
+        const section = q('#resumeSection');
+        if (!section) return;
+
+        if (!activity || !activity.content_title) {
+            return;
+        }
+
+        const resumeSubject = q('#resumeSubject');
+        const resumeTopic = q('#resumeTopic');
+        const resumeProgressLabel = q('#resumeProgressLabel');
+        const resumeProgressFill = q('#resumeProgressFill');
+
+        if (resumeSubject) resumeSubject.textContent = activity.subject_title || 'Continue Learning';
+        if (resumeTopic) resumeTopic.textContent = activity.content_title || 'Pick up where you left off';
+        
+        if (state.dashboardStats) {
+            const progress = Math.round(state.dashboardStats.overall_progress || 0);
+            if (resumeProgressLabel) resumeProgressLabel.textContent = `${progress}% overall progress`;
+            if (resumeProgressFill) resumeProgressFill.style.width = `${progress}%`;
+        }
+        
+        section.style.display = 'block';
+        
+        const resumeBtn = q('#resumeBtn');
+        if (resumeBtn) {
+            resumeBtn.onclick = () => {
+                if (activity.content_type === 'learn') {
+                    window.location.href = `learn-content.html?id=${activity.content_id}`;
+                } else if (activity.content_type === 'case') {
+                    window.location.href = `case-detail.html?id=${activity.content_id}`;
+                } else if (activity.content_type === 'practice') {
+                    window.location.href = `practice-content.html?id=${activity.content_id}`;
+                } else if (activity.subject_id) {
+                    window.location.href = `start-studying.html?subject=${activity.subject_id}`;
+                }
+            };
+        }
     }
 
     if (document.readyState === 'loading') {
