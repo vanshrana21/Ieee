@@ -1,0 +1,359 @@
+/**
+ * settings-lawyer.css
+ * Phase 2: Lawyer Settings Page Styling
+ */
+
+.settings-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.settings-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1e3a5f;
+    margin: 0;
+}
+
+.settings-section {
+    margin-bottom: 32px;
+}
+
+.settings-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.settings-section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f5f0e6 0%, #e8dcc8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1e3a5f;
+    flex-shrink: 0;
+}
+
+.settings-section-icon.danger {
+    background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+    color: #DC2626;
+}
+
+.settings-section-info h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e3a5f;
+    margin: 0 0 4px;
+}
+
+.settings-section-info p {
+    font-size: 0.875rem;
+    color: #64748B;
+    margin: 0;
+}
+
+.settings-card {
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.settings-item-content {
+    flex: 1;
+}
+
+.settings-item-content label {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    margin-bottom: 2px;
+}
+
+.settings-item-content p {
+    font-size: 0.8125rem;
+    color: #64748B;
+    margin: 0;
+}
+
+.settings-item-control {
+    flex-shrink: 0;
+}
+
+.settings-divider {
+    height: 1px;
+    background: #E2E8F0;
+    margin: 16px 0;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #CBD5E1;
+    transition: 0.3s;
+    border-radius: 26px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #1e3a5f;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.profile-details h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e3a5f;
+    margin: 0 0 4px;
+}
+
+.profile-details p {
+    font-size: 0.875rem;
+    color: #64748B;
+    margin: 0 0 8px;
+}
+
+.profile-role {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #f5f0e6;
+    color: #1e3a5f;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+.subscription-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.subscription-item label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.subscription-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1e3a5f;
+}
+
+.plan-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f5f0e6;
+    color: #1e3a5f;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+.status-active {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.subscription-actions {
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+}
+
+.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background: #FEE2E2;
+    border-color: #FCA5A5;
+}
+
+.settings-select {
+    padding: 8px 12px;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #1e3a5f;
+    background: white;
+    min-width: 180px;
+    cursor: pointer;
+}
+
+.settings-select:focus {
+    outline: none;
+    border-color: #1e3a5f;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+.lawyer-badge {
+    background: #f5f0e6;
+    color: #1e3a5f;
+}
+
+.student-badge {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 16px;
+    }
+    
+    .subscription-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .settings-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .settings-item-control {
+        align-self: flex-end;
+    }
+    
+    .profile-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-details {
+        text-align: center;
+    }
+    
+    .settings-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
