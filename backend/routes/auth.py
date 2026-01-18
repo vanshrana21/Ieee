@@ -17,6 +17,7 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 
 from backend.database import get_db
 from backend.orm.user import User, UserRole
+from backend.errors import ErrorCode, raise_bad_request, raise_unauthorized
 
 logger = logging.getLogger(__name__)
 
@@ -106,27 +107,48 @@ async def get_current_user(
 ) -> User:
     """
     Get current authenticated user from JWT token.
-    No changes to logic - role is automatically included with User object.
+    Phase 11.1: Consistent error responses
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid authentication",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "success": False,
+                    "error": "Unauthorized",
+                    "message": "Invalid token payload",
+                    "code": ErrorCode.AUTH_INVALID
+                },
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except JWTError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "success": False,
+                "error": "Unauthorized",
+                "message": "Invalid or expired token",
+                "code": ErrorCode.AUTH_EXPIRED if "expired" in str(e).lower() else ErrorCode.AUTH_INVALID
+            },
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 
     if not user:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "success": False,
+                "error": "Unauthorized",
+                "message": "User not found",
+                "code": ErrorCode.USER_NOT_FOUND
+            },
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     return user
 
@@ -137,44 +159,46 @@ async def get_current_user(
 async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
     """
     Register new user with role.
-    
-    Changes:
-    - Now requires and stores 'role' field
-    - Returns role in token response for frontend routing
+    Phase 11.1: Consistent error responses
     """
     logger.info(f"Registration attempt for email: {user_data.email}, role: {user_data.role}")
     
-    # Check if email already exists
     result = await db.execute(select(User).where(User.email == user_data.email))
     if result.scalar_one_or_none():
         logger.warning(f"Email already registered: {user_data.email}")
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "success": False,
+                "error": "Bad Request",
+                "message": "Email already registered",
+                "code": ErrorCode.INVALID_INPUT,
+                "details": {"field": "email"}
+            }
+        )
 
-    # Create user with role
     user = User(
         email=user_data.email,
         full_name=user_data.name,
         password_hash=hash_password(user_data.password),
-        role=user_data.role,  # NEW: Set user role
+        role=user_data.role,
     )
 
     db.add(user)
     await db.commit()
     await db.refresh(user)
 
-    # Create token with role in payload
     token = create_access_token(
-        {"sub": user.email, "role": user.role.value},  # NEW: Include role in JWT
+        {"sub": user.email, "role": user.role.value},
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
-    logger.info(f"✓ User registered successfully: {user_data.email} as {user_data.role}")
+    logger.info(f"User registered successfully: {user_data.email} as {user_data.role}")
     
-    # Return token with role for frontend routing
     return {
         "access_token": token,
         "token_type": "bearer",
-        "role": user.role.value  # NEW: Return role
+        "role": user.role.value
     }
 
 
@@ -185,34 +209,36 @@ async def login(
 ):
     """
     Login user and return token with role.
-    
-    Changes:
-    - Returns user role in response for frontend routing
+    Phase 11.1: Consistent error responses
     """
     logger.info(f"Login attempt for username: {form_data.username}")
     
-    # Find user by email
     result = await db.execute(select(User).where(User.email == form_data.username))
     user = result.scalar_one_or_none()
 
-    # Verify credentials
     if not user or not verify_password(form_data.password, user.password_hash):
         logger.warning(f"Invalid credentials for username: {form_data.username}")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "success": False,
+                "error": "Unauthorized",
+                "message": "Invalid email or password",
+                "code": ErrorCode.AUTH_INVALID
+            }
+        )
 
-    # Create token with role in payload
     token = create_access_token(
-        {"sub": user.email, "role": user.role.value},  # NEW: Include role in JWT
+        {"sub": user.email, "role": user.role.value},
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
-    logger.info(f"✓ User logged in successfully: {form_data.username} as {user.role}")
+    logger.info(f"User logged in successfully: {form_data.username} as {user.role}")
     
-    # Return token with role for frontend routing
     return {
         "access_token": token,
         "token_type": "bearer",
-        "role": user.role.value  # NEW: Return role
+        "role": user.role.value
     }
 
 

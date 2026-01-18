@@ -26,6 +26,7 @@ from backend.orm.curriculum import CourseCurriculum
 from backend.orm.user_content_progress import UserContentProgress, ContentType
 from backend.orm.subject_progress import SubjectProgress
 from backend.routes.auth import get_current_user
+from backend.errors import ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -49,27 +50,19 @@ async def verify_content_access(
 ) -> tuple[ContentModule, Subject]:
     """
     Verify user can access content and return module + subject.
-    
-    Args:
-        db: Database session
-        user: Current user
-        content_type: Type of content (learn/case/practice)
-        content_id: Content item ID
-    
-    Returns:
-        (module, subject) if access granted
-    
-    Raises:
-        HTTPException: 400/403/404 for access violations
+    Phase 11.1: Consistent error responses with proper codes
     """
-    # Validate user enrollment
     if not user.course_id or not user.current_semester:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User enrollment incomplete"
+            detail={
+                "success": False,
+                "error": "Bad Request",
+                "message": "User enrollment incomplete. Please complete your course enrollment.",
+                "code": ErrorCode.INVALID_STATE
+            }
         )
     
-    # Fetch content with module relationship
     if content_type == ContentType.LEARN:
         stmt = (
             select(LearnContent)
@@ -97,25 +90,40 @@ async def verify_content_access(
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid content type"
+            detail={
+                "success": False,
+                "error": "Bad Request",
+                "message": "Invalid content type. Must be 'learn', 'case', or 'practice'",
+                "code": ErrorCode.INVALID_INPUT,
+                "details": {"allowed": ["learn", "case", "practice"]}
+            }
         )
     
     if not content:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Content not found"
+            detail={
+                "success": False,
+                "error": "Not Found",
+                "message": f"Content with id '{content_id}' not found",
+                "code": ErrorCode.CONTENT_NOT_FOUND
+            }
         )
     
     module = content.module
     if not module or not module.subject:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Content configuration error"
+            detail={
+                "success": False,
+                "error": "Internal Error",
+                "message": "Content configuration error",
+                "code": ErrorCode.INTERNAL_ERROR
+            }
         )
     
     subject = module.subject
     
-    # Check if subject is in user's course curriculum
     curriculum_stmt = (
         select(CourseCurriculum)
         .where(
@@ -129,34 +137,58 @@ async def verify_content_access(
     
     if not curriculum_item:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This subject is not in your enrolled course"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "This subject is not in your enrolled course",
+                "code": ErrorCode.SCOPE_VIOLATION
+            }
         )
     
-    # Check semester access (future semesters are locked)
     if curriculum_item.semester_number > user.current_semester:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"This subject is locked. Available in Semester {curriculum_item.semester_number}."
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": f"This subject is locked. Available in Semester {curriculum_item.semester_number}.",
+                "code": ErrorCode.PREREQUISITE_NOT_MET,
+                "details": {"required_semester": curriculum_item.semester_number, "current_semester": user.current_semester}
+            }
         )
     
-    # Check module lock status
     if module.status.value == "locked":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This module is currently locked"
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "This module is currently locked",
+                "code": ErrorCode.FORBIDDEN
+            }
         )
     
     if module.status.value == "coming_soon":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Content coming soon"
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "This content is coming soon",
+                "code": ErrorCode.FORBIDDEN
+            }
         )
     
     if not module.is_free and not user.is_premium:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Premium subscription required"
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "Premium subscription required to access this content",
+                "code": ErrorCode.FORBIDDEN
+            }
         )
     
     return module, subject
