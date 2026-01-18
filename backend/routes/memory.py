@@ -17,6 +17,7 @@ from typing import Optional, Dict, Any, List
 from backend.database import get_db
 from backend.orm.user import User
 from backend.routes.auth import get_current_user
+from backend.errors import ErrorCode
 from backend.ai.memory import (
     compute_tutor_memory,
     build_memory_context_for_ai,
@@ -150,7 +151,12 @@ async def get_tutor_memory(
         logger.error(f"[Memory API] Error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to compute tutor memory"
+            detail={
+                "success": False,
+                "error": "Internal Error",
+                "message": "Failed to compute tutor memory",
+                "code": ErrorCode.AI_SERVICE_ERROR
+            }
         )
 
 
@@ -223,7 +229,12 @@ async def get_memory_with_context(
         logger.error(f"[Memory API] Context error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate memory context"
+            detail={
+                "success": False,
+                "error": "Internal Error",
+                "message": "Failed to generate memory context",
+                "code": ErrorCode.AI_SERVICE_ERROR
+            }
         )
 
 
@@ -274,7 +285,12 @@ async def get_phrase(
         logger.error(f"[Memory API] Phrase error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get memory phrase"
+            detail={
+                "success": False,
+                "error": "Internal Error",
+                "message": "Failed to get memory phrase",
+                "code": ErrorCode.AI_SERVICE_ERROR
+            }
         )
 
 

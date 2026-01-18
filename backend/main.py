@@ -61,6 +61,7 @@ from backend.routes import notes
 from backend.database import init_db, close_db
 from backend.routes import router
 from backend.routes import search
+from backend.errors import ErrorCode, APIError, log_and_raise_internal, get_error_summary
 # ============================================
 app = FastAPI()
 app.add_middleware(
@@ -169,11 +170,44 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     logger.warning(f"HTTP exception on {request.url.path}: {exc.detail}")
+    
+    if isinstance(exc.detail, dict):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.detail
+        )
+    
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "success": False,
-            "error": exc.detail
+            "error": "Error",
+            "message": str(exc.detail),
+            "code": ErrorCode.INTERNAL_ERROR if exc.status_code >= 500 else ErrorCode.INVALID_INPUT
+        }
+    )
+
+
+@app.exception_handler(APIError)
+async def api_error_handler(request: Request, exc: APIError):
+    logger.warning(f"API error on {request.url.path}: {exc.code} - {exc.message}")
+    return exc.to_response()
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import uuid
+    log_id = str(uuid.uuid4())[:8]
+    logger.error(f"[{log_id}] Unhandled exception on {request.url.path}: {type(exc).__name__}: {str(exc)}")
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "success": False,
+            "error": "Internal Error",
+            "message": "An unexpected error occurred. Please try again later.",
+            "code": ErrorCode.INTERNAL_ERROR,
+            "details": {"log_id": log_id}
         }
     )
 
@@ -185,6 +219,11 @@ async def health_check():
         "gemini_configured": bool(os.getenv("GEMINI_API_KEY")),
         "version": "1.0.0"
     }
+
+
+@app.get("/api/errors/health", tags=["Health"])
+async def error_handling_health():
+    return get_error_summary()
 
 @app.get("/", tags=["Root"])
 async def root():
