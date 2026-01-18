@@ -738,6 +738,11 @@
     };
 
     async function init() {
+        if (window.JurisSessionManager && !window.JurisSessionManager.checkAuth()) {
+            window.JurisSessionManager.requireAuth();
+            return;
+        }
+
         updateGreeting();
         setupSidebar();
         setupSearch();
@@ -745,20 +750,25 @@
         setupLogout();
         setupContinueLearning();
 
+        showLoadingState('subjects');
+        showLoadingState('stats');
+        showLoadingState('activity');
+        showLoadingState('focus');
         renderRecentActivity([]);
 
         try {
             const dashboardStatsRes = await fetchJson(`${API_BASE}/api/dashboard/stats`).catch(err => {
-                console.warn('Dashboard stats fetch failed:', err.message);
+                handleFetchError(err, 'stats', 'Dashboard stats fetch failed');
                 return null;
             });
 
             if (dashboardStatsRes) {
                 state.dashboardStats = dashboardStatsRes;
             }
+            hideLoadingState('stats');
 
             const subjectsRes = await fetchJson(`${API_BASE}/api/subjects`).catch(err => {
-                console.warn('Subjects fetch failed:', err.message);
+                handleFetchError(err, 'subjects', 'Subjects fetch failed');
                 return null;
             });
 
@@ -771,7 +781,7 @@
                 updateResumeSection();
             } else {
                 const curriculumRes = await fetchJson(`${API_BASE}/api/curriculum/dashboard`).catch(err => {
-                    console.warn('Curriculum fetch failed:', err.message);
+                    handleFetchError(err, 'subjects', 'Curriculum fetch failed');
                     return null;
                 });
 
@@ -785,9 +795,10 @@
                     renderSubjectsEmpty();
                 }
             }
+            hideLoadingState('subjects');
 
             const lastActivityRes = await fetchJson(`${API_BASE}/api/dashboard/last-activity`).catch(err => {
-                console.warn('Last activity fetch failed:', err.message);
+                handleFetchError(err, 'activity', 'Last activity fetch failed');
                 return null;
             });
 
@@ -797,7 +808,7 @@
             }
 
             const analyticsRes = await fetchJson(`${API_BASE}/api/analytics/dashboard`).catch(err => {
-                console.warn('Analytics fetch failed:', err.message);
+                handleFetchError(err, 'analytics', 'Analytics fetch failed');
                 return null;
             });
 
@@ -805,19 +816,24 @@
             updateStats(state.curriculum, analyticsRes, state.dashboardStats);
 
             const focusRes = await fetchJson(`${API_BASE}/api/study/focus`).catch(err => {
-                console.warn('Focus fetch failed:', err.message);
+                handleFetchError(err, 'focus', 'Focus fetch failed');
                 return null;
             });
             renderFocus(focusRes);
+            hideLoadingState('focus');
 
             const progressRes = await fetchJson(`${API_BASE}/api/progress/recent?limit=5`).catch(() => null);
             if (progressRes?.activities) {
                 state.recentActivity = progressRes.activities;
                 renderRecentActivity(progressRes.activities);
             }
+            hideLoadingState('activity');
 
         } catch (err) {
             console.error('Dashboard init error:', err);
+            if (window.JurisErrorHandler) {
+                window.JurisErrorHandler.handle(err, { context: 'Dashboard init', showToast: true });
+            }
             renderSubjectsEmpty();
             renderRecentActivity([]);
             updateStats(null, null, null);

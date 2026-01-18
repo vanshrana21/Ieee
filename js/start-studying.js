@@ -25,7 +25,11 @@
         const token = window.auth?.getToken?.() || localStorage.getItem('access_token');
         
         if (!token) {
-            window.location.href = 'login.html';
+            if (window.JurisSessionManager) {
+                window.JurisSessionManager.requireAuth();
+            } else {
+                window.location.href = 'login.html';
+            }
             throw new Error('Not authenticated');
         }
         
@@ -36,9 +40,13 @@
         const resp = await fetch(url, { ...opts, headers });
         
         if (resp.status === 401) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('user_role');
-            window.location.href = 'login.html';
+            if (window.JurisErrorHandler) {
+                window.JurisErrorHandler.handleAuthError();
+            } else {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('user_role');
+                window.location.href = 'login.html';
+            }
             throw new Error('Session expired. Please log in again.');
         }
         
@@ -533,6 +541,11 @@
     }
 
     async function init() {
+        if (window.JurisSessionManager && !window.JurisSessionManager.checkAuth()) {
+            window.JurisSessionManager.requireAuth();
+            return;
+        }
+
         showLoading();
 
         const subjectSelection = document.getElementById('subjectSelection');
@@ -553,7 +566,17 @@
             const urlParams = new URLSearchParams(window.location.search);
             const subjectId = urlParams.get('subject');
             if (subjectId) {
-                selectSubject(Number(subjectId));
+                const validId = window.JurisNavigationGuard 
+                    ? window.JurisNavigationGuard.validateId(subjectId)
+                    : parseInt(subjectId, 10);
+                    
+                if (validId) {
+                    selectSubject(validId);
+                } else {
+                    if (window.JurisErrorHandler) {
+                        window.JurisErrorHandler.showToast('Invalid subject ID. Please select a subject.', 'warning');
+                    }
+                }
             }
 
         } catch (err) {
@@ -561,10 +584,25 @@
             state.isLoading = false;
             state.error = err.message;
 
-            if (err.message.includes('Not authenticated') || err.message.includes('401')) {
-                showError('Please log in to view your subjects.');
+            if (window.JurisErrorHandler) {
+                const result = window.JurisErrorHandler.handle(err, {
+                    context: 'Start Studying init',
+                    showToast: true
+                });
+                
+                if (!result.handled) {
+                    if (err.message.includes('Not authenticated') || err.message.includes('401')) {
+                        showError('Please log in to view your subjects.');
+                    } else {
+                        showError(err.message || 'Failed to load subjects. Please try again.');
+                    }
+                }
             } else {
-                showError(err.message || 'Failed to load subjects. Please try again.');
+                if (err.message.includes('Not authenticated') || err.message.includes('401')) {
+                    showError('Please log in to view your subjects.');
+                } else {
+                    showError(err.message || 'Failed to load subjects. Please try again.');
+                }
             }
         }
     }
