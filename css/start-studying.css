@@ -811,3 +811,115 @@ body {
     max-width: 400px;
     margin: 0 auto;
 }
+
+.mode-card-disabled {
+    opacity: 0.7;
+    cursor: not-allowed !important;
+    position: relative;
+}
+
+.mode-card-disabled::before {
+    display: none !important;
+}
+
+.mode-card-disabled:hover {
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    border-color: transparent !important;
+}
+
+.mode-card-disabled .mode-icon {
+    opacity: 0.5;
+}
+
+.mode-unavailable-badge {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #fef3c7;
+    border-radius: 8px;
+    border-left: 3px solid #f59e0b;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.mode-unavailable-badge .unavailable-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.mode-unavailable-badge .unavailable-text {
+    font-size: 0.8rem;
+    color: #92400e;
+    line-height: 1.4;
+}
+
+.subject-card-no-content {
+    border: 2px dashed #cbd5e1;
+}
+
+.subject-card-no-content .coming-soon-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+}
+
+.empty-state-container {
+    text-align: center;
+    padding: 3rem 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-state-title {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.empty-state-message {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.empty-state-detail {
+    color: #94A3B8;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+}
+
+.empty-state-suggestion {
+    background: #F1F5F9;
+    padding: 16px;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.empty-state-btn {
+    background: var(--secondary-blue);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.empty-state-btn:hover {
+    background: var(--accent-teal);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 111, 149, 0.3);
+}

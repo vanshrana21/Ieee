@@ -686,10 +686,17 @@
         const resumeBtn = q('#resumeBtn');
 
         const navigate = () => {
-            if (state.lastActivity?.id) {
+            if (state.lastActivity?.subject_id) {
+                window.location.href = `start-studying.html?subject=${state.lastActivity.subject_id}`;
+            } else if (state.lastActivity?.id) {
                 window.location.href = `start-studying.html?subject=${state.lastActivity.id}`;
-            } else if (state.subjects?.[0]?.id) {
-                window.location.href = `start-studying.html?subject=${state.subjects[0].id}`;
+            } else if (state.subjects?.length > 0) {
+                const subjectWithContent = state.subjects.find(s => (s.modules?.length > 0) || (s.completion_percentage > 0));
+                if (subjectWithContent) {
+                    window.location.href = `start-studying.html?subject=${subjectWithContent.id}`;
+                } else {
+                    window.location.href = 'start-studying.html';
+                }
             } else {
                 window.location.href = 'start-studying.html';
             }
