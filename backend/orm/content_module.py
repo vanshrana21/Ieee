@@ -13,7 +13,7 @@ Modules can be:
 - locked: Requires prerequisite or premium
 - coming_soon: Placeholder for future content
 """
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum as SQLEnum, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 from enum import Enum
 from backend.orm.base import BaseModel
@@ -97,16 +97,16 @@ class ContentModule(BaseModel):
     
     # Module Configuration
     module_type = Column(
-        SQLEnum(ModuleType),
+        String(20),
         nullable=False,
         index=True,
         comment="Type of learning content"
     )
     
     status = Column(
-        SQLEnum(ModuleStatus),
+        String(20),
         nullable=False,
-        default=ModuleStatus.ACTIVE,
+        default="active",
         index=True,
         comment="Module availability status"
     )
@@ -172,11 +172,12 @@ class ContentModule(BaseModel):
     
     # Database Constraints
     __table_args__ = (
-        # Prevent duplicate module types per subject
+        # Prevent duplicate module titles per subject per type
         UniqueConstraint(
             "subject_id",
             "module_type",
-            name="uq_subject_module_type"
+            "title",
+            name="uq_subject_module_title"
         ),
         # Composite index for common queries
         Index(

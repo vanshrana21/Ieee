@@ -116,8 +116,8 @@ async def get_subject_availability(
     learn_module_stmt = select(ContentModule).where(
         and_(
             ContentModule.subject_id == subject_id,
-            ContentModule.module_type == ModuleType.LEARN,
-            ContentModule.status == ModuleStatus.ACTIVE
+            ContentModule.module_type == "learn",
+            ContentModule.status == "active"
         )
     )
     learn_module_result = await db.execute(learn_module_stmt)
@@ -139,8 +139,8 @@ async def get_subject_availability(
     cases_module_stmt = select(ContentModule).where(
         and_(
             ContentModule.subject_id == subject_id,
-            ContentModule.module_type == ModuleType.CASES,
-            ContentModule.status == ModuleStatus.ACTIVE
+            ContentModule.module_type == "cases",
+            ContentModule.status == "active"
         )
     )
     cases_module_result = await db.execute(cases_module_stmt)
@@ -163,8 +163,8 @@ async def get_subject_availability(
     practice_module_stmt = select(ContentModule).where(
         and_(
             ContentModule.subject_id == subject_id,
-            ContentModule.module_type == ModuleType.PRACTICE,
-            ContentModule.status == ModuleStatus.ACTIVE
+            ContentModule.module_type == "practice",
+            ContentModule.status == "active"
         )
     )
     practice_module_result = await db.execute(practice_module_stmt)
@@ -232,8 +232,8 @@ async def get_subject_modules(
     modules_stmt = select(ContentModule).where(
         and_(
             ContentModule.subject_id == subject_id,
-            ContentModule.module_type == ModuleType.LEARN,
-            ContentModule.status == ModuleStatus.ACTIVE
+            ContentModule.module_type == "learn",
+            ContentModule.status == "active"
         )
     ).order_by(ContentModule.order_index)
     
