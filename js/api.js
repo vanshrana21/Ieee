@@ -67,6 +67,15 @@ const api = {
 
     async getResumeContext(subjectId) {
         return this.get(`/subjects/${subjectId}/resume`);
+    },
+
+    // --- Dashboard Stats Endpoints (Phase 9.3) ---
+    async getDashboardStats() {
+        return this.get('/api/dashboard/stats');
+    },
+
+    async getLastActivity() {
+        return this.get('/api/dashboard/last-activity');
     }
 };
 

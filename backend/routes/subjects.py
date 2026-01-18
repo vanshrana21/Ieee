@@ -5,14 +5,15 @@ Phase 9.1: Subject Context & Navigation
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from typing import List
+from sqlalchemy import select, and_, func
+from typing import List, Optional
 from pydantic import BaseModel
 
 from backend.database import get_db
 from backend.orm.user import User
 from backend.orm.subject import Subject, SubjectCategory
 from backend.orm.curriculum import CourseCurriculum
+from backend.orm.subject_progress import SubjectProgress
 from backend.routes.auth import get_current_user
 
 from backend.orm.content_module import ContentModule, ModuleType
@@ -40,6 +41,10 @@ class SubjectResponse(BaseModel):
     category: SubjectCategory
     semester: int
     is_elective: bool
+    progress: float = 0.0
+    completed_items: int = 0
+    total_items: int = 0
+    last_activity: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -79,6 +84,18 @@ async def get_my_subjects(
     
     subjects = []
     for subject, semester, is_elective in rows:
+        progress_stmt = (
+            select(SubjectProgress)
+            .where(
+                and_(
+                    SubjectProgress.user_id == current_user.id,
+                    SubjectProgress.subject_id == subject.id
+                )
+            )
+        )
+        progress_result = await db.execute(progress_stmt)
+        progress = progress_result.scalar_one_or_none()
+        
         subjects.append(SubjectResponse(
             id=subject.id,
             title=subject.title,
@@ -86,7 +103,11 @@ async def get_my_subjects(
             description=subject.description,
             category=subject.category,
             semester=semester,
-            is_elective=is_elective
+            is_elective=is_elective,
+            progress=progress.completion_percentage if progress else 0.0,
+            completed_items=progress.completed_items if progress else 0,
+            total_items=progress.total_items if progress else 0,
+            last_activity=progress.last_activity_at.isoformat() if progress and progress.last_activity_at else None
         ))
         
     return subjects
