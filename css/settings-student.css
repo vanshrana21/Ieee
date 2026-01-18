@@ -129,9 +129,12 @@
 }
 
 .settings-container {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 32px 24px 48px;
+    width: 100%;
+    padding: 32px 40px 48px;
+}
+
+.settings-inner {
+    max-width: 720px;
 }
 
 .settings-section {
@@ -432,6 +435,10 @@
 @media (max-width: 768px) {
     .settings-container {
         padding: 20px 16px 32px;
+    }
+    
+    .settings-inner {
+        max-width: 100%;
     }
     
     .top-bar {
