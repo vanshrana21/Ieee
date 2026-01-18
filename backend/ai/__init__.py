@@ -1,6 +1,6 @@
 """
 backend/ai/__init__.py
-Phase 10.1 + 10.2 + 10.3: AI Context Binding, Guardrails, Explanation & Feedback Engine
+Phase 10.1-10.4: AI Context Binding, Guardrails, Explanation, Feedback & Adaptive Hinting
 """
 
 from backend.ai.context import resolve_ai_context, AIContext
@@ -25,6 +25,17 @@ from backend.ai.feedback import (
     clear_feedback_cache,
     build_feedback_prompt
 )
+from backend.ai.adaptive import (
+    compute_adaptation_signals,
+    select_adaptation_style,
+    get_adaptive_feedback,
+    get_hint_for_struggling_student,
+    get_adaptation_summary,
+    build_adaptive_prompt_modifier,
+    DifficultyLevel,
+    AdaptationStyle,
+    AdaptationSignals
+)
 
 __all__ = [
     "resolve_ai_context",
@@ -44,5 +55,14 @@ __all__ = [
     "generate_attempt_feedback",
     "get_mcq_option_analysis",
     "clear_feedback_cache",
-    "build_feedback_prompt"
+    "build_feedback_prompt",
+    "compute_adaptation_signals",
+    "select_adaptation_style",
+    "get_adaptive_feedback",
+    "get_hint_for_struggling_student",
+    "get_adaptation_summary",
+    "build_adaptive_prompt_modifier",
+    "DifficultyLevel",
+    "AdaptationStyle",
+    "AdaptationSignals"
 ]
