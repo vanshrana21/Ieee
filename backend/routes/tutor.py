@@ -1,196 +1,222 @@
 """
 backend/routes/tutor.py
-Phase 4.1: Tutor Context Engine API
+Phase 10.2: Tutor Explanation API Endpoints
 
-Provides curriculum-grounded context for AI Tutor.
+API endpoints for the Tutor Explanation Engine.
 """
+
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field
+from typing import Optional, List
 
 from backend.database import get_db
 from backend.orm.user import User
 from backend.routes.auth import get_current_user
-from backend.services.tutor_context_service import assemble_context
-from backend.schemas.tutor import TutorChatRequest, TutorChatResponse, AdaptiveTutorResponse
-from backend.services.tutor_chat_service import process_tutor_chat
-from backend.services.tutor_adaptive import process_adaptive_chat, get_remediation_pack
+from backend.ai.service import (
+    explain_content,
+    ask_about_content,
+    get_available_explanation_types
+)
+from backend.ai.prompts import ExplanationType
+from backend.exceptions import ForbiddenError, ScopeViolationError, NotFoundError
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
 
 
-class StudentInfo(BaseModel):
-    course: Optional[str]
-    semester: Optional[int]
+class TutorExplainRequest(BaseModel):
+    """Request for content explanation"""
+    subject_id: int = Field(..., description="Subject ID")
+    module_id: int = Field(..., description="Module ID")
+    content_id: int = Field(..., description="Content ID to explain")
+    type: str = Field(
+        default="simple",
+        description="Explanation type: simple, exam_oriented, summary, detailed, example"
+    )
+    question: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Optional specific question about the content"
+    )
 
 
-class SubjectInfo(BaseModel):
-    id: int
-    title: str
+class TutorExplainResponse(BaseModel):
+    """Response from tutor explanation"""
+    content_id: int
+    explanation_type: str
+    explanation: str
+    from_cache: bool = False
+    context: dict
 
 
-class TopicMasteryInfo(BaseModel):
-    topic_tag: str
-    mastery_percent: float
+class TutorAskRequest(BaseModel):
+    """Request for asking a question about content"""
+    subject_id: int
+    module_id: int
+    content_id: int
+    question: str = Field(..., min_length=3, max_length=500)
 
 
-class RecentActivityInfo(BaseModel):
-    last_practice_days_ago: Optional[int]
-    last_subject: Optional[str]
+class ExplanationTypeInfo(BaseModel):
+    """Info about an explanation type"""
+    type: str
+    name: str
+    description: str
 
 
-class StudyMapItem(BaseModel):
-    module: str
-    priority: str
-
-
-class ConstraintsInfo(BaseModel):
-    allowed_subjects_only: bool
-    no_legal_advice: bool
-    exam_oriented: bool
-
-
-class TutorContext(BaseModel):
-    student: StudentInfo
-    active_subjects: List[SubjectInfo]
-    weak_topics: List[TopicMasteryInfo]
-    strong_topics: List[TopicMasteryInfo]
-    recent_activity: RecentActivityInfo
-    study_map_snapshot: List[StudyMapItem]
-    constraints: ConstraintsInfo
-    error: Optional[str] = None
-
-
-class TutorContextResponse(BaseModel):
-    success: bool
-    context: TutorContext
-
-
-@router.get("/context", response_model=TutorContextResponse)
-async def get_tutor_context(
+@router.post("/explain", response_model=TutorExplainResponse)
+async def tutor_explain(
+    payload: TutorExplainRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get curriculum-grounded context for AI Tutor.
+    Get AI explanation of curriculum content.
     
-    Phase 4.1: Tutor Context Engine
+    Phase 10.2 Endpoint - Tutor Explanation Engine
     
-    Returns deterministic context based on:
-    - User's course and semester
-    - Active subjects from curriculum
-    - Topic mastery (weak/strong topics)
-    - Recent practice activity
-    - Study map priorities
+    This endpoint:
+    1. Validates context (subject/module/content chain)
+    2. Enforces scope guards
+    3. Generates explanation using specified style
+    4. Caches responses for efficiency
     
-    Rules:
-    - Same user state → same context
-    - No hallucinated topics
-    - Works with empty mastery tables
-    - Zero AI calls
+    Explanation Types:
+    - simple: Easy to understand explanation
+    - exam_oriented: Structured like an exam answer
+    - summary: Concise bullet points
+    - detailed: Comprehensive explanation
+    - example: Explained through examples
     """
-    logger.info(f"Tutor context request: user_id={current_user.id}")
+    logger.info(f"[Tutor] Explain request from {current_user.email}: content={payload.content_id}, type={payload.type}")
+    
+    valid_types = [e.value for e in ExplanationType]
+    if payload.type not in valid_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid explanation type. Valid types: {valid_types}"
+        )
     
     try:
-        context = await assemble_context(current_user.id, db)
-        
-        has_error = "error" in context
-        
-        return TutorContextResponse(
-            success=not has_error,
-            context=TutorContext(**context)
+        result = await explain_content(
+            db=db,
+            user_id=current_user.id,
+            subject_id=payload.subject_id,
+            module_id=payload.module_id,
+            content_id=payload.content_id,
+            explanation_type=payload.type,
+            question=payload.question
         )
         
+        return TutorExplainResponse(
+            content_id=result["content_id"],
+            explanation_type=result["explanation_type"],
+            explanation=result["explanation"],
+            from_cache=result.get("from_cache", False),
+            context=result["context"]
+        )
+        
+    except ForbiddenError as e:
+        logger.warning(f"[Tutor] Forbidden: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=e.message
+        )
+    except ScopeViolationError as e:
+        logger.info(f"[Tutor] Scope violation: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message
+        )
+    except NotFoundError as e:
+        logger.warning(f"[Tutor] Not found: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message
+        )
     except Exception as e:
-        logger.error(f"Failed to assemble tutor context: {str(e)}")
+        logger.error(f"[Tutor] Explanation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to assemble tutor context"
+            detail="Failed to generate explanation. Please try again."
         )
 
 
-@router.post("/chat", response_model=TutorChatResponse)
-async def tutor_chat(
-    request: TutorChatRequest,
+@router.post("/ask", response_model=TutorExplainResponse)
+async def tutor_ask(
+    payload: TutorAskRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Curriculum-aware AI Tutor Chat.
+    Ask a specific question about curriculum content.
     
-    Phase 4.2, 4.3, 4.4: Curriculum-Aware, Adaptive & Session-aware AI Tutor Chat
+    The question must be about the specified content.
+    Out-of-scope questions will be rejected.
     """
-    logger.info(f"Tutor chat request: user_id={current_user.id}, mode={request.mode}, session_id={request.session_id}, question='{request.question[:50]}...'")
+    logger.info(f"[Tutor] Ask request from {current_user.email}: {payload.question[:50]}...")
     
     try:
-        if request.mode in ["adaptive", "concise", "standard", "scaffolded"]:
-            adaptive_result = await process_adaptive_chat(
-                current_user.id, 
-                request.question, 
-                request.mode, 
-                db,
-                session_id=request.session_id
-            )
-            
-            # If error in adaptive processing
-            if "error" in adaptive_result and not adaptive_result.get("answer"):
-                return TutorChatResponse(
-                    answer=adaptive_result.get("fallback", "Error processing request"),
-                    confidence="Low",
-                    linked_topics=[],
-                    why_this_answer=adaptive_result.get("error", "Unknown error"),
-                    session_warning=adaptive_result.get("session_warning")
-                )
-            
-            # Map adaptive result to TutorChatResponse format
-            return TutorChatResponse(
-                answer=adaptive_result.get("answer", ""),
-                confidence=str(adaptive_result.get("confidence_score", "Medium")),
-                linked_topics=adaptive_result.get("linked_topics", []),
-                why_this_answer=adaptive_result.get("why_this_help", "Based on your curriculum and mastery"),
-                adaptive=AdaptiveTutorResponse(**adaptive_result),
-                session_warning=adaptive_result.get("session_warning")
-            )
-        else:
-            # Fallback to Phase 4.2 logic for other modes if any
-            response_data = await process_tutor_chat(current_user.id, request.question, db)
-            return TutorChatResponse(**response_data)
-            
+        result = await ask_about_content(
+            db=db,
+            user_id=current_user.id,
+            subject_id=payload.subject_id,
+            module_id=payload.module_id,
+            content_id=payload.content_id,
+            question=payload.question
+        )
+        
+        return TutorExplainResponse(
+            content_id=result["content_id"],
+            explanation_type="answer",
+            explanation=result["explanation"],
+            from_cache=False,
+            context=result["context"]
+        )
+        
+    except ForbiddenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=e.message
+        )
+    except ScopeViolationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.message
+        )
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.message
+        )
     except Exception as e:
-        logger.error(f"Tutor chat error: {str(e)}")
+        logger.error(f"[Tutor] Ask error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Tutor chat service error: {str(e)}"
+            detail="Failed to answer question. Please try again."
         )
 
-@router.get("/remediation/{topic_tag}", response_model=TutorChatResponse)
-async def get_remediation(
-    topic_tag: str,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+
+@router.get("/explanation-types", response_model=List[ExplanationTypeInfo])
+async def get_explanation_types(
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Get a remediation pack for a specific topic.
-    Phase 4.3: Weakness-Aware Tutor remediation.
-    """
-    logger.info(f"Remediation request: user_id={current_user.id}, topic_tag={topic_tag}")
+    Get available explanation types.
     
-    try:
-        result = await get_remediation_pack(current_user.id, topic_tag, db)
-        return TutorChatResponse(
-            answer=result.get("answer", ""),
-            confidence=str(result.get("confidence_score", "High")),
-            linked_topics=[topic_tag],
-            why_this_answer=f"Remediation pack for {topic_tag}",
-            adaptive=AdaptiveTutorResponse(**result)
-        )
-    except Exception as e:
-        logger.error(f"Remediation error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate remediation pack: {str(e)}"
-        )
+    Returns list of explanation types with names and descriptions.
+    """
+    return get_available_explanation_types()
+
+
+@router.get("/health")
+async def tutor_health():
+    """Health check for tutor service"""
+    return {
+        "status": "healthy",
+        "service": "tutor-explanation-engine",
+        "version": "10.2"
+    }
