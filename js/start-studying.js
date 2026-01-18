@@ -5,7 +5,8 @@
 
     const state = {
         subjects: [],
-        archiveSubjects: [],
+        courseName: null,
+        currentSemester: null,
         currentSubject: null,
         currentMode: '',
         isLoading: true,
@@ -109,15 +110,21 @@
         }
     }
 
-    function showEmptyState() {
+    function showEmptyState(courseName, semester) {
         const grid = document.querySelector('.subject-grid');
         if (grid) {
+            const semesterInfo = courseName && semester 
+                ? `<p style="color: #64748b; margin-bottom: 12px;"><strong>${escapeHtml(courseName)}</strong> - Semester ${semester}</p>`
+                : '';
+            
             grid.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
                     <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-                    <h3 style="color: #0F172A; margin-bottom: 8px;">No Subjects Enrolled Yet</h3>
-                    <p style="color: #64748b; margin-bottom: 20px;">You haven't been enrolled in any subjects. Please contact your administrator.</p>
-                    <a href="dashboard-student.html" style="background: #0066FF; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block;">Back to Dashboard</a>
+                    <h3 style="color: #0F172A; margin-bottom: 8px;">No Subjects for This Semester</h3>
+                    ${semesterInfo}
+                    <p style="color: #64748b; margin-bottom: 20px;">There are no subjects available for your current semester. Please update your academic profile or contact your administrator.</p>
+                    <a href="academic-profile.html" style="background: #0066FF; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px;">Update Profile</a>
+                    <a href="dashboard-student.html" style="background: #64748b; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block;">Back to Dashboard</a>
                 </div>
             `;
         }
@@ -149,42 +156,24 @@
         const grid = document.querySelector('.subject-grid');
         if (!grid) return;
 
-        const allSubjects = [...state.subjects, ...state.archiveSubjects];
-
-        if (allSubjects.length === 0) {
-            showEmptyState();
+        if (state.subjects.length === 0) {
+            showEmptyState(state.courseName, state.currentSemester);
             return;
         }
 
-        const grouped = {};
-        allSubjects.forEach(subject => {
-            const sem = subject.semester || 'Other';
-            if (!grouped[sem]) grouped[sem] = [];
-            grouped[sem].push(subject);
-        });
-
-        const sortedSemesters = Object.keys(grouped).sort((a, b) => {
-            if (a === 'Other') return 1;
-            if (b === 'Other') return -1;
-            return Number(a) - Number(b);
-        });
-
         let html = '';
-
-        sortedSemesters.forEach(semester => {
-            const subjects = grouped[semester];
-            const isCurrentSem = state.subjects.some(s => s.semester === Number(semester));
-
+        
+        if (state.courseName && state.currentSemester) {
             html += `
-                <div class="category-header">
-                    <h2>Semester ${semester} ${isCurrentSem ? '<span class="current-badge">Current</span>' : ''}</h2>
-                    <p>${subjects.length} subject${subjects.length !== 1 ? 's' : ''}</p>
+                <div class="category-header" style="grid-column: 1 / -1;">
+                    <h2>${escapeHtml(state.courseName)} - Semester ${state.currentSemester} <span class="current-badge">Current</span></h2>
+                    <p>${state.subjects.length} subject${state.subjects.length !== 1 ? 's' : ''}</p>
                 </div>
             `;
+        }
 
-            subjects.forEach(subject => {
-                html += createSubjectCard(subject);
-            });
+        state.subjects.forEach(subject => {
+            html += createSubjectCard(subject);
         });
 
         grid.innerHTML = html;
@@ -441,24 +430,17 @@
         if (studyHub) studyHub.classList.add('hidden');
 
         try {
-            let data;
-            try {
-                data = await fetchJson(`${API_BASE}/api/curriculum/dashboard`);
-                state.subjects = data.active_subjects || [];
-                state.archiveSubjects = data.archive_subjects || [];
-            } catch (dashErr) {
-                console.warn('Dashboard API failed, trying subjects endpoint:', dashErr.message);
-                const subjectsData = await fetchJson(`${API_BASE}/api/student/subjects`);
-                state.subjects = (subjectsData.subjects || []).map(s => ({
-                    id: s.id,
-                    title: s.title,
-                    description: '',
-                    semester: 1,
-                    modules: [],
-                    completion_percentage: 0
-                }));
-                state.archiveSubjects = [];
-            }
+            const subjectsData = await fetchJson(`${API_BASE}/api/student/subjects`);
+            
+            state.subjects = (subjectsData.subjects || []).map(s => ({
+                id: s.id,
+                title: s.title,
+                description: '',
+                modules: [],
+                completion_percentage: 0
+            }));
+            state.courseName = subjectsData.course_name || null;
+            state.currentSemester = subjectsData.current_semester || null;
 
             state.isLoading = false;
 
@@ -472,7 +454,14 @@
                     : parseInt(subjectId, 10);
                     
                 if (validId) {
-                    selectSubject(validId);
+                    const isAllowed = state.subjects.some(s => s.id === validId);
+                    if (isAllowed) {
+                        selectSubject(validId);
+                    } else {
+                        if (window.JurisErrorHandler) {
+                            window.JurisErrorHandler.showToast('Subject not available in your current semester.', 'warning');
+                        }
+                    }
                 } else {
                     if (window.JurisErrorHandler) {
                         window.JurisErrorHandler.showToast('Invalid subject ID. Please select a subject.', 'warning');
@@ -481,7 +470,7 @@
             }
 
         } catch (err) {
-            console.error('Failed to load curriculum:', err);
+            console.error('Failed to load subjects:', err);
             state.isLoading = false;
             state.error = err.message;
 

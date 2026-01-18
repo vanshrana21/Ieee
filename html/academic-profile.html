@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Profile - Juris AI</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .profile-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .header-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: #0F172A;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #64748b;
+            font-size: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #0F172A;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 15px;
+            color: #0F172A;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+        }
+        
+        .form-group select:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+        
+        .form-group select:disabled {
+            background-color: #F8FAFC;
+            cursor: not-allowed;
+        }
+        
+        .course-info {
+            background: #F0F9FF;
+            border: 1px solid #BAE6FD;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        
+        .course-info.visible {
+            display: block;
+        }
+        
+        .course-info p {
+            color: #0369A1;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .course-info strong {
+            color: #0C4A6E;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            color: #64748b;
+            border: 2px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        
+        .btn-secondary:hover {
+            background: #F8FAFC;
+            border-color: #CBD5E1;
+        }
+        
+        .current-profile {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        
+        .current-profile.visible {
+            display: block;
+        }
+        
+        .current-profile h3 {
+            color: #166534;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .current-profile p {
+            color: #15803D;
+            font-size: 15px;
+            margin: 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E2E8F0;
+            border-top-color: #0066FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #B91C1C;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .error-message.visible {
+            display: block;
+        }
+        
+        .success-message {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            color: #166534;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .success-message.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="header">
+            <div class="header-icon">🎓</div>
+            <h1>Academic Profile</h1>
+            <p>Select your course and current semester to see your subjects</p>
+        </div>
+        
+        <div id="loadingState" class="loading">
+            <div class="loading-spinner"></div>
+            <p style="color: #64748b;">Loading your profile...</p>
+        </div>
+        
+        <div id="formState" style="display: none;">
+            <div id="currentProfile" class="current-profile">
+                <h3>Current Profile</h3>
+                <p id="currentProfileText"></p>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="courseSelect">Select Your Course</label>
+                    <select id="courseSelect" required>
+                        <option value="">Choose a course...</option>
+                    </select>
+                </div>
+                
+                <div id="courseInfo" class="course-info">
+                    <p><strong id="courseDuration"></strong></p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="semesterSelect">Current Semester</label>
+                    <select id="semesterSelect" required disabled>
+                        <option value="">Select course first...</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn-primary" id="saveBtn" disabled>
+                    Save Academic Profile
+                </button>
+                
+                <button type="button" class="btn-secondary" onclick="window.location.href='dashboard-student.html'">
+                    Back to Dashboard
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
+    <script>
+        const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
+        
+        let courses = [];
+        let currentProfile = null;
+        
+        async function fetchJson(url, opts = {}) {
+            const token = localStorage.getItem('access_token');
+            if (!token && opts.requireAuth !== false) {
+                window.location.href = 'login.html';
+                throw new Error('Not authenticated');
+            }
+            
+            const headers = { ...opts.headers };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+            
+            const resp = await fetch(url, { ...opts, headers });
+            const text = await resp.text();
+            let json;
+            try { json = text ? JSON.parse(text) : null; } catch { json = null; }
+            if (!resp.ok) throw new Error(json?.detail || json?.error || resp.statusText);
+            return json;
+        }
+        
+        async function loadCourses() {
+            try {
+                const data = await fetchJson(`${API_BASE}/api/student/courses`, { requireAuth: false });
+                courses = data.courses || [];
+                
+                const select = document.getElementById('courseSelect');
+                select.innerHTML = '<option value="">Choose a course...</option>';
+                
+                courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.name;
+                    option.dataset.semesters = course.total_semesters;
+                    option.dataset.years = course.duration_years;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                showError('Failed to load courses: ' + err.message);
+            }
+        }
+        
+        async function loadCurrentProfile() {
+            try {
+                const data = await fetchJson(`${API_BASE}/api/student/academic-profile`);
+                currentProfile = data;
+                
+                if (data.course_id && data.current_semester) {
+                    document.getElementById('currentProfile').classList.add('visible');
+                    document.getElementById('currentProfileText').textContent = 
+                        `${data.course_name} - Semester ${data.current_semester} of ${data.total_semesters}`;
+                    
+                    document.getElementById('courseSelect').value = data.course_id;
+                    handleCourseChange();
+                    document.getElementById('semesterSelect').value = data.current_semester;
+                    updateSaveButton();
+                }
+            } catch (err) {
+                console.error('Failed to load profile:', err);
+            }
+        }
+        
+        function handleCourseChange() {
+            const courseSelect = document.getElementById('courseSelect');
+            const semesterSelect = document.getElementById('semesterSelect');
+            const courseInfo = document.getElementById('courseInfo');
+            
+            const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+            
+            if (!courseSelect.value) {
+                semesterSelect.disabled = true;
+                semesterSelect.innerHTML = '<option value="">Select course first...</option>';
+                courseInfo.classList.remove('visible');
+                updateSaveButton();
+                return;
+            }
+            
+            const totalSemesters = parseInt(selectedOption.dataset.semesters);
+            const years = parseInt(selectedOption.dataset.years);
+            
+            document.getElementById('courseDuration').textContent = 
+                `${years} Year Program • ${totalSemesters} Semesters`;
+            courseInfo.classList.add('visible');
+            
+            semesterSelect.disabled = false;
+            semesterSelect.innerHTML = '<option value="">Select semester...</option>';
+            
+            for (let i = 1; i <= totalSemesters; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Semester ${i}`;
+                semesterSelect.appendChild(option);
+            }
+            
+            updateSaveButton();
+        }
+        
+        function updateSaveButton() {
+            const courseSelect = document.getElementById('courseSelect');
+            const semesterSelect = document.getElementById('semesterSelect');
+            const saveBtn = document.getElementById('saveBtn');
+            
+            saveBtn.disabled = !courseSelect.value || !semesterSelect.value;
+        }
+        
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const courseId = parseInt(document.getElementById('courseSelect').value);
+            const semester = parseInt(document.getElementById('semesterSelect').value);
+            
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
+            hideMessages();
+            
+            try {
+                const data = await fetchJson(`${API_BASE}/api/student/academic-profile`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        course_id: courseId,
+                        current_semester: semester
+                    })
+                });
+                
+                showSuccess(data.message);
+                
+                document.getElementById('currentProfile').classList.add('visible');
+                document.getElementById('currentProfileText').textContent = 
+                    `${data.course_name} - Semester ${data.current_semester}`;
+                
+                setTimeout(() => {
+                    window.location.href = 'start-studying.html';
+                }, 1500);
+                
+            } catch (err) {
+                showError(err.message);
+                saveBtn.disabled = false;
+            }
+            
+            saveBtn.textContent = 'Save Academic Profile';
+        }
+        
+        function showError(msg) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+        
+        function showSuccess(msg) {
+            const el = document.getElementById('successMessage');
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorMessage').classList.remove('visible');
+            document.getElementById('successMessage').classList.remove('visible');
+        }
+        
+        async function init() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            await loadCourses();
+            await loadCurrentProfile();
+            
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('formState').style.display = 'block';
+            
+            document.getElementById('courseSelect').addEventListener('change', handleCourseChange);
+            document.getElementById('semesterSelect').addEventListener('change', updateSaveButton);
+            document.getElementById('profileForm').addEventListener('submit', handleSubmit);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
