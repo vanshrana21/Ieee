@@ -26,6 +26,7 @@ from backend.routes import exam_readiness
 from backend.routes import benchmark
 from backend.routes import ai_context
 from backend.routes import feedback
+from backend.routes import adaptive
 
 
 # ============================================
@@ -225,6 +226,7 @@ app.include_router(exam_readiness.router)
 app.include_router(benchmark.router)
 app.include_router(ai_context.router)
 app.include_router(feedback.router)
+app.include_router(adaptive.router)
 
 
 if __name__ == "__main__":
