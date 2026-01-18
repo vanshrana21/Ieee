@@ -1,313 +1,252 @@
 """
-backend/routes/search.py
-Phase 6.1: Search, Filtering & Discovery
-Unified search endpoint with access control
+backend/routes/subjects.py
+Phase 9.1: Subject Context & Navigation
 """
 
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_, func
-from typing import List, Optional, Literal
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_
+from typing import List
+from pydantic import BaseModel
 
 from backend.database import get_db
-from backend.dependencies import get_current_user
 from backend.orm.user import User
-from backend.orm.subject import Subject
+from backend.orm.subject import Subject, SubjectCategory
+from backend.orm.curriculum import CourseCurriculum
+from backend.routes.auth import get_current_user
+
+from backend.orm.content_module import ContentModule, ModuleType
+from backend.orm.user_content_progress import UserContentProgress, ContentType
 from backend.orm.learn_content import LearnContent
 from backend.orm.case_content import CaseContent
 from backend.orm.practice_question import PracticeQuestion
-from backend.orm.content_module import ContentModule
 
-router = APIRouter(prefix="/api/search", tags=["search"])
+router = APIRouter(prefix="/subjects", tags=["Subjects"])
 
-# ============================================================================
-# RESPONSE MODELS
-# ============================================================================
+# ================= SCHEMAS =================
 
-class SearchResultItem(BaseModel):
-    """Unified search result item"""
+class ResumeResponse(BaseModel):
+    type: str  # "learn", "case", "practice", "revision"
+    content_id: int | None = None
+    subject_id: int
+    module_id: int | None = None
+    message: str
+
+class SubjectResponse(BaseModel):
     id: int
-    content_type: Literal["subject", "learn", "case", "practice"]
     title: str
-    description: Optional[str] = None
-    subject_code: Optional[str] = None
-    subject_name: Optional[str] = None
-    semester: Optional[int] = None
-    module_id: Optional[int] = None
-    module_title: Optional[str] = None
-    
-    # Type-specific fields
-    case_citation: Optional[str] = None
-    case_year: Optional[int] = None
-    exam_importance: Optional[str] = None
-    question_type: Optional[str] = None
-    difficulty: Optional[str] = None
-    marks: Optional[int] = None
-    tags: Optional[List[str]] = None
+    code: str
+    description: str | None
+    category: SubjectCategory
+    semester: int
+    is_elective: bool
 
     class Config:
         from_attributes = True
 
+# ================= ENDPOINTS =================
 
-class SearchResponse(BaseModel):
-    """Paginated search response"""
-    results: List[SearchResultItem]
-    total_count: int
-    page: int
-    page_size: int
-    has_more: bool
-
-
-# ============================================================================
-# SEARCH ENDPOINT
-# ============================================================================
-
-@router.get("", response_model=SearchResponse)
-async def search_content(
-    q: str = Query(..., min_length=2, max_length=200, description="Search query"),
-    content_types: Optional[str] = Query(
-        None, 
-        description="Comma-separated content types: subject,learn,case,practice"
-    ),
-    subject_id: Optional[int] = Query(None, description="Filter by subject ID"),
-    semester: Optional[int] = Query(None, ge=1, le=10, description="Filter by semester"),
-    page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Results per page"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+@router.get("", response_model=List[SubjectResponse])
+async def get_my_subjects(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Unified search endpoint across all content types.
-    
-    Security:
-    - User must be enrolled (has course_id and current_semester)
-    - Only returns content from user's course
-    - Only returns content from unlocked semesters (≤ current_semester)
-    - Respects module lock status
-    
-    Performance:
-    - Uses indexed columns only (title, case_name, citation, tags)
-    - Bounded by page_size (max 100)
-    - Pagination required
+    Fetch subjects for the student's enrolled course and current/previous semesters.
     """
-    
-    # Verify enrollment
     if not current_user.course_id or not current_user.current_semester:
         raise HTTPException(
-            status_code=403,
-            detail="You must be enrolled in a course to use search"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User enrollment incomplete"
         )
-    
-    # Parse content type filter
-    allowed_types = {"subject", "learn", "case", "practice"}
-    if content_types:
-        requested_types = set(t.strip() for t in content_types.split(","))
-        search_types = requested_types & allowed_types
-    else:
-        search_types = allowed_types
-    
-    # Build search pattern (case-insensitive)
-    search_pattern = f"%{q}%"
-    
-    all_results = []
-    
-    # ========================================================================
-    # SEARCH SUBJECTS
-    # ========================================================================
-    if "subject" in search_types:
-        subject_query = db.query(Subject).filter(
+
+    # Fetch subjects from curriculum mapping
+    stmt = (
+        select(Subject, CourseCurriculum.semester_number, CourseCurriculum.is_elective)
+        .join(CourseCurriculum, Subject.id == CourseCurriculum.subject_id)
+        .where(
             and_(
-                Subject.course_id == current_user.course_id,
-                Subject.semester <= current_user.current_semester,
-                or_(
-                    Subject.title.ilike(search_pattern),
-                    Subject.code.ilike(search_pattern),
-                    Subject.description.ilike(search_pattern)
-                )
+                CourseCurriculum.course_id == current_user.course_id,
+                CourseCurriculum.semester_number <= current_user.current_semester,
+                CourseCurriculum.is_active == True
             )
         )
-        
-        # Apply subject filter if provided
-        if subject_id:
-            subject_query = subject_query.filter(Subject.id == subject_id)
-        
-        # Apply semester filter if provided
-        if semester:
-            subject_query = subject_query.filter(Subject.semester == semester)
-        
-        subjects = subject_query.all()
-        
-        for subj in subjects:
-            all_results.append(SearchResultItem(
-                id=subj.id,
-                content_type="subject",
-                title=subj.title,
-                description=subj.description,
-                subject_code=subj.code,
-                subject_name=subj.title,
-                semester=subj.semester
-            ))
-    
-    # ========================================================================
-    # SEARCH LEARN CONTENT
-    # ========================================================================
-    if "learn" in search_types:
-        learn_query = db.query(
-            LearnContent,
-            Subject,
-            ContentModule
-        ).join(
-            ContentModule, LearnContent.module_id == ContentModule.id
-        ).join(
-            Subject, ContentModule.subject_id == Subject.id
-        ).filter(
-            and_(
-                Subject.course_id == current_user.course_id,
-                Subject.semester <= current_user.current_semester,
-                ContentModule.is_locked == False,
-                or_(
-                    LearnContent.title.ilike(search_pattern),
-                    LearnContent.summary.ilike(search_pattern),
-                    LearnContent.tags.contains([q.lower()])  # GIN index
-                )
-            )
-        )
-        
-        # Apply filters
-        if subject_id:
-            learn_query = learn_query.filter(Subject.id == subject_id)
-        if semester:
-            learn_query = learn_query.filter(Subject.semester == semester)
-        
-        learn_results = learn_query.all()
-        
-        for learn, subj, module in learn_results:
-            all_results.append(SearchResultItem(
-                id=learn.id,
-                content_type="learn",
-                title=learn.title,
-                description=learn.summary,
-                subject_code=subj.code,
-                subject_name=subj.title,
-                semester=subj.semester,
-                module_id=module.id,
-                module_title=module.title,
-                tags=learn.tags
-            ))
-    
-    # ========================================================================
-    # SEARCH CASE CONTENT
-    # ========================================================================
-    if "case" in search_types:
-        case_query = db.query(
-            CaseContent,
-            Subject,
-            ContentModule
-        ).join(
-            ContentModule, CaseContent.module_id == ContentModule.id
-        ).join(
-            Subject, ContentModule.subject_id == Subject.id
-        ).filter(
-            and_(
-                Subject.course_id == current_user.course_id,
-                Subject.semester <= current_user.current_semester,
-                ContentModule.is_locked == False,
-                or_(
-                    CaseContent.case_name.ilike(search_pattern),
-                    CaseContent.citation.ilike(search_pattern),
-                    CaseContent.summary.ilike(search_pattern),
-                    CaseContent.tags.contains([q.lower()])  # GIN index
-                )
-            )
-        )
-        
-        # Apply filters
-        if subject_id:
-            case_query = case_query.filter(Subject.id == subject_id)
-        if semester:
-            case_query = case_query.filter(Subject.semester == semester)
-        
-        case_results = case_query.all()
-        
-        for case, subj, module in case_results:
-            all_results.append(SearchResultItem(
-                id=case.id,
-                content_type="case",
-                title=case.case_name,
-                description=case.summary,
-                subject_code=subj.code,
-                subject_name=subj.title,
-                semester=subj.semester,
-                module_id=module.id,
-                module_title=module.title,
-                case_citation=case.citation,
-                case_year=case.year,
-                exam_importance=case.exam_importance,
-                tags=case.tags
-            ))
-    
-    # ========================================================================
-    # SEARCH PRACTICE QUESTIONS
-    # ========================================================================
-    if "practice" in search_types:
-        practice_query = db.query(
-            PracticeQuestion,
-            Subject,
-            ContentModule
-        ).join(
-            ContentModule, PracticeQuestion.module_id == ContentModule.id
-        ).join(
-            Subject, ContentModule.subject_id == Subject.id
-        ).filter(
-            and_(
-                Subject.course_id == current_user.course_id,
-                Subject.semester <= current_user.current_semester,
-                ContentModule.is_locked == False,
-                or_(
-                    PracticeQuestion.question.ilike(search_pattern),
-                    PracticeQuestion.tags.contains([q.lower()])  # GIN index
-                )
-            )
-        )
-        
-        # Apply filters
-        if subject_id:
-            practice_query = practice_query.filter(Subject.id == subject_id)
-        if semester:
-            practice_query = practice_query.filter(Subject.semester == semester)
-        
-        practice_results = practice_query.all()
-        
-        for question, subj, module in practice_results:
-            all_results.append(SearchResultItem(
-                id=question.id,
-                content_type="practice",
-                title=f"Question: {question.question[:100]}...",
-                description=question.question[:200],
-                subject_code=subj.code,
-                subject_name=subj.title,
-                semester=subj.semester,
-                module_id=module.id,
-                module_title=module.title,
-                question_type=question.question_type,
-                difficulty=question.difficulty,
-                marks=question.marks,
-                tags=question.tags
-            ))
-    
-    # ========================================================================
-    # PAGINATION
-    # ========================================================================
-    total_count = len(all_results)
-    start_idx = (page - 1) * page_size
-    end_idx = start_idx + page_size
-    paginated_results = all_results[start_idx:end_idx]
-    
-    return SearchResponse(
-        results=paginated_results,
-        total_count=total_count,
-        page=page,
-        page_size=page_size,
-        has_more=end_idx < total_count
+        .order_by(CourseCurriculum.semester_number, CourseCurriculum.display_order)
     )
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+    
+    subjects = []
+    for subject, semester, is_elective in rows:
+        subjects.append(SubjectResponse(
+            id=subject.id,
+            title=subject.title,
+            code=subject.code,
+            description=subject.description,
+            category=subject.category,
+            semester=semester,
+            is_elective=is_elective
+        ))
+        
+    return subjects
+
+@router.get("/{subject_id}/resume", response_model=ResumeResponse)
+async def resume_subject(
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Phase 9.2: Resume Learning Engine
+    Determines the exact next destination for a student.
+    """
+    # 1. Validate subject ownership
+    curriculum_stmt = select(CourseCurriculum).where(
+        and_(
+            CourseCurriculum.course_id == current_user.course_id,
+            CourseCurriculum.subject_id == subject_id,
+            CourseCurriculum.is_active == True
+        )
+    )
+    curriculum_result = await db.execute(curriculum_stmt)
+    if not curriculum_result.scalar_one_or_none():
+        raise HTTPException(status_code=403, detail="Subject not in your curriculum")
+
+    # 2. Check for unfinished LEARN content
+    # Get all LEARN items for this subject
+    learn_stmt = (
+        select(LearnContent)
+        .join(ContentModule, LearnContent.module_id == ContentModule.id)
+        .where(and_(
+            ContentModule.subject_id == subject_id,
+            ContentModule.module_type == ModuleType.LEARN
+        ))
+        .order_by(LearnContent.order_index)
+    )
+    learn_result = await db.execute(learn_stmt)
+    learn_items = learn_result.scalars().all()
+
+    for item in learn_items:
+        progress_stmt = select(UserContentProgress).where(and_(
+            UserContentProgress.user_id == current_user.id,
+            UserContentProgress.content_type == ContentType.LEARN,
+            UserContentProgress.content_id == item.id,
+            UserContentProgress.is_completed == True
+        ))
+        p_res = await db.execute(progress_stmt)
+        if not p_res.scalar_one_or_none():
+            return ResumeResponse(
+                type="learn",
+                content_id=item.id,
+                subject_id=subject_id,
+                module_id=item.module_id,
+                message="Resuming unfinished learn content"
+            )
+
+    # 3. Check for unfinished CASES content
+    case_stmt = (
+        select(CaseContent)
+        .join(ContentModule, CaseContent.module_id == ContentModule.id)
+        .where(and_(
+            ContentModule.subject_id == subject_id,
+            ContentModule.module_type == ModuleType.CASES
+        ))
+        .order_by(CaseContent.order_index if hasattr(CaseContent, 'order_index') else CaseContent.id)
+    )
+    case_result = await db.execute(case_stmt)
+    case_items = case_result.scalars().all()
+
+    for item in case_items:
+        progress_stmt = select(UserContentProgress).where(and_(
+            UserContentProgress.user_id == current_user.id,
+            UserContentProgress.content_type == ContentType.CASE,
+            UserContentProgress.content_id == item.id,
+            UserContentProgress.is_completed == True
+        ))
+        p_res = await db.execute(progress_stmt)
+        if not p_res.scalar_one_or_none():
+            return ResumeResponse(
+                type="case",
+                content_id=item.id,
+                subject_id=subject_id,
+                module_id=item.module_id,
+                message="Resuming unfinished case content"
+            )
+
+    # 4. Check for PRACTICE attempts
+    practice_stmt = (
+        select(PracticeQuestion)
+        .join(ContentModule, PracticeQuestion.module_id == ContentModule.id)
+        .where(and_(
+            ContentModule.subject_id == subject_id,
+            ContentModule.module_type == ModuleType.PRACTICE
+        ))
+        .order_by(PracticeQuestion.order_index)
+    )
+    practice_result = await db.execute(practice_stmt)
+    practice_items = practice_result.scalars().all()
+
+    if practice_items:
+        # If any practice question is not completed, redirect to the first incomplete one
+        for item in practice_items:
+            progress_stmt = select(UserContentProgress).where(and_(
+                UserContentProgress.user_id == current_user.id,
+                UserContentProgress.content_type == ContentType.PRACTICE,
+                UserContentProgress.content_id == item.id,
+                UserContentProgress.is_completed == True
+            ))
+            p_res = await db.execute(progress_stmt)
+            if not p_res.scalar_one_or_none():
+                return ResumeResponse(
+                    type="practice",
+                    content_id=item.id,
+                    subject_id=subject_id,
+                    module_id=item.module_id,
+                    message="Resuming practice"
+                )
+
+    # 5. Everything complete
+    return ResumeResponse(
+        type="revision",
+        subject_id=subject_id,
+        message="Subject complete! Time for revision."
+    )
+
+@router.post("/{subject_id}/select")
+async def select_subject(
+    subject_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Validate that a subject belongs to the student's course.
+    Phase 9.1: Ensures subject context is valid.
+    """
+    if not current_user.course_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User not enrolled in any course"
+        )
+
+    stmt = (
+        select(CourseCurriculum)
+        .where(
+            and_(
+                CourseCurriculum.course_id == current_user.course_id,
+                CourseCurriculum.subject_id == subject_id,
+                CourseCurriculum.is_active == True
+            )
+        )
+    )
+    
+    result = await db.execute(stmt)
+    curriculum = result.scalar_one_or_none()
+    
+    if not curriculum:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This subject is not part of your curriculum"
+        )
+        
+    return {"success": True, "subject_id": subject_id, "message": "Subject context validated"}

@@ -106,9 +106,15 @@
 
     const frag = document.createDocumentFragment();
     subjects.forEach((subject) => {
-      const card = document.createElement('div');
-      card.className = 'subject-card';
-      const progressPercent = Math.round(subject.progress || 0);
+    const card = document.createElement('div');
+    card.className = 'subject-card';
+    if (String(StorageService.getItem(STORAGE_KEYS.CURRENT_SUBJECT_ID)) === String(subject.id)) {
+      card.classList.add('active-context');
+      card.style.border = '2px solid #3b82f6';
+      card.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.3)';
+    }
+    const progressPercent = Math.round(subject.progress || 0);
+
       const semester = subject.semester ? `Sem ${subject.semester}` : '';
       card.innerHTML = `
         <div class="subject-header">
@@ -123,8 +129,19 @@
             <span>${escapeHtml(semester)}</span>
         </div>
       `;
-      card.addEventListener('click', () => {
-        window.location.href = `start-studying.html?subject=${subject.id}`;
+      card.addEventListener('click', async () => {
+        try {
+          // Phase 9.1: Select subject (validate on backend)
+          await window.api.selectSubject(subject.id);
+          StorageService.setItem(STORAGE_KEYS.CURRENT_SUBJECT_ID, subject.id);
+          
+          // Phase 9.2: Resume logic
+          const resume = await window.api.getResumeContext(subject.id);
+          handleResumeNavigation(resume);
+        } catch (err) {
+          console.error('Subject selection error', err);
+          showToast(err.message || 'Failed to select subject', 'error');
+        }
       });
       frag.appendChild(card);
     });
@@ -226,6 +243,25 @@
     container.appendChild(frag);
   }
 
+  function handleResumeNavigation(resume) {
+    if (!resume) return;
+    const { type, content_id, subject_id, module_id } = resume;
+    
+    if (type === 'learn') {
+      window.location.href = `learn-content.html?id=${content_id}&subject=${subject_id}&module=${module_id}`;
+    } else if (type === 'case') {
+      window.location.href = `case-detail.html?id=${content_id}&subject=${subject_id}&module=${module_id}`;
+    } else if (type === 'practice') {
+      // If content_id is missing, it goes to the practice entry for the subject
+      const url = content_id 
+        ? `practice-content.html?id=${content_id}&subject=${subject_id}&module=${module_id}`
+        : `practice-content.html?subject=${subject_id}`;
+      window.location.href = url;
+    } else if (type === 'revision') {
+      window.location.href = `start-studying.html?subject=${subject_id}&view=revision`;
+    }
+  }
+
   // Actions
   const dashboardStudent = {
     startStudying,
@@ -254,11 +290,23 @@
     return true;
   }
 
-  function startStudying() {
+  async function startStudying() {
     if (!ensureAuthOrRedirect()) return;
+    
+    // Phase 9.1 & 9.2: Use active context or first subject
+    const activeSubjectId = StorageService.getItem(STORAGE_KEYS.CURRENT_SUBJECT_ID);
     const firstSubject = state.subjects && state.subjects[0];
-    if (firstSubject) {
-      window.location.href = `start-studying.html?subject=${firstSubject.id}`;
+    const targetId = activeSubjectId || (firstSubject ? firstSubject.id : null);
+    
+    if (targetId) {
+      try {
+        const resume = await window.api.getResumeContext(targetId);
+        handleResumeNavigation(resume);
+      } catch (err) {
+        console.error('Resume error', err);
+        // Fallback to start-studying page
+        window.location.href = `start-studying.html?subject=${targetId}`;
+      }
     } else {
       window.location.href = 'onboarding.html';
     }
@@ -526,28 +574,30 @@
           avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
         }
       } else {
-        const curriculumResult = await window.auth.getUserCurriculum();
-        if (curriculumResult && curriculumResult.success && curriculumResult.data) {
-          state.curriculum = curriculumResult.data;
-          state.subjects = curriculumResult.data.subjects || [];
-          state.userFirstName = window.auth.getUserFirstName ? window.auth.getUserFirstName() : '';
-          const nameEl = q('#studentNameFull');
-          if (nameEl && state.userFirstName) {
-            nameEl.textContent = `, ${state.userFirstName}`;
-          }
-          const avatarEl = q('#studentName');
-          if (avatarEl && state.userFirstName) {
-            avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
-          }
-          renderSubjectProgress(state.subjects);
-        } else {
-          const res = await fetchJson(`${API_BASE}/api/user/curriculum`, { method: 'GET' }).catch(()=>null);
-          if (res && res.data) {
-            state.curriculum = res.data;
-            state.subjects = res.data.subjects || [];
+          const subjectsResult = await window.api.getSubjects();
+          if (subjectsResult) {
+            state.subjects = subjectsResult.map(s => ({
+              ...s,
+              name: s.title // Map title to name for existing render logic
+            }));
+            state.userFirstName = window.auth.getUserFirstName ? window.auth.getUserFirstName() : '';
+            const nameEl = q('#studentNameFull');
+            if (nameEl && state.userFirstName) {
+              nameEl.textContent = `, ${state.userFirstName}`;
+            }
+            const avatarEl = q('#studentName');
+            if (avatarEl && state.userFirstName) {
+              avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
+            }
             renderSubjectProgress(state.subjects);
+          } else {
+            const res = await fetchJson(`${API_BASE}/api/user/curriculum`, { method: 'GET' }).catch(()=>null);
+            if (res && res.data) {
+              state.curriculum = res.data;
+              state.subjects = res.data.subjects || [];
+              renderSubjectProgress(state.subjects);
+            }
           }
-        }
       }
 
       const plan = await fetchJson(`${API_BASE}/api/study-plan/active`, { method: 'GET' }).catch(()=>null);

@@ -8,7 +8,8 @@ const STORAGE_KEYS = {
     ACCESS_TOKEN: 'legalai_access_token',
     USER_ROLE: 'legalai_user_role',
     USER_NAME: 'legalai_user_name',
-    USER_EMAIL: 'legalai_user_email'
+    USER_EMAIL: 'legalai_user_email',
+    CURRENT_SUBJECT_ID: 'legalai_current_subject_id'
 };
 
 const StorageService = {

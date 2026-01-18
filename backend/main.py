@@ -3,7 +3,7 @@ import sys
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
-from backend.routes import progress
+from backend.routes import progress, subjects
 from backend.routes import auth, user, curriculum, modules, content, progress
 from backend.routes.practice import router as practice_router
 from backend.routes import search
@@ -191,6 +191,7 @@ async def root():
     }
 
 app.include_router(router, prefix="/api")
+app.include_router(subjects.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
 app.include_router(curriculum.router, prefix="/api")
