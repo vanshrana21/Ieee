@@ -27,6 +27,7 @@ from backend.routes import benchmark
 from backend.routes import ai_context
 from backend.routes import feedback
 from backend.routes import adaptive
+from backend.routes import memory
 
 
 # ============================================
@@ -227,6 +228,7 @@ app.include_router(benchmark.router)
 app.include_router(ai_context.router)
 app.include_router(feedback.router)
 app.include_router(adaptive.router)
+app.include_router(memory.router)
 
 
 if __name__ == "__main__":

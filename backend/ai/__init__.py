@@ -1,6 +1,6 @@
 """
 backend/ai/__init__.py
-Phase 10.1-10.4: AI Context Binding, Guardrails, Explanation, Feedback & Adaptive Hinting
+Phase 10.1-10.5: AI Context Binding, Guardrails, Explanation, Feedback, Adaptive Hinting & Memory
 """
 
 from backend.ai.context import resolve_ai_context, AIContext
@@ -36,6 +36,16 @@ from backend.ai.adaptive import (
     AdaptationStyle,
     AdaptationSignals
 )
+from backend.ai.memory import (
+    compute_tutor_memory,
+    build_memory_context_for_ai,
+    get_memory_phrase,
+    get_memory_summary,
+    TutorMemory,
+    TopicStruggle,
+    ConfusionPattern,
+    MEMORY_PHRASES
+)
 
 __all__ = [
     "resolve_ai_context",
@@ -64,5 +74,13 @@ __all__ = [
     "build_adaptive_prompt_modifier",
     "DifficultyLevel",
     "AdaptationStyle",
-    "AdaptationSignals"
+    "AdaptationSignals",
+    "compute_tutor_memory",
+    "build_memory_context_for_ai",
+    "get_memory_phrase",
+    "get_memory_summary",
+    "TutorMemory",
+    "TopicStruggle",
+    "ConfusionPattern",
+    "MEMORY_PHRASES"
 ]
