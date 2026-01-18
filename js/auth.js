@@ -398,9 +398,13 @@ async function handleLogin(event) {
             if (!isEnrolled) {
                 window.location.href = '/html/onboarding.html';
             } else {
-                const role = getUserRole();
-                const dashboardUrl = getDashboardUrl(role);
-                window.location.href = dashboardUrl;
+                if (window.JurisSessionManager) {
+                    window.JurisSessionManager.handleLoginSuccess();
+                } else {
+                    const role = getUserRole();
+                    const dashboardUrl = getDashboardUrl(role);
+                    window.location.href = dashboardUrl;
+                }
             }
         } else {
             throw new Error(result.error || 'Login failed');

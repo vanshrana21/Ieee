@@ -1,5 +1,5 @@
 /**
- * Practice Content - Phase 3.3
+ * Practice Content - Phase 3.3 + Phase 9.4 Robustness
  * Module-Aware Practice Mode for Indian Law Students
  */
 
@@ -15,6 +15,7 @@ let state = {
     currentModuleTitle: '',
     timerSeconds: 0,
     timerInterval: null,
+    isLoading: false,
     results: {
         correct: 0,
         total: 0
@@ -26,6 +27,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function initializePage() {
+    if (window.JurisSessionManager && !window.JurisSessionManager.checkAuth()) {
+        window.JurisSessionManager.requireAuth();
+        return;
+    }
+
     setupEventListeners();
     setupSidebarToggle();
     await loadUserInfo();
@@ -458,8 +464,12 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
     if (!response.ok) {
         if (response.status === 401) {
-            localStorage.removeItem('access_token');
-            window.location.href = '/html/login.html';
+            if (window.JurisErrorHandler) {
+                window.JurisErrorHandler.handleAuthError();
+            } else {
+                localStorage.removeItem('access_token');
+                window.location.href = '/html/login.html';
+            }
         }
         throw new Error(data.detail || 'API request failed');
     }
@@ -467,7 +477,11 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     return data;
 }
 
-function showToast(message) {
+function showToast(message, type = 'info') {
+    if (window.JurisErrorHandler) {
+        window.JurisErrorHandler.showToast(message, type === 'error' ? 'error' : 'info');
+        return;
+    }
     const toast = document.getElementById('toast');
     if (!toast) return;
     toast.textContent = message;
