@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-tutor-enabled>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/dashboard-v2.css">
     <link rel="stylesheet" href="../css/practice-content.css">
+    <link rel="stylesheet" href="../css/tutor-panel.css">
 </head>
 <body>
     <aside class="sidebar" id="sidebar">
@@ -157,6 +158,9 @@
                     <div class="question-text" id="questionText">
                         Loading question...
                     </div>
+                    
+                    <!-- AI Hint Container (Phase 10.6 - optional, dismissible) -->
+                    <div id="hintContainer" class="hint-container"></div>
 
                     <!-- MCQ Options -->
                     <div id="mcqOptions" class="options-container">
@@ -273,6 +277,7 @@
 
     <script src="../js/error-handler.js"></script>
     <script src="../js/api.js"></script>
+    <script src="../js/tutor-panel.js"></script>
     <script src="../js/practice-content.js"></script>
 </body>
 </html>
