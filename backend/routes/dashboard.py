@@ -213,21 +213,26 @@ async def calculate_study_streak(db: AsyncSession, user_id: int) -> int:
     """
     today = datetime.utcnow().date()
     
-    activity_dates_stmt = (
-        select(distinct(func.date(UserContentProgress.last_viewed_at)))
+    activity_stmt = (
+        select(UserContentProgress.last_viewed_at)
         .where(UserContentProgress.user_id == user_id)
-        .order_by(func.date(UserContentProgress.last_viewed_at).desc())
+        .order_by(UserContentProgress.last_viewed_at.desc())
     )
-    result = await db.execute(activity_dates_stmt)
-    dates = [row[0] for row in result.all()]
+    result = await db.execute(activity_stmt)
+    rows = result.all()
 
-    if not dates:
+    if not rows:
+        return 0
+
+    unique_dates = sorted(set(row[0].date() for row in rows if row[0]), reverse=True)
+    
+    if not unique_dates:
         return 0
 
     streak = 0
     check_date = today
 
-    for d in dates:
+    for d in unique_dates:
         if d == check_date:
             streak += 1
             check_date = check_date - timedelta(days=1)
