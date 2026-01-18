@@ -1,0 +1,632 @@
+/**
+ * tutor-panel.css
+ * Phase 10.6: Tutor UX Discipline
+ * 
+ * DESIGN PRINCIPLES:
+ * - Learning content is PRIMARY
+ * - Tutor interaction is SECONDARY and OPTIONAL
+ * - Mentor aesthetic, NOT chatbot
+ * - Calm, professional, law-appropriate
+ * - Always dismissible, never blocking
+ */
+
+/* ============================================================================
+   TUTOR PANEL - BASE STYLES (Inline contextual panel)
+   ============================================================================ */
+
+.tutor-panel {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(12, 43, 78, 0.08);
+    overflow: hidden;
+    margin: 1rem 0;
+    max-width: 100%;
+}
+
+.tutor-panel.collapsed {
+    max-height: 56px;
+    overflow: hidden;
+}
+
+.tutor-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%);
+    border-bottom: 1px solid #E2E8F0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.tutor-panel-header:hover {
+    background: #F1F5F9;
+}
+
+.tutor-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0C2B4E;
+}
+
+.tutor-panel-icon {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #0C2B4E, #2E6F95);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.tutor-panel-toggle {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748B;
+    transition: transform 0.2s ease;
+}
+
+.tutor-panel.collapsed .tutor-panel-toggle {
+    transform: rotate(-90deg);
+}
+
+.tutor-panel-body {
+    padding: 1rem;
+}
+
+.tutor-panel.collapsed .tutor-panel-body {
+    display: none;
+}
+
+/* ============================================================================
+   EXPLAIN BUTTON - Beside content (not intrusive)
+   ============================================================================ */
+
+.explain-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #2E6F95;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.explain-btn:hover {
+    background: #E8F4F8;
+    border-color: #2E6F95;
+    color: #0C2B4E;
+}
+
+.explain-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.explain-btn-icon {
+    font-size: 0.875rem;
+}
+
+.explain-btn.loading {
+    pointer-events: none;
+}
+
+.explain-btn.loading .explain-btn-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================================================
+   HINT CARD - Contextual, non-blocking
+   ============================================================================ */
+
+.hint-card {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+    margin: 0.75rem 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+.hint-card-icon {
+    width: 24px;
+    height: 24px;
+    background: #F59E0B;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.hint-card-content {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #92400E;
+}
+
+.hint-card-dismiss {
+    background: none;
+    border: none;
+    color: #B45309;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.hint-card-dismiss:hover {
+    color: #92400E;
+}
+
+/* ============================================================================
+   FEEDBACK PANEL - Post-attempt, expandable
+   ============================================================================ */
+
+.feedback-panel {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    margin: 1rem 0;
+    overflow: hidden;
+}
+
+.feedback-panel.correct {
+    border-color: #A7F3D0;
+    background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%);
+}
+
+.feedback-panel.incorrect {
+    border-color: #FECACA;
+    background: linear-gradient(135deg, #FEF2F2 0%, #FFFFFF 100%);
+}
+
+.feedback-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.feedback-panel.correct .feedback-panel-header {
+    border-color: #A7F3D0;
+}
+
+.feedback-panel.incorrect .feedback-panel-header {
+    border-color: #FECACA;
+}
+
+.feedback-result {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+.feedback-result.correct {
+    color: #059669;
+}
+
+.feedback-result.incorrect {
+    color: #DC2626;
+}
+
+.feedback-result-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+}
+
+.feedback-result.correct .feedback-result-icon {
+    background: #059669;
+    color: white;
+}
+
+.feedback-result.incorrect .feedback-result-icon {
+    background: #DC2626;
+    color: white;
+}
+
+.feedback-panel-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.feedback-expand-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    background: transparent;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748B;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.feedback-expand-btn:hover {
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+    color: #0C2B4E;
+}
+
+.feedback-panel-body {
+    padding: 1rem;
+    display: none;
+}
+
+.feedback-panel.expanded .feedback-panel-body {
+    display: block;
+}
+
+.feedback-explanation {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: #334155;
+}
+
+.feedback-explanation strong {
+    color: #0C2B4E;
+}
+
+/* ============================================================================
+   EXPLANATION MODAL - Dismissible, not blocking
+   ============================================================================ */
+
+.explanation-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 43, 78, 0.4);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.explanation-modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.explanation-modal {
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(12, 43, 78, 0.2);
+    max-width: 640px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.2s ease;
+}
+
+.explanation-modal-overlay.visible .explanation-modal {
+    transform: translateY(0) scale(1);
+}
+
+.explanation-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.explanation-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0C2B4E;
+}
+
+.explanation-modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F8FAFC;
+    border: none;
+    border-radius: 8px;
+    color: #64748B;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.explanation-modal-close:hover {
+    background: #E2E8F0;
+    color: #0C2B4E;
+}
+
+.explanation-modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.explanation-content {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: #334155;
+}
+
+.explanation-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0C2B4E;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.explanation-content h3:first-child {
+    margin-top: 0;
+}
+
+.explanation-content ul, 
+.explanation-content ol {
+    margin: 0.5rem 0;
+    padding-left: 1.25rem;
+}
+
+.explanation-content li {
+    margin: 0.25rem 0;
+}
+
+.explanation-content strong {
+    color: #0C2B4E;
+}
+
+.explanation-content blockquote {
+    border-left: 3px solid #2E6F95;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #475569;
+    font-style: italic;
+}
+
+.explanation-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1.25rem;
+    border-top: 1px solid #E2E8F0;
+    background: #F8FAFC;
+}
+
+.explanation-meta {
+    font-size: 0.75rem;
+    color: #64748B;
+}
+
+.explanation-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.explanation-action-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.explanation-action-btn.primary {
+    background: #0C2B4E;
+    border: none;
+    color: white;
+}
+
+.explanation-action-btn.primary:hover {
+    background: #2E6F95;
+}
+
+.explanation-action-btn.secondary {
+    background: transparent;
+    border: 1px solid #E2E8F0;
+    color: #64748B;
+}
+
+.explanation-action-btn.secondary:hover {
+    background: #F1F5F9;
+    color: #0C2B4E;
+}
+
+/* ============================================================================
+   INLINE TUTOR ASSISTANCE - Small contextual helper
+   ============================================================================ */
+
+.tutor-assist {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #1E40AF;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tutor-assist:hover {
+    background: #DBEAFE;
+    border-color: #93C5FD;
+}
+
+.tutor-assist-icon {
+    font-size: 0.875rem;
+}
+
+/* ============================================================================
+   MEMORY ACKNOWLEDGMENT - Subtle, non-intrusive
+   ============================================================================ */
+
+.memory-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+    background: #F0F9FF;
+    border-left: 3px solid #0EA5E9;
+    border-radius: 0 8px 8px 0;
+    margin: 0.75rem 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #0369A1;
+}
+
+.memory-note-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.memory-note-text {
+    flex: 1;
+}
+
+.memory-note-dismiss {
+    background: none;
+    border: none;
+    color: #0EA5E9;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+}
+
+.memory-note-dismiss:hover {
+    color: #0369A1;
+}
+
+/* ============================================================================
+   LOADING STATE - No typing animation (per Phase 10.6)
+   ============================================================================ */
+
+.tutor-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #64748B;
+    font-size: 0.875rem;
+}
+
+.tutor-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #E2E8F0;
+    border-top-color: #2E6F95;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .explanation-modal {
+        max-height: 90vh;
+        border-radius: 12px 12px 0 0;
+        margin-top: auto;
+    }
+    
+    .explanation-modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+    
+    .tutor-panel {
+        margin: 0.75rem 0;
+    }
+    
+    .feedback-panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .feedback-panel-actions {
+        width: 100%;
+    }
+    
+    .feedback-expand-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+.tutor-panel:focus-within {
+    outline: 2px solid #2E6F95;
+    outline-offset: 2px;
+}
+
+.explain-btn:focus,
+.feedback-expand-btn:focus,
+.explanation-modal-close:focus {
+    outline: 2px solid #2E6F95;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .explain-btn.loading .explain-btn-icon,
+    .tutor-loading-spinner {
+        animation: none;
+    }
+    
+    .explanation-modal,
+    .explanation-modal-overlay {
+        transition: none;
+    }
+}
