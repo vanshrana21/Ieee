@@ -1,0 +1,342 @@
+/**
+ * empty-states.css
+ * Phase 11.2: Empty State & Graceful Degradation
+ * 
+ * DESIGN PRINCIPLE:
+ * Empty states are intentional, not accidental.
+ * They guide users, not confuse them.
+ */
+
+/* ============================================================================
+   BASE EMPTY STATE
+   ============================================================================ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    background: linear-gradient(180deg, #FAFBFC 0%, #FFFFFF 100%);
+    border: 1px dashed #E2E8F0;
+    border-radius: 12px;
+    min-height: 200px;
+}
+
+.empty-state-compact {
+    padding: 1.5rem 1rem;
+    min-height: 120px;
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+.empty-state-compact .empty-state-icon {
+    font-size: 32px;
+    margin-bottom: 0.75rem;
+}
+
+.empty-state-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0C2B4E;
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-state-compact .empty-state-title {
+    font-size: 0.9375rem;
+}
+
+.empty-state-message {
+    font-size: 0.875rem;
+    color: #64748B;
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-state-compact .empty-state-message {
+    font-size: 0.8125rem;
+    max-width: 280px;
+}
+
+.empty-state-note {
+    font-size: 0.75rem;
+    color: #94A3B8;
+    font-style: italic;
+    margin: 0.25rem 0 0.75rem;
+}
+
+.empty-state-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.625rem 1.25rem;
+    background: linear-gradient(135deg, #0C2B4E 0%, #2E6F95 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.empty-state-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(12, 43, 78, 0.25);
+}
+
+.empty-state-compact .empty-state-action {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    margin-top: 0.75rem;
+}
+
+/* ============================================================================
+   TYPE-SPECIFIC STYLING
+   ============================================================================ */
+
+.empty-state-subjects {
+    background: linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 100%);
+    border-color: #BAE6FD;
+}
+
+.empty-state-progress {
+    background: linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 100%);
+    border-color: #FDE68A;
+}
+
+.empty-state-analytics {
+    background: linear-gradient(180deg, #F3E8FF 0%, #FFFFFF 100%);
+    border-color: #DDD6FE;
+}
+
+.empty-state-practice {
+    background: linear-gradient(180deg, #ECFDF5 0%, #FFFFFF 100%);
+    border-color: #A7F3D0;
+}
+
+.empty-state-focus {
+    background: linear-gradient(180deg, #FEF2F2 0%, #FFFFFF 100%);
+    border-color: #FECACA;
+}
+
+.empty-state-activity {
+    background: linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%);
+    border-color: #E2E8F0;
+}
+
+/* ============================================================================
+   INLINE EMPTY STATES (for stats, tables, etc.)
+   ============================================================================ */
+
+.inline-empty {
+    color: #94A3B8;
+    font-style: italic;
+}
+
+.inline-empty-compact {
+    font-size: 0.875rem;
+}
+
+.stat-empty {
+    color: #CBD5E1 !important;
+}
+
+/* ============================================================================
+   EMPTY STATE WITHIN CARDS
+   ============================================================================ */
+
+.card .empty-state,
+.panel .empty-state {
+    border: none;
+    background: transparent;
+    min-height: 150px;
+}
+
+.card .empty-state-icon,
+.panel .empty-state-icon {
+    font-size: 40px;
+}
+
+/* ============================================================================
+   EMPTY STATE IN GRIDS
+   ============================================================================ */
+
+.grid .empty-state {
+    grid-column: 1 / -1;
+}
+
+/* ============================================================================
+   FIRST-TIME USER WELCOME STATE
+   ============================================================================ */
+
+.welcome-empty-state {
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #0C2B4E 0%, #1E4A6E 100%);
+    border: none;
+    border-radius: 16px;
+    color: white;
+}
+
+.welcome-empty-state .empty-state-icon {
+    font-size: 56px;
+    margin-bottom: 1.25rem;
+}
+
+.welcome-empty-state .empty-state-title {
+    color: white;
+    font-size: 1.5rem;
+}
+
+.welcome-empty-state .empty-state-message {
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 400px;
+    font-size: 1rem;
+}
+
+.welcome-empty-state .empty-state-action {
+    background: white;
+    color: #0C2B4E;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.welcome-empty-state .empty-state-action:hover {
+    background: #F8FAFC;
+}
+
+/* ============================================================================
+   LOADING TO EMPTY TRANSITION
+   ============================================================================ */
+
+.empty-state {
+    animation: fadeInEmpty 0.3s ease-out;
+}
+
+@keyframes fadeInEmpty {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================================
+   INSUFFICIENT DATA WARNING
+   ============================================================================ */
+
+.insufficient-data-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.insufficient-data-warning-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.insufficient-data-warning-text {
+    font-size: 0.8125rem;
+    color: #92400E;
+    line-height: 1.5;
+}
+
+.insufficient-data-warning-text strong {
+    display: block;
+    color: #78350F;
+    margin-bottom: 0.25rem;
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .empty-state {
+        padding: 2rem 1rem;
+        min-height: 160px;
+    }
+    
+    .empty-state-icon {
+        font-size: 40px;
+    }
+    
+    .empty-state-title {
+        font-size: 1rem;
+    }
+    
+    .empty-state-message {
+        font-size: 0.8125rem;
+    }
+    
+    .welcome-empty-state {
+        padding: 2rem 1.5rem;
+    }
+    
+    .welcome-empty-state .empty-state-icon {
+        font-size: 48px;
+    }
+    
+    .welcome-empty-state .empty-state-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+.empty-state:focus-within {
+    outline: 2px solid #2E6F95;
+    outline-offset: 2px;
+}
+
+.empty-state-action:focus {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .empty-state {
+        animation: none;
+    }
+}
+
+/* ============================================================================
+   DARK MODE SUPPORT (if needed in future)
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+    .empty-state {
+        background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+        border-color: #334155;
+    }
+    
+    .empty-state-title {
+        color: #F8FAFC;
+    }
+    
+    .empty-state-message {
+        color: #94A3B8;
+    }
+    
+    .empty-state-note {
+        color: #64748B;
+    }
+}

@@ -162,6 +162,10 @@ async def get_hint(
     - Hint CANNOT suggest moving on
     
     Only provides encouragement and conceptual guidance.
+    
+    Phase 11.2: Graceful empty state handling
+    - Returns neutral guidance when no history available
+    - Never returns error for missing context
     """
     logger.info(f"[Adaptive API] Hint request: user={current_user.id}, subject={payload.subject_id}")
     
@@ -183,10 +187,15 @@ async def get_hint(
         )
         
     except Exception as e:
-        logger.error(f"[Adaptive API] Error getting hint: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate hint"
+        logger.warning(f"[Adaptive API] Hint generation failed, returning neutral: {e}")
+        return AdaptiveHintResponse(
+            hint_available=True,
+            hint_style="neutral",
+            message="Take your time with this question. Focus on the key concepts and consider each option carefully.",
+            signals={
+                "has_history": False,
+                "fallback_reason": "neutral_guidance"
+            }
         )
 
 
@@ -211,6 +220,10 @@ async def get_adaptive_explanation(
     - Exam-focused for advanced students
     
     The adaptation does NOT change WHAT is taught.
+    
+    Phase 11.2: Graceful empty state handling
+    - Returns basic style when no history available
+    - AI never invents context
     """
     logger.info(f"[Adaptive API] Explain request: user={current_user.id}, subject={payload.subject_id}")
     
@@ -233,10 +246,15 @@ async def get_adaptive_explanation(
         )
         
     except Exception as e:
-        logger.error(f"[Adaptive API] Error generating adaptive explanation: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate adaptive explanation"
+        logger.warning(f"[Adaptive API] Adaptive explanation failed, returning basic: {e}")
+        return AdaptiveExplainResponse(
+            adapted_prompt=payload.base_prompt,
+            signals={
+                "has_history": False,
+                "fallback_reason": "basic_style"
+            },
+            style="basic",
+            opener="Let me explain this concept."
         )
 
 
