@@ -198,10 +198,8 @@ async def api_error_handler(request: Request, exc: APIError):
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     import uuid
-    import traceback
     log_id = str(uuid.uuid4())[:8]
     logger.error(f"[{log_id}] Unhandled exception on {request.url.path}: {type(exc).__name__}: {str(exc)}")
-    logger.error(f"[{log_id}] Full traceback:\n{traceback.format_exc()}")
     
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
