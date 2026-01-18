@@ -13,6 +13,7 @@ from datetime import datetime
 from backend.database import get_db
 from backend.orm.user import User
 from backend.orm.curriculum import CourseCurriculum
+from backend.orm.course import Course
 from backend.orm.content_module import ContentModule, ModuleType, ModuleStatus
 from backend.orm.learn_content import LearnContent
 from backend.orm.case_content import CaseContent
@@ -25,6 +26,33 @@ from backend.routes.auth import get_current_user
 router = APIRouter(prefix="/student", tags=["Student"])
 
 
+async def get_allowed_subject_ids(user: User, db: AsyncSession) -> List[int]:
+    """
+    Get subject IDs the user is allowed to access based on course + semester.
+    Returns only subjects for user's current semester.
+    """
+    if not user.course_id or not user.current_semester:
+        return []
+    
+    stmt = select(CourseCurriculum.subject_id).where(
+        and_(
+            CourseCurriculum.course_id == user.course_id,
+            CourseCurriculum.semester_number == user.current_semester,
+            CourseCurriculum.is_active == True
+        )
+    )
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def verify_subject_access(user: User, subject_id: int, db: AsyncSession) -> bool:
+    """
+    Verify user can access a specific subject based on course + semester.
+    """
+    allowed_ids = await get_allowed_subject_ids(user, db)
+    return subject_id in allowed_ids
+
+
 class SubjectListItem(BaseModel):
     id: int
     title: str
@@ -32,6 +60,120 @@ class SubjectListItem(BaseModel):
 
 class SubjectListResponse(BaseModel):
     subjects: List[SubjectListItem]
+    course_name: Optional[str] = None
+    current_semester: Optional[int] = None
+
+
+class AcademicProfileRequest(BaseModel):
+    course_id: int
+    current_semester: int
+
+
+class AcademicProfileResponse(BaseModel):
+    success: bool
+    message: str
+    course_id: int
+    course_name: str
+    current_semester: int
+
+
+class CourseListItem(BaseModel):
+    id: int
+    name: str
+    code: str
+    duration_years: int
+    total_semesters: int
+
+
+class CoursesListResponse(BaseModel):
+    courses: List[CourseListItem]
+
+
+@router.get("/courses", response_model=CoursesListResponse)
+async def get_available_courses(
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get list of available courses for enrollment.
+    No auth required - used during onboarding.
+    """
+    stmt = select(Course).order_by(Course.id)
+    result = await db.execute(stmt)
+    courses = result.scalars().all()
+    
+    return CoursesListResponse(
+        courses=[
+            CourseListItem(
+                id=c.id,
+                name=c.name,
+                code=c.code,
+                duration_years=c.duration_years,
+                total_semesters=c.total_semesters
+            ) for c in courses
+        ]
+    )
+
+
+@router.post("/academic-profile", response_model=AcademicProfileResponse)
+async def save_academic_profile(
+    profile: AcademicProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Save student's academic profile (course + semester).
+    Validates course exists and semester is valid for that course.
+    """
+    course_stmt = select(Course).where(Course.id == profile.course_id)
+    course_result = await db.execute(course_stmt)
+    course = course_result.scalar_one_or_none()
+    
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid course ID"
+        )
+    
+    if profile.current_semester < 1 or profile.current_semester > course.total_semesters:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid semester. {course.name} has semesters 1-{course.total_semesters}"
+        )
+    
+    current_user.course_id = profile.course_id
+    current_user.current_semester = profile.current_semester
+    await db.commit()
+    await db.refresh(current_user)
+    
+    return AcademicProfileResponse(
+        success=True,
+        message=f"Academic profile updated to {course.name}, Semester {profile.current_semester}",
+        course_id=course.id,
+        course_name=course.name,
+        current_semester=profile.current_semester
+    )
+
+
+@router.get("/academic-profile")
+async def get_academic_profile(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get student's current academic profile.
+    """
+    course = None
+    if current_user.course_id:
+        course_stmt = select(Course).where(Course.id == current_user.course_id)
+        course_result = await db.execute(course_stmt)
+        course = course_result.scalar_one_or_none()
+    
+    return {
+        "course_id": current_user.course_id,
+        "course_name": course.name if course else None,
+        "current_semester": current_user.current_semester,
+        "total_semesters": course.total_semesters if course else None
+    }
 
 
 @router.get("/subjects", response_model=SubjectListResponse)
@@ -40,24 +182,39 @@ async def get_student_subjects(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get subjects the student is enrolled in.
+    Get subjects for student's CURRENT SEMESTER ONLY.
+    
+    Enforces course + semester filtering:
+    - BA LLB Sem 3 user → only Sem 3 subjects
+    - LLB Sem 1 user → only Sem 1 subjects
+    
     Returns [] if no subjects - never throws 404 for valid users.
     """
-    if not current_user.course_id:
-        return SubjectListResponse(subjects=[])
+    if not current_user.course_id or not current_user.current_semester:
+        return SubjectListResponse(subjects=[], course_name=None, current_semester=None)
+    
+    course_stmt = select(Course).where(Course.id == current_user.course_id)
+    course_result = await db.execute(course_stmt)
+    course = course_result.scalar_one_or_none()
+    course_name = course.name if course else None
     
     stmt = select(CourseCurriculum).where(
         and_(
             CourseCurriculum.course_id == current_user.course_id,
+            CourseCurriculum.semester_number == current_user.current_semester,
             CourseCurriculum.is_active == True
         )
-    ).order_by(CourseCurriculum.semester_number, CourseCurriculum.display_order)
+    ).order_by(CourseCurriculum.display_order)
     
     result = await db.execute(stmt)
     curriculum_items = result.scalars().all()
     
     if not curriculum_items:
-        return SubjectListResponse(subjects=[])
+        return SubjectListResponse(
+            subjects=[],
+            course_name=course_name,
+            current_semester=current_user.current_semester
+        )
     
     subject_ids = [item.subject_id for item in curriculum_items]
     
@@ -71,7 +228,11 @@ async def get_student_subjects(
         if subject:
             subjects_list.append(SubjectListItem(id=subject.id, title=subject.title))
     
-    return SubjectListResponse(subjects=subjects_list)
+    return SubjectListResponse(
+        subjects=subjects_list,
+        course_name=course_name,
+        current_semester=current_user.current_semester
+    )
 
 
 class ContentAvailabilityResponse(BaseModel):
@@ -141,25 +302,18 @@ async def get_subject_availability(
 ):
     """
     Check what content exists for a subject.
+    Enforces course + semester access control.
     """
-    if not current_user.course_id:
+    if not current_user.course_id or not current_user.current_semester:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User not enrolled in any course"
+            detail="Please set your course and semester first"
         )
 
-    curriculum_stmt = select(CourseCurriculum).where(
-        and_(
-            CourseCurriculum.course_id == current_user.course_id,
-            CourseCurriculum.subject_id == subject_id,
-            CourseCurriculum.is_active == True
-        )
-    )
-    curriculum_result = await db.execute(curriculum_stmt)
-    if not curriculum_result.scalar_one_or_none():
+    if not await verify_subject_access(current_user, subject_id, db):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Subject not in your curriculum"
+            detail="Subject not available in your current semester"
         )
 
     learn_module_stmt = select(ContentModule).where(
@@ -270,8 +424,20 @@ async def get_subject_modules(
 ):
     """
     Get all LEARN modules for a subject in correct order.
-    Returns subject_name, module list with total_contents and completed_contents.
+    Enforces course + semester access control.
     """
+    if not current_user.course_id or not current_user.current_semester:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please set your course and semester first"
+        )
+    
+    if not await verify_subject_access(current_user, subject_id, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Subject not available in your current semester"
+        )
+    
     subject_stmt = select(Subject).where(Subject.id == subject_id)
     subject_result = await db.execute(subject_stmt)
     subject = subject_result.scalar_one_or_none()
