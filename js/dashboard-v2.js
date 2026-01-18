@@ -12,7 +12,14 @@
         recentActivity: [],
         lastActivity: null,
         dashboardStats: null,
-        isLoading: true
+        isLoading: true,
+        loadingStates: {
+            subjects: true,
+            stats: true,
+            activity: true,
+            focus: true
+        },
+        errors: {}
     };
 
     function q(sel, parent = document) {
@@ -33,6 +40,10 @@
     }
 
     function showToast(message, type = 'info', duration = 3000) {
+        if (window.JurisErrorHandler) {
+            window.JurisErrorHandler.showToast(message, type, duration);
+            return;
+        }
         let container = document.getElementById('toastContainer');
         if (!container) {
             container = document.createElement('div');
@@ -71,6 +82,65 @@
                 if (container.contains(toast)) container.removeChild(toast);
             }, 300);
         }, duration);
+    }
+
+    function showLoadingState(section) {
+        state.loadingStates[section] = true;
+        
+        if (section === 'subjects') {
+            const grid = q('#subjectsGrid');
+            if (grid && window.JurisLoadingStates) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1;">
+                        ${window.JurisLoadingStates.skeletons.stats}
+                    </div>
+                `;
+            }
+        } else if (section === 'stats') {
+            const statsEl = q('.stats-grid');
+            if (statsEl) {
+                statsEl.style.opacity = '0.5';
+            }
+        } else if (section === 'activity') {
+            const list = q('#activityList');
+            if (list && window.JurisLoadingStates) {
+                window.JurisLoadingStates.showSkeleton(list, 'list');
+            }
+        } else if (section === 'focus') {
+            const grid = q('#focusGrid');
+            if (grid && window.JurisLoadingStates) {
+                window.JurisLoadingStates.showSpinner(grid, 'Loading recommendations...');
+            }
+        }
+    }
+
+    function hideLoadingState(section) {
+        state.loadingStates[section] = false;
+        
+        if (section === 'stats') {
+            const statsEl = q('.stats-grid');
+            if (statsEl) {
+                statsEl.style.opacity = '1';
+            }
+        }
+    }
+
+    function handleFetchError(error, section, context) {
+        state.errors[section] = error.message;
+        hideLoadingState(section);
+        
+        if (window.JurisErrorHandler) {
+            const result = window.JurisErrorHandler.handle(error, {
+                context: context,
+                showToast: false,
+                redirect: true
+            });
+            
+            if (result.handled) return true;
+        }
+        
+        console.warn(`${context}:`, error.message);
+        return false;
     }
 
     async function fetchJson(url, opts = {}) {
