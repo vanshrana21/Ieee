@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Juris AI</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
@@ -339,15 +347,14 @@
             }
 
             const darkModeToggle = document.getElementById('darkModeToggle');
-            const isDarkMode = localStorage.getItem('theme') === 'dark';
-            darkModeToggle.checked = isDarkMode;
+            darkModeToggle.checked = document.documentElement.getAttribute('data-theme') === 'dark';
             
             darkModeToggle.addEventListener('change', function() {
                 if (this.checked) {
-                    document.body.classList.add('dark-mode');
+                    document.documentElement.setAttribute('data-theme', 'dark');
                     localStorage.setItem('theme', 'dark');
                 } else {
-                    document.body.classList.remove('dark-mode');
+                    document.documentElement.removeAttribute('data-theme');
                     localStorage.setItem('theme', 'light');
                 }
             });
