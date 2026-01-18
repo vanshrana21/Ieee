@@ -54,6 +54,19 @@ const api = {
             method: 'POST',
             body: JSON.stringify(body)
         });
+    },
+
+    // --- Subject Context Endpoints (Phase 9.1 & 9.2) ---
+    async getSubjects() {
+        return this.get('/subjects');
+    },
+
+    async selectSubject(subjectId) {
+        return this.post(`/subjects/${subjectId}/select`);
+    },
+
+    async getResumeContext(subjectId) {
+        return this.get(`/subjects/${subjectId}/resume`);
     }
 };
 
