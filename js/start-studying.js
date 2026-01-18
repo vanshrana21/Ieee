@@ -115,8 +115,8 @@
             grid.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
                     <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-                    <h3 style="color: #0F172A; margin-bottom: 8px;">No Subjects Available</h3>
-                    <p style="color: #64748b; margin-bottom: 20px;">Your curriculum hasn't been set up yet. Please contact your administrator.</p>
+                    <h3 style="color: #0F172A; margin-bottom: 8px;">No Subjects Enrolled Yet</h3>
+                    <p style="color: #64748b; margin-bottom: 20px;">You haven't been enrolled in any subjects. Please contact your administrator.</p>
                     <a href="dashboard-student.html" style="background: #0066FF; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block;">Back to Dashboard</a>
                 </div>
             `;
@@ -441,10 +441,25 @@
         if (studyHub) studyHub.classList.add('hidden');
 
         try {
-            const data = await fetchJson(`${API_BASE}/api/curriculum/dashboard`);
+            let data;
+            try {
+                data = await fetchJson(`${API_BASE}/api/curriculum/dashboard`);
+                state.subjects = data.active_subjects || [];
+                state.archiveSubjects = data.archive_subjects || [];
+            } catch (dashErr) {
+                console.warn('Dashboard API failed, trying subjects endpoint:', dashErr.message);
+                const subjectsData = await fetchJson(`${API_BASE}/api/student/subjects`);
+                state.subjects = (subjectsData.subjects || []).map(s => ({
+                    id: s.id,
+                    title: s.title,
+                    description: '',
+                    semester: 1,
+                    modules: [],
+                    completion_percentage: 0
+                }));
+                state.archiveSubjects = [];
+            }
 
-            state.subjects = data.active_subjects || [];
-            state.archiveSubjects = data.archive_subjects || [];
             state.isLoading = false;
 
             renderSubjects();

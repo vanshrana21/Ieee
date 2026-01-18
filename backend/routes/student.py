@@ -25,6 +25,55 @@ from backend.routes.auth import get_current_user
 router = APIRouter(prefix="/student", tags=["Student"])
 
 
+class SubjectListItem(BaseModel):
+    id: int
+    title: str
+
+
+class SubjectListResponse(BaseModel):
+    subjects: List[SubjectListItem]
+
+
+@router.get("/subjects", response_model=SubjectListResponse)
+async def get_student_subjects(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get subjects the student is enrolled in.
+    Returns [] if no subjects - never throws 404 for valid users.
+    """
+    if not current_user.course_id:
+        return SubjectListResponse(subjects=[])
+    
+    stmt = select(CourseCurriculum).where(
+        and_(
+            CourseCurriculum.course_id == current_user.course_id,
+            CourseCurriculum.is_active == True
+        )
+    ).order_by(CourseCurriculum.semester_number, CourseCurriculum.display_order)
+    
+    result = await db.execute(stmt)
+    curriculum_items = result.scalars().all()
+    
+    if not curriculum_items:
+        return SubjectListResponse(subjects=[])
+    
+    subject_ids = [item.subject_id for item in curriculum_items]
+    
+    subjects_stmt = select(Subject).where(Subject.id.in_(subject_ids))
+    subjects_result = await db.execute(subjects_stmt)
+    subjects_map = {s.id: s for s in subjects_result.scalars().all()}
+    
+    subjects_list = []
+    for item in curriculum_items:
+        subject = subjects_map.get(item.subject_id)
+        if subject:
+            subjects_list.append(SubjectListItem(id=subject.id, title=subject.title))
+    
+    return SubjectListResponse(subjects=subjects_list)
+
+
 class ContentAvailabilityResponse(BaseModel):
     subject_id: int
     has_learning_content: bool

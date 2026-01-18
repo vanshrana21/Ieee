@@ -138,13 +138,16 @@ async def get_subjects_with_modules_and_progress(
         for module in subject_modules:
             is_locked = calculate_module_lock_status(module, user)
             
+            module_type_val = module.module_type.value if hasattr(module.module_type, 'value') else module.module_type
+            status_val = module.status.value if hasattr(module.status, 'value') else module.status
+            
             modules_data.append({
                 "id": module.id,
-                "module_type": module.module_type.value,
+                "module_type": module_type_val,
                 "title": module.title,
                 "description": module.description,
                 "order_index": module.order_index,
-                "status": module.status.value,
+                "status": status_val,
                 "is_locked": is_locked,
                 "is_free": module.is_free,
             })
@@ -182,12 +185,14 @@ def calculate_module_lock_status(module: ContentModule, user: User) -> bool:
     Returns:
         True if locked, False if accessible
     """
+    status_val = module.status.value if hasattr(module.status, 'value') else module.status
+    
     # Rule 1: Explicitly locked modules
-    if module.status == ModuleStatus.LOCKED:
+    if status_val == "locked":
         return True
     
     # Rule 2: Coming soon modules
-    if module.status == ModuleStatus.COMING_SOON:
+    if status_val == "coming_soon":
         return True
     
     # Rule 3: Premium paywall
@@ -533,13 +538,16 @@ async def get_subject_details(
     for module in modules:
         is_locked = calculate_module_lock_status(module, current_user)
         
+        module_type_val = module.module_type.value if hasattr(module.module_type, 'value') else module.module_type
+        status_val = module.status.value if hasattr(module.status, 'value') else module.status
+        
         modules_data.append({
             "id": module.id,
-            "module_type": module.module_type.value,
+            "module_type": module_type_val,
             "title": module.title,
             "description": module.description,
             "order_index": module.order_index,
-            "status": module.status.value,
+            "status": status_val,
             "is_locked": is_locked,
             "is_free": module.is_free,
         })
