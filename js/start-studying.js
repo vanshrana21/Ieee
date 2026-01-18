@@ -12,6 +12,7 @@
         error: null,
         contentAvailability: {
             has_learning_content: false,
+            has_modules: false,
             has_cases: false,
             has_practice: false,
             has_notes: true,
@@ -19,6 +20,7 @@
             first_case_id: null,
             first_practice_id: null,
             learn_count: 0,
+            modules_count: 0,
             cases_count: 0,
             practice_count: 0
         }
@@ -197,6 +199,7 @@
             console.error('Failed to fetch content availability:', err);
             state.contentAvailability = {
                 has_learning_content: false,
+                has_modules: false,
                 has_cases: false,
                 has_practice: false,
                 has_notes: true,
@@ -204,6 +207,7 @@
                 first_case_id: null,
                 first_practice_id: null,
                 learn_count: 0,
+                modules_count: 0,
                 cases_count: 0,
                 practice_count: 0
             };
@@ -217,10 +221,10 @@
         
         const modeMapping = {
             concepts: {
-                available: state.contentAvailability.has_learning_content,
-                count: state.contentAvailability.learn_count,
-                enabledText: `${state.contentAvailability.learn_count} lessons available`,
-                disabledText: 'Learning content is being prepared for this subject. Check back soon!'
+                available: state.contentAvailability.has_modules,
+                count: state.contentAvailability.modules_count,
+                enabledText: `${state.contentAvailability.modules_count} module${state.contentAvailability.modules_count !== 1 ? 's' : ''} available`,
+                disabledText: 'Learning modules are being prepared for this subject. Check back soon!'
             },
             cases: {
                 available: state.contentAvailability.has_cases,
@@ -287,7 +291,7 @@
         const studyMapContainer = document.getElementById('studyMapContainer');
         if (!studyMapContainer) return;
         
-        const hasAnyContent = state.contentAvailability.has_learning_content || 
+        const hasAnyContent = state.contentAvailability.has_modules || 
                              state.contentAvailability.has_cases || 
                              state.contentAvailability.has_practice;
         
@@ -305,8 +309,8 @@
             `;
         } else {
             let availableItems = [];
-            if (state.contentAvailability.has_learning_content) {
-                availableItems.push(`${state.contentAvailability.learn_count} learning lessons`);
+            if (state.contentAvailability.has_modules) {
+                availableItems.push(`${state.contentAvailability.modules_count} learning modules`);
             }
             if (state.contentAvailability.has_cases) {
                 availableItems.push(`${state.contentAvailability.cases_count} case studies`);
@@ -370,6 +374,7 @@
         state.currentMode = '';
         state.contentAvailability = {
             has_learning_content: false,
+            has_modules: false,
             has_cases: false,
             has_practice: false,
             has_notes: true,
@@ -377,6 +382,7 @@
             first_case_id: null,
             first_practice_id: null,
             learn_count: 0,
+            modules_count: 0,
             cases_count: 0,
             practice_count: 0
         };

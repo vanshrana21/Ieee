@@ -19,6 +19,7 @@ from backend.orm.case_content import CaseContent
 from backend.orm.practice_question import PracticeQuestion
 from backend.orm.user_notes import UserNotes
 from backend.orm.user_content_progress import UserContentProgress, ContentType
+from backend.orm.subject import Subject
 from backend.routes.auth import get_current_user
 
 router = APIRouter(prefix="/student", tags=["Student"])
@@ -27,6 +28,7 @@ router = APIRouter(prefix="/student", tags=["Student"])
 class ContentAvailabilityResponse(BaseModel):
     subject_id: int
     has_learning_content: bool
+    has_modules: bool
     has_cases: bool
     has_practice: bool
     has_notes: bool
@@ -34,6 +36,7 @@ class ContentAvailabilityResponse(BaseModel):
     first_case_id: Optional[int] = None
     first_practice_id: Optional[int] = None
     learn_count: int = 0
+    modules_count: int = 0
     cases_count: int = 0
     practice_count: int = 0
     notes_count: int = 0
@@ -43,13 +46,21 @@ class ModuleListItem(BaseModel):
     module_id: int
     title: str
     sequence_order: int
-    content_count: int
+    total_contents: int
+    completed_contents: int
     is_completed: bool
 
 
 class SubjectModulesResponse(BaseModel):
     subject_id: int
+    subject_name: str
     modules: List[ModuleListItem]
+
+
+class ModuleResumeResponse(BaseModel):
+    module_id: int
+    next_content_id: Optional[int] = None
+    message: Optional[str] = None
 
 
 class ContentListItem(BaseModel):
@@ -182,9 +193,12 @@ async def get_subject_availability(
     notes_result = await db.execute(notes_stmt)
     notes_count = notes_result.scalar() or 0
 
+    modules_count = len(learn_modules)
+
     return ContentAvailabilityResponse(
         subject_id=subject_id,
         has_learning_content=total_learn_count > 0,
+        has_modules=modules_count > 0,
         has_cases=cases_count > 0,
         has_practice=practice_count > 0,
         has_notes=True,
@@ -192,6 +206,7 @@ async def get_subject_availability(
         first_case_id=first_case_id,
         first_practice_id=first_practice_id,
         learn_count=total_learn_count,
+        modules_count=modules_count,
         cases_count=cases_count,
         practice_count=practice_count,
         notes_count=notes_count
@@ -206,7 +221,14 @@ async def get_subject_modules(
 ):
     """
     Get all LEARN modules for a subject in correct order.
+    Returns subject_name, module list with total_contents and completed_contents.
     """
+    subject_stmt = select(Subject).where(Subject.id == subject_id)
+    subject_result = await db.execute(subject_stmt)
+    subject = subject_result.scalar_one_or_none()
+    
+    subject_name = subject.title if subject else "Unknown Subject"
+    
     modules_stmt = select(ContentModule).where(
         and_(
             ContentModule.subject_id == subject_id,
@@ -220,17 +242,13 @@ async def get_subject_modules(
     
     module_list = []
     for module in modules:
-        content_count_stmt = select(func.count(LearnContent.id)).where(
-            LearnContent.module_id == module.id
-        )
-        content_count_result = await db.execute(content_count_stmt)
-        content_count = content_count_result.scalar() or 0
-        
         content_ids_stmt = select(LearnContent.id).where(LearnContent.module_id == module.id)
         content_ids_result = await db.execute(content_ids_stmt)
         content_ids = content_ids_result.scalars().all()
         
-        is_completed = False
+        total_contents = len(content_ids)
+        completed_contents = 0
+        
         if content_ids:
             completed_count_stmt = select(func.count(UserContentProgress.id)).where(
                 and_(
@@ -241,20 +259,22 @@ async def get_subject_modules(
                 )
             )
             completed_count_result = await db.execute(completed_count_stmt)
-            completed_count = completed_count_result.scalar() or 0
-            
-            is_completed = (completed_count == len(content_ids))
+            completed_contents = completed_count_result.scalar() or 0
+        
+        is_completed = (completed_contents == total_contents) if total_contents > 0 else False
         
         module_list.append(ModuleListItem(
             module_id=module.id,
             title=module.title,
             sequence_order=module.order_index,
-            content_count=content_count,
+            total_contents=total_contents,
+            completed_contents=completed_contents,
             is_completed=is_completed
         ))
     
     return SubjectModulesResponse(
         subject_id=subject_id,
+        subject_name=subject_name,
         modules=module_list
     )
 
@@ -297,6 +317,54 @@ async def get_module_content(
     return ModuleContentResponse(
         module_id=module_id,
         content=content_list
+    )
+
+
+@router.get("/module/{module_id}/resume", response_model=ModuleResumeResponse)
+async def get_module_resume(
+    module_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get the next content to resume in a module.
+    Returns earliest incomplete content, or last content if all complete.
+    """
+    content_stmt = select(LearnContent).where(
+        LearnContent.module_id == module_id
+    ).order_by(LearnContent.order_index)
+    
+    content_result = await db.execute(content_stmt)
+    contents = content_result.scalars().all()
+    
+    if not contents:
+        return ModuleResumeResponse(
+            module_id=module_id,
+            next_content_id=None,
+            message="No learning content available in this module yet."
+        )
+    
+    for content in contents:
+        progress_stmt = select(UserContentProgress).where(
+            and_(
+                UserContentProgress.user_id == current_user.id,
+                UserContentProgress.content_type == ContentType.LEARN,
+                UserContentProgress.content_id == content.id,
+                UserContentProgress.is_completed == True
+            )
+        )
+        progress_result = await db.execute(progress_stmt)
+        progress = progress_result.scalar_one_or_none()
+        
+        if not progress:
+            return ModuleResumeResponse(
+                module_id=module_id,
+                next_content_id=content.id
+            )
+    
+    return ModuleResumeResponse(
+        module_id=module_id,
+        next_content_id=contents[-1].id
     )
 
 

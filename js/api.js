@@ -87,6 +87,10 @@ const api = {
         return this.get(`/api/student/module/${moduleId}/content`);
     },
 
+    async getModuleResume(moduleId) {
+        return this.get(`/api/student/module/${moduleId}/resume`);
+    },
+
     async getContentDetail(contentId) {
         return this.get(`/api/student/content/${contentId}`);
     },
