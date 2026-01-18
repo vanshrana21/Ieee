@@ -14,6 +14,9 @@
     studyPlan: null,
     isEnrolled: true,
     userFirstName: '',
+    dashboardStats: null,
+    lastActivity: null,
+    isLoading: true
   };
 
   const DOM = {};
