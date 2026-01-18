@@ -8,12 +8,30 @@
  * - Smooth transitions
  * - Tooltip labels on hover when collapsed
  * - Mobile overlay behavior
+ * - Dark mode support via data-theme attribute
  */
 
 :root {
     --sidebar-width-expanded: 260px;
     --sidebar-width-collapsed: 72px;
     --sidebar-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-bg: #0F172A;
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-text: rgba(255, 255, 255, 0.7);
+    --sidebar-text-active: rgba(255, 255, 255, 1);
+    --sidebar-hover: rgba(255, 255, 255, 0.1);
+    --sidebar-active-bg: #4F46E5;
+    --sidebar-logo-accent: #6366F1;
+}
+
+[data-theme="dark"] {
+    --sidebar-bg: #020617;
+    --sidebar-border: rgba(255, 255, 255, 0.06);
+    --sidebar-text: rgba(255, 255, 255, 0.65);
+    --sidebar-text-active: rgba(255, 255, 255, 1);
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-active-bg: #6366F1;
+    --sidebar-logo-accent: #818CF8;
 }
 
 .sidebar {
@@ -22,20 +40,21 @@
     left: 0;
     width: var(--sidebar-width-expanded);
     height: 100vh;
-    background: var(--sidebar-bg, #0F172A);
+    background: var(--sidebar-bg);
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    transition: width var(--sidebar-transition), transform var(--sidebar-transition);
+    transition: width var(--sidebar-transition), transform var(--sidebar-transition), background-color 0.3s ease;
     overflow: hidden;
 }
 
 .sidebar-header {
     padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--sidebar-border);
     display: flex;
     align-items: center;
     min-height: 68px;
+    transition: border-color 0.3s ease;
 }
 
 .logo {
@@ -52,7 +71,8 @@
 
 .logo svg {
     flex-shrink: 0;
-    color: var(--primary, #0066FF);
+    color: var(--sidebar-logo-accent);
+    transition: color 0.3s ease;
 }
 
 .logo span {
@@ -76,7 +96,7 @@
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    color: var(--sidebar-text, rgba(255, 255, 255, 0.8));
+    color: var(--sidebar-text);
     text-decoration: none;
     border-radius: 8px;
     font-size: 14px;
@@ -98,19 +118,20 @@
 }
 
 .nav-item:hover {
-    background: var(--sidebar-hover, rgba(255, 255, 255, 0.1));
-    color: var(--sidebar-active, rgba(255, 255, 255, 1));
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-active);
 }
 
 .nav-item.active {
-    background: var(--primary, #0066FF);
+    background: var(--sidebar-active-bg);
     color: white;
 }
 
 .nav-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--sidebar-border);
     margin: 12px 4px;
+    transition: background-color 0.3s ease;
 }
 
 .nav-logout {
@@ -191,7 +212,7 @@
 .sidebar.collapsed .nav-item span {
     position: absolute;
     left: calc(100% + 12px);
-    background: var(--sidebar-bg, #0F172A);
+    background: var(--sidebar-bg);
     color: white;
     padding: 8px 12px;
     border-radius: 6px;
@@ -212,7 +233,7 @@
     top: 50%;
     transform: translateY(-50%);
     border: 6px solid transparent;
-    border-right-color: var(--sidebar-bg, #0F172A);
+    border-right-color: var(--sidebar-bg);
 }
 
 .sidebar.collapsed .nav-item:hover span {
@@ -321,11 +342,11 @@ body.sidebar-collapsed .main-content {
 }
 
 .sidebar:focus-within .nav-item:focus {
-    outline: 2px solid var(--primary, #0066FF);
+    outline: 2px solid var(--sidebar-active-bg);
     outline-offset: -2px;
 }
 
 .nav-item:focus-visible {
-    outline: 2px solid var(--primary, #0066FF);
+    outline: 2px solid var(--sidebar-active-bg);
     outline-offset: -2px;
 }
