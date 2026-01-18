@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modules | JurisAI</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        .modules-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .modules-header {
+            margin-bottom: 32px;
+        }
+        .modules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .module-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-color: #cbd5e1;
+        }
+        .module-card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .module-info h3 {
+            margin: 0 0 8px 0;
+            color: #0f172a;
+        }
+        .module-meta {
+            font-size: 14px;
+            color: #64748b;
+            display: flex;
+            gap: 16px;
+        }
+        .completion-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .content-count {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0066ff;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="logo">JurisAI</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard-student.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="start-studying.html" class="nav-item">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Study Hub</span>
+                </a>
+                <a href="#" class="nav-item" id="logoutBtn">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="modules-container">
+                <a href="start-studying.html" id="backToSubject" class="back-link">
+                    ← Back to Subject
+                </a>
+                
+                <div class="modules-header">
+                    <h1 id="subjectTitle">Modules</h1>
+                    <p id="subjectSubtitle">Select a module to view its content</p>
+                </div>
+
+                <div id="modulesList" class="modules-list">
+                    <!-- Modules will be loaded here -->
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="loading-spinner"></div>
+                        <p>Loading modules...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/modules.js"></script>
+</body>
+</html>

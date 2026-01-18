@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Content | JurisAI</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        .content-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .content-header {
+            margin-bottom: 32px;
+        }
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+        .content-card:hover {
+            transform: translateX(4px);
+            border-color: #0066ff;
+        }
+        .content-info h3 {
+            margin: 0 0 4px 0;
+            font-size: 18px;
+            color: #0f172a;
+        }
+        .content-meta {
+            font-size: 14px;
+            color: #64748b;
+        }
+        .completion-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            margin-right: 12px;
+        }
+        .completion-dot.completed {
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0066ff;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+        .card-left {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="logo">JurisAI</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard-student.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="start-studying.html" class="nav-item">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Study Hub</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-container">
+                <a href="#" id="backToModules" class="back-link">
+                    ← Back to Modules
+                </a>
+                
+                <div class="content-header">
+                    <h1 id="moduleTitle">Module Content</h1>
+                    <p id="moduleSubtitle">Choose a topic to start learning</p>
+                </div>
+
+                <div id="contentList" class="content-list">
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="loading-spinner"></div>
+                        <p>Loading topics...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/module-content-list.js"></script>
+</body>
+</html>
