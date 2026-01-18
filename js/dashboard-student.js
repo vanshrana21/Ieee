@@ -91,6 +91,116 @@
   }
 
   // UI Rendering
+  function renderDashboardStats(stats) {
+    if (!stats) return;
+    
+    const progressEl = q('#overallProgress');
+    if (progressEl) progressEl.textContent = `${stats.overall_progress}%`;
+    
+    const progressBarEl = q('#overallProgressBar');
+    if (progressBarEl) progressBarEl.style.width = `${stats.overall_progress}%`;
+    
+    const subjectsCountEl = q('#subjectsCount');
+    if (subjectsCountEl) subjectsCountEl.textContent = `${stats.completed_subjects}/${stats.total_subjects}`;
+    
+    const practiceAccuracyEl = q('#practiceAccuracy');
+    if (practiceAccuracyEl) practiceAccuracyEl.textContent = `${stats.practice_accuracy}%`;
+    
+    const streakEl = q('#studyStreak');
+    if (streakEl) streakEl.textContent = `${stats.study_streak} days`;
+    
+    const contentCompletedEl = q('#contentCompleted');
+    if (contentCompletedEl) contentCompletedEl.textContent = `${stats.content_completed}/${stats.content_total}`;
+    
+    const attemptsEl = q('#practiceAttempts');
+    if (attemptsEl) attemptsEl.textContent = `${stats.correct_attempts}/${stats.total_attempts}`;
+    
+    const timeSpentEl = q('#timeSpent');
+    if (timeSpentEl) {
+      const hours = Math.floor((stats.total_time_spent_seconds || 0) / 3600);
+      const mins = Math.floor(((stats.total_time_spent_seconds || 0) % 3600) / 60);
+      timeSpentEl.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    }
+  }
+  
+  function renderLastActivity(activity) {
+    const container = q('#lastActivityCard');
+    if (!container) return;
+    
+    if (!activity || !activity.content_title) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <p style="font-size:32px;margin-bottom:8px;">📖</p>
+          <p style="font-weight:600;margin-bottom:4px;">No recent activity</p>
+          <p class="text-muted">Start learning to see your progress here.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    const timeAgo = activity.last_viewed_at ? formatTimeAgo(activity.last_viewed_at) : '';
+    const typeIcon = activity.content_type === 'learn' ? '📚' : activity.content_type === 'case' ? '⚖️' : '✍️';
+    
+    container.innerHTML = `
+      <div class="last-activity-content" style="cursor:pointer;">
+        <div style="font-size:24px;margin-bottom:8px;">${typeIcon}</div>
+        <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:600;">${escapeHtml(activity.content_title)}</h4>
+        <p style="margin:0;color:#64748b;font-size:12px;">${escapeHtml(activity.subject_title || '')}</p>
+        <p style="margin:4px 0 0 0;color:#94a3b8;font-size:11px;">${timeAgo}</p>
+      </div>
+    `;
+    
+    container.querySelector('.last-activity-content').addEventListener('click', () => {
+      if (activity.content_type === 'learn') {
+        window.location.href = `learn-content.html?id=${activity.content_id}`;
+      } else if (activity.content_type === 'case') {
+        window.location.href = `case-detail.html?id=${activity.content_id}`;
+      } else if (activity.content_type === 'practice') {
+        window.location.href = `practice-content.html?id=${activity.content_id}`;
+      }
+    });
+  }
+  
+  function formatTimeAgo(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  }
+  
+  function showLoadingState() {
+    const statsContainer = q('#statsContainer');
+    if (statsContainer) {
+      statsContainer.classList.add('loading');
+    }
+    const subjectContainer = q('#subjectProgressContainer');
+    if (subjectContainer) {
+      subjectContainer.innerHTML = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+      `;
+    }
+  }
+  
+  function hideLoadingState() {
+    const statsContainer = q('#statsContainer');
+    if (statsContainer) {
+      statsContainer.classList.remove('loading');
+    }
+    state.isLoading = false;
+  }
+
   function renderSubjectProgress(subjects = []) {
     const container = q('#subjectProgressContainer');
     if (!container) return;
@@ -565,44 +675,52 @@
       });
     });
 
+    showLoadingState();
+
     try {
-      if (!window.auth || !window.auth.isAuthenticated || !window.auth.getUserCurriculum) {
-        state.userFirstName = (window.auth && window.auth.getUserFirstName && window.auth.getUserFirstName()) || '';
-        const nameEl = q('#studentNameFull');
-        if (nameEl && state.userFirstName) {
-          nameEl.textContent = `, ${state.userFirstName}`;
-        }
-        const avatarEl = q('#studentName');
-        if (avatarEl && state.userFirstName) {
-          avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
-        }
-      } else {
-          const subjectsResult = await window.api.getSubjects();
-          if (subjectsResult) {
-            state.subjects = subjectsResult.map(s => ({
-              ...s,
-              name: s.title // Map title to name for existing render logic
-            }));
-            state.userFirstName = window.auth.getUserFirstName ? window.auth.getUserFirstName() : '';
-            const nameEl = q('#studentNameFull');
-            if (nameEl && state.userFirstName) {
-              nameEl.textContent = `, ${state.userFirstName}`;
-            }
-            const avatarEl = q('#studentName');
-            if (avatarEl && state.userFirstName) {
-              avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
-            }
-            renderSubjectProgress(state.subjects);
-          } else {
-            const res = await fetchJson(`${API_BASE}/api/user/curriculum`, { method: 'GET' }).catch(()=>null);
-            if (res && res.data) {
-              state.curriculum = res.data;
-              state.subjects = res.data.subjects || [];
-              renderSubjectProgress(state.subjects);
-            }
-          }
+      state.userFirstName = (window.auth && window.auth.getUserFirstName && window.auth.getUserFirstName()) || '';
+      const nameEl = q('#studentNameFull');
+      if (nameEl && state.userFirstName) {
+        nameEl.textContent = `, ${state.userFirstName}`;
+      }
+      const avatarEl = q('#studentName');
+      if (avatarEl && state.userFirstName) {
+        avatarEl.textContent = state.userFirstName.charAt(0).toUpperCase();
       }
 
+      // Phase 9.3: Fetch all dashboard data from backend
+      const [statsResult, subjectsResult, lastActivityResult] = await Promise.allSettled([
+        window.api.getDashboardStats(),
+        window.api.getSubjects(),
+        window.api.getLastActivity()
+      ]);
+
+      // Render dashboard stats
+      if (statsResult.status === 'fulfilled' && statsResult.value) {
+        state.dashboardStats = statsResult.value;
+        renderDashboardStats(statsResult.value);
+      }
+
+      // Render subjects with progress
+      if (subjectsResult.status === 'fulfilled' && subjectsResult.value) {
+        state.subjects = subjectsResult.value.map(s => ({
+          ...s,
+          name: s.title
+        }));
+        renderSubjectProgress(state.subjects);
+      } else {
+        renderSubjectProgress([]);
+      }
+
+      // Render last activity
+      if (lastActivityResult.status === 'fulfilled' && lastActivityResult.value) {
+        state.lastActivity = lastActivityResult.value;
+        renderLastActivity(lastActivityResult.value);
+      }
+
+      hideLoadingState();
+
+      // Fetch study plan
       const plan = await fetchJson(`${API_BASE}/api/study-plan/active`, { method: 'GET' }).catch(()=>null);
       if (plan && plan.has_active_plan && plan.plan) {
         state.studyPlan = plan.plan;
@@ -612,6 +730,8 @@
       }
     } catch (err) {
       console.warn('Initialization fetch failed', err);
+      hideLoadingState();
+      renderSubjectProgress([]);
       renderStudyPlan(null);
     }
   }
