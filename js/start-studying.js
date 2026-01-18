@@ -391,8 +391,8 @@
         if (!subject) return;
         
         if (mode === 'concepts') {
-            if (state.contentAvailability.has_learning_content && state.contentAvailability.first_learning_content_id) {
-                window.location.href = `learn.html?content_id=${state.contentAvailability.first_learning_content_id}&subject_id=${subject.id}`;
+            if (state.contentAvailability.has_learning_content) {
+                window.location.href = `modules.html?subject_id=${subject.id}`;
             }
             return;
         }

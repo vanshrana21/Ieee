@@ -1,64 +1,291 @@
 <!DOCTYPE html>
-<html lang="en" data-tutor-enabled>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learn Content | JurisAI</title>
-    <link rel="stylesheet" href="../css/global.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/content-detail.css">
-    <link rel="stylesheet" href="../css/tutor-panel.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #0f172a;
+        }
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0C2B4E;
+        }
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+            color: #0f172a;
+            margin: 24px 0 12px;
+        }
+        .markdown-content h1 { font-size: 24px; }
+        .markdown-content h2 { font-size: 20px; }
+        .markdown-content h3 { font-size: 18px; }
+        .markdown-content ul, .markdown-content ol {
+            margin: 16px 0;
+            padding-left: 24px;
+        }
+        .markdown-content li { margin: 8px 0; }
+        .markdown-content blockquote {
+            border-left: 4px solid #1A3D6D;
+            background: #f1f5f9;
+            padding: 16px 20px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .markdown-content code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2 class="logo">JurisAI</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard-student.html" class="nav-item">
-                    <span class="nav-icon">📚</span>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-                <a href="#" class="nav-item" onclick="handleLogout(); return false;">
-                    <span class="nav-icon">🚪</span>
-                    <span class="nav-text">Logout</span>
-                </a>
-            </nav>
-        </aside>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">JurisAI</div>
+            <button class="back-button" onclick="goBack()">Back to Module</button>
+        </div>
+    </nav>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <div id="contentContainer" class="content-detail-container">
-                <!-- Loading state -->
-                <div class="loading-state">
-                    <div class="loading-spinner"></div>
-                    <p>Loading content...</p>
-                </div>
-            </div>
-        </main>
+    <div class="content-detail-container" id="contentContainer">
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading content...</p>
+        </div>
     </div>
 
+    <script src="../js/error-handler.js"></script>
     <script src="../js/auth.js"></script>
-    <script src="../js/tutor-panel.js"></script>
-    <script src="../js/content-detail.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Require authentication
-            if (!window.auth.requireAuth()) return;
+    (function() {
+        'use strict';
+
+        const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
+        let contentId = null;
+        let moduleId = null;
+        let subjectId = null;
+
+        async function fetchJson(url, opts = {}) {
+            const token = window.auth?.getToken?.() || localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                throw new Error('Not authenticated');
+            }
+            const headers = { ...opts.headers };
+            headers['Authorization'] = `Bearer ${token}`;
+            headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+            const resp = await fetch(url, { ...opts, headers });
+            if (resp.status === 401) {
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
+                throw new Error('Session expired');
+            }
+            const text = await resp.text();
+            let json;
+            try { json = text ? JSON.parse(text) : null; } catch { json = null; }
+            if (!resp.ok) throw new Error(json?.detail || resp.statusText);
+            return json;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatMarkdown(text) {
+            if (!text) return '';
+            let html = text
+                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`(.+?)`/g, '<code>$1</code>')
+                .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+                .replace(/^\- (.+)$/gm, '<li>$1</li>')
+                .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
             
-            // Get content ID from URL
+            html = html.replace(/(<li>.*<\/li>)+/g, '<ul>$&</ul>');
+            return `<p>${html}</p>`;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('contentContainer');
+            container.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <h2>Error Loading Content</h2>
+                    <p>${escapeHtml(message)}</p>
+                    <button class="secondary-button" onclick="goBack()">Go Back</button>
+                </div>
+            `;
+        }
+
+        function showSuccess(message) {
+            const toast = document.createElement('div');
+            toast.className = 'success-toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function renderContent(data) {
+            const container = document.getElementById('contentContainer');
+            
+            moduleId = data.module_id;
+            subjectId = data.subject_id;
+
+            const timeText = data.estimated_time_minutes 
+                ? `⏱️ ${data.estimated_time_minutes} min read` 
+                : '';
+
+            container.innerHTML = `
+                <div class="content-header">
+                    <div class="breadcrumb">
+                        <span>${escapeHtml(data.subject_code)}</span>
+                        <span class="separator">›</span>
+                        <span>${escapeHtml(data.module_title)}</span>
+                        <span class="separator">›</span>
+                        <span>${escapeHtml(data.title)}</span>
+                    </div>
+                    
+                    <div class="content-title-section">
+                        <div class="content-icon-large">📖</div>
+                        <div>
+                            <h1 class="content-title">${escapeHtml(data.title)}</h1>
+                            ${data.summary ? `<p class="content-subtitle">${escapeHtml(data.summary)}</p>` : ''}
+                            <div class="content-metadata">
+                                ${timeText ? `<span class="meta-badge">${timeText}</span>` : ''}
+                                ${data.is_completed 
+                                    ? '<span class="meta-badge completed">✓ Completed</span>' 
+                                    : '<span class="meta-badge">In Progress</span>'}
+                                ${data.view_count > 1 
+                                    ? `<span class="meta-badge">👁️ Viewed ${data.view_count} times</span>` 
+                                    : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-body">
+                    <div class="content-text markdown-content">
+                        ${formatMarkdown(data.body)}
+                    </div>
+                </div>
+
+                <div class="content-actions">
+                    ${!data.is_completed ? `
+                        <button onclick="markComplete()" class="complete-button" id="completeBtn">
+                            ✓ Mark as Completed
+                        </button>
+                    ` : `
+                        <button class="complete-button completed-state" disabled>
+                            ✓ Completed
+                        </button>
+                    `}
+                    <button onclick="goBack()" class="secondary-button">
+                        Back to Module
+                    </button>
+                </div>
+            `;
+        }
+
+        async function loadContent() {
             const urlParams = new URLSearchParams(window.location.search);
-            const contentId = urlParams.get('id');
-            
+            contentId = urlParams.get('id');
+            moduleId = urlParams.get('module_id');
+            subjectId = urlParams.get('subject_id');
+
             if (!contentId) {
                 showError('No content ID provided');
                 return;
             }
-            
-            // Load learn content
-            window.contentDetail.loadLearnContent(parseInt(contentId));
-        });
+
+            try {
+                const data = await fetchJson(`${API_BASE}/api/student/learn/${contentId}`);
+                renderContent(data);
+            } catch (error) {
+                console.error('Failed to load content:', error);
+                showError(error.message || 'Failed to load content. Please try again.');
+            }
+        }
+
+        window.markComplete = async function() {
+            const btn = document.getElementById('completeBtn');
+            if (!btn) return;
+
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Marking...';
+
+            try {
+                await fetchJson(`${API_BASE}/api/student/learn/${contentId}/complete`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                btn.textContent = '✓ Completed';
+                btn.classList.add('completed-state');
+                showSuccess('Content marked as complete!');
+
+                setTimeout(() => {
+                    loadContent();
+                }, 1500);
+
+            } catch (error) {
+                console.error('Failed to mark complete:', error);
+                btn.disabled = false;
+                btn.textContent = originalText;
+                alert('Failed to mark as complete: ' + error.message);
+            }
+        };
+
+        window.goBack = function() {
+            if (moduleId && subjectId) {
+                window.location.href = `module-content.html?module_id=${moduleId}&subject_id=${subjectId}`;
+            } else if (moduleId) {
+                window.location.href = `module-content.html?module_id=${moduleId}`;
+            } else {
+                window.location.href = 'start-studying.html';
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadContent);
+        } else {
+            loadContent();
+        }
+    })();
     </script>
 </body>
 </html>

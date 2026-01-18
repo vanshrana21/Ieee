@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Content | JurisAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/module-content.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #0f172a;
+        }
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0C2B4E;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #0066FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">JurisAI</div>
+            <button class="back-button" onclick="goBack()">Back to Modules</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="contentContainer">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading content...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/error-handler.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
+        let moduleId = null;
+        let subjectId = null;
+
+        async function fetchJson(url, opts = {}) {
+            const token = window.auth?.getToken?.() || localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                throw new Error('Not authenticated');
+            }
+            const headers = { ...opts.headers };
+            headers['Authorization'] = `Bearer ${token}`;
+            headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+            const resp = await fetch(url, { ...opts, headers });
+            if (resp.status === 401) {
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
+                throw new Error('Session expired');
+            }
+            const text = await resp.text();
+            let json;
+            try { json = text ? JSON.parse(text) : null; } catch { json = null; }
+            if (!resp.ok) throw new Error(json?.detail || resp.statusText);
+            return json;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function showError(message) {
+            const container = document.getElementById('contentContainer');
+            container.innerHTML = `
+                <div class="error-state">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                    <h2>Error Loading Content</h2>
+                    <p>${escapeHtml(message)}</p>
+                    <button class="primary-button" onclick="goBack()">Go Back</button>
+                </div>
+            `;
+        }
+
+        function renderContent(data) {
+            const container = document.getElementById('contentContainer');
+            subjectId = data.subject_id;
+
+            if (!data.content || data.content.length === 0) {
+                container.innerHTML = `
+                    <div class="module-header">
+                        <div class="module-info">
+                            <div class="subject-badge">${escapeHtml(data.subject_title)}</div>
+                            <h1 class="module-title">${escapeHtml(data.module_title)}</h1>
+                        </div>
+                    </div>
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                        <h3>No Content Yet</h3>
+                        <p>Learning content is being prepared for this module. Check back soon!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const completedCount = data.content.filter(c => c.is_completed).length;
+            const totalCount = data.content.length;
+            const progress = Math.round((completedCount / totalCount) * 100);
+
+            let contentHtml = data.content.map((item, index) => {
+                const timeText = item.estimated_time_minutes 
+                    ? `${item.estimated_time_minutes} min` 
+                    : '';
+                return `
+                    <div class="content-item ${item.is_completed ? 'completed' : ''}" 
+                         onclick="openContent(${item.content_id})">
+                        <div class="content-icon">${item.is_completed ? '✓' : (index + 1)}</div>
+                        <div class="content-details">
+                            <h3 class="content-title">${escapeHtml(item.title)}</h3>
+                            ${item.summary ? `<p class="content-summary">${escapeHtml(item.summary)}</p>` : ''}
+                            <div class="content-meta">
+                                ${timeText ? `<span class="meta-item">⏱️ ${timeText}</span>` : ''}
+                                ${item.is_completed 
+                                    ? '<span class="completed-badge">Completed</span>' 
+                                    : '<span class="meta-item">Not started</span>'}
+                            </div>
+                        </div>
+                        <span class="content-arrow">→</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="module-header">
+                    <div class="module-info">
+                        <div class="subject-badge">${escapeHtml(data.subject_title)}</div>
+                        <h1 class="module-title">${escapeHtml(data.module_title)}</h1>
+                    </div>
+                    <div class="module-progress-card">
+                        <div class="progress-stats">
+                            <div class="progress-stat">
+                                <span class="stat-value">${completedCount}/${totalCount}</span>
+                                <span class="stat-label">Lessons Completed</span>
+                            </div>
+                            <div class="progress-stat">
+                                <span class="stat-value">${progress}%</span>
+                                <span class="stat-label">Progress</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-list">
+                    ${contentHtml}
+                </div>
+            `;
+        }
+
+        async function loadContent() {
+            const urlParams = new URLSearchParams(window.location.search);
+            moduleId = urlParams.get('module_id');
+            subjectId = urlParams.get('subject_id');
+
+            if (!moduleId) {
+                showError('No module selected. Please go back and select a module.');
+                return;
+            }
+
+            try {
+                const data = await fetchJson(`${API_BASE}/api/student/module/${moduleId}/content`);
+                renderContent(data);
+            } catch (error) {
+                console.error('Failed to load content:', error);
+                showError(error.message || 'Failed to load content. Please try again.');
+            }
+        }
+
+        window.openContent = function(contentId) {
+            window.location.href = `learn-content.html?id=${contentId}&module_id=${moduleId}&subject_id=${subjectId}`;
+        };
+
+        window.goBack = function() {
+            if (subjectId) {
+                window.location.href = `modules.html?subject_id=${subjectId}`;
+            } else {
+                window.location.href = 'start-studying.html';
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadContent);
+        } else {
+            loadContent();
+        }
+    })();
+    </script>
+</body>
+</html>
