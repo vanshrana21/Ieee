@@ -8,15 +8,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
 from dotenv import load_dotenv
-from backend.orm.bookmark import Bookmark
-from backend.orm.saved_search import SavedSearch
-from backend.orm.smart_note import SmartNote 
-from backend.orm.semantic_embedding import SemanticEmbedding
-from backend.orm.tutor_session import TutorSession 
-from backend.orm.tutor_message import TutorMessage 
-from backend.orm.topic_mastery import TopicMastery 
-from backend.orm.study_plan import StudyPlan  # PHASE 9C
-from backend.orm.study_plan_item import StudyPlanItem
 
 load_dotenv()
 
@@ -61,7 +52,6 @@ async def check_and_migrate_role_column():
     """
     async with engine.begin() as conn:
         try:
-            # Check if users table exists
             result = await conn.execute(
                 text("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
             )
@@ -71,18 +61,11 @@ async def check_and_migrate_role_column():
                 logger.info("Users table doesn't exist yet - will be created fresh")
                 return
             
-            # Check if role column exists
             result = await conn.execute(text("PRAGMA table_info(users)"))
             columns = [row[1] for row in result.fetchall()]
             
             if 'role' not in columns:
                 logger.warning("Role column missing - performing migration")
-                
-                # SQLite doesn't support ALTER COLUMN, so we need to:
-                # 1. Create new table with role column
-                # 2. Copy data with default role
-                # 3. Drop old table
-                # 4. Rename new table
                 
                 await conn.execute(text("""
                     CREATE TABLE users_new (
@@ -102,7 +85,6 @@ async def check_and_migrate_role_column():
                     )
                 """))
                 
-                # Copy existing data with default role as 'student'
                 await conn.execute(text("""
                     INSERT INTO users_new (
                         id, email, full_name, password_hash, role,
@@ -116,11 +98,9 @@ async def check_and_migrate_role_column():
                     FROM users
                 """))
                 
-                # Drop old table and rename
                 await conn.execute(text("DROP TABLE users"))
                 await conn.execute(text("ALTER TABLE users_new RENAME TO users"))
                 
-                # Recreate indexes
                 await conn.execute(text("CREATE INDEX ix_users_id ON users (id)"))
                 await conn.execute(text("CREATE INDEX ix_users_email ON users (email)"))
                 await conn.execute(text("CREATE INDEX ix_users_role ON users (role)"))
@@ -145,27 +125,24 @@ async def init_db():
     logger.info("Initializing database...")
     
     try:
-        # Import all models to register them with Base
-        from backend.orm.user import User
-        from backend.orm.course import Course
-        from backend.orm.subject import Subject
-        from backend.orm.curriculum import CourseCurriculum
-        from backend.orm.content_module import ContentModule  # PHASE 6
-        from backend.orm.learn_content import LearnContent    # PHASE 6
-        from backend.orm.case_content import CaseContent      # PHASE 6
-        from backend.orm.practice_question import PracticeQuestion  # PHASE 6
-        from backend.orm.user_notes import UserNotes          # PHASE 6
+        from backend.orm import (
+            User, Course, Subject, CourseCurriculum,
+            ContentModule, LearnContent, CaseContent, PracticeQuestion,
+            UserContentProgress, PracticeAttempt, SubjectProgress, UserNotes,
+            ExamSession, ExamAnswer, ExamAnswerEvaluation, ExamSessionEvaluation,
+            Bookmark, SavedSearch
+        )
         from backend.orm.user_progress import UserProgress
+        from backend.orm.smart_note import SmartNote 
+        from backend.orm.semantic_embedding import SemanticEmbedding
+        from backend.orm.tutor_session import TutorSession 
+        from backend.orm.tutor_message import TutorMessage 
+        from backend.orm.topic_mastery import TopicMastery 
+        from backend.orm.study_plan import StudyPlan
+        from backend.orm.study_plan_item import StudyPlanItem
         
-        # ⭐ PHASE 8: Import progress tracking models
-        from backend.orm.user_content_progress import UserContentProgress
-        from backend.orm.practice_attempt import PracticeAttempt
-        from backend.orm.subject_progress import SubjectProgress
-        
-        # First, handle migration for existing database
         await check_and_migrate_role_column()
         
-        # Then create all tables (this will only create missing tables)
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         
