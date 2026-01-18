@@ -923,3 +923,122 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(46, 111, 149, 0.3);
 }
+
+/* Mode Availability Badges - Phase 3 */
+.mode-availability-badge {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.mode-availability-badge .availability-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.mode-availability-badge .availability-text {
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.mode-availability-badge.mode-available {
+    background: #f0fdf4;
+    border-left: 3px solid #22c55e;
+}
+
+.mode-availability-badge.mode-available .availability-icon {
+    color: #22c55e;
+}
+
+.mode-availability-badge.mode-available .availability-text {
+    color: #166534;
+}
+
+.mode-availability-badge.mode-unavailable {
+    background: #fef3c7;
+    border-left: 3px solid #f59e0b;
+}
+
+.mode-availability-badge.mode-unavailable .availability-icon {
+    color: #f59e0b;
+}
+
+.mode-availability-badge.mode-unavailable .availability-text {
+    color: #92400e;
+}
+
+.mode-card-enabled {
+    cursor: pointer;
+}
+
+.mode-card-enabled:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(12, 43, 78, 0.15);
+    border-color: var(--accent-teal);
+}
+
+.mode-card-enabled:hover::before {
+    transform: scaleX(1);
+}
+
+/* Content Coming Soon Section - Phase 3 */
+.content-coming-soon,
+.content-available {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.content-coming-soon .coming-soon-icon,
+.content-available .available-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.content-coming-soon h4,
+.content-available h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.content-coming-soon p,
+.content-available p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 400px;
+    margin: 0 auto 1rem;
+}
+
+.coming-soon-suggestion {
+    background: #F1F5F9;
+    padding: 16px;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.available-summary {
+    background: #f0fdf4;
+    padding: 12px 16px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.available-summary strong {
+    color: #166534;
+}
+
+.available-summary {
+    color: #166534;
+    font-size: 0.9rem;
+}

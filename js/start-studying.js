@@ -11,10 +11,16 @@
         isLoading: true,
         error: null,
         contentAvailability: {
-            concepts: false,
-            cases: false,
-            practice: false,
-            notes: true
+            has_learning_content: false,
+            has_cases: false,
+            has_practice: false,
+            has_notes: true,
+            first_learning_content_id: null,
+            first_case_id: null,
+            first_practice_id: null,
+            learn_count: 0,
+            cases_count: 0,
+            practice_count: 0
         }
     };
 
@@ -119,10 +125,9 @@
         const progress = Math.round(subject.completion_percentage || 0);
         const icon = getCategoryIcon(subject.category);
         const moduleCount = (subject.modules || []).length;
-        const hasContent = moduleCount > 0;
 
         return `
-            <div class="subject-card ${!hasContent ? 'subject-card-no-content' : ''}" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
+            <div class="subject-card" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
                 <div class="subject-icon">${icon}</div>
                 <h3>${escapeHtml(subject.title)}</h3>
                 <p>${escapeHtml(subject.description || 'Explore this subject')}</p>
@@ -131,7 +136,6 @@
                     <span class="progress-badge">${progress}%</span>
                 </div>
                 ${subject.semester ? `<div class="semester-badge">Semester ${subject.semester}</div>` : ''}
-                ${!hasContent ? `<div class="coming-soon-badge">Content Coming Soon</div>` : ''}
                 <div class="progress-bar-mini">
                     <div class="progress-fill" style="width: ${progress}%"></div>
                 </div>
@@ -184,75 +188,144 @@
         grid.innerHTML = html;
     }
 
-    async function checkContentAvailability(subjectId) {
-        state.contentAvailability = {
-            concepts: false,
-            cases: false,
-            practice: false,
-            notes: true
-        };
-
+    async function fetchContentAvailability(subjectId) {
         try {
-            const [learnRes, casesRes, practiceRes] = await Promise.allSettled([
-                fetchJson(`${API_BASE}/api/subjects/${subjectId}/learn`).catch(() => null),
-                fetchJson(`${API_BASE}/api/subjects/${subjectId}/cases`).catch(() => null),
-                fetchJson(`${API_BASE}/api/subjects/${subjectId}/practice`).catch(() => null)
-            ]);
-
-            if (learnRes.status === 'fulfilled' && learnRes.value) {
-                const topics = learnRes.value?.topics || learnRes.value?.content || learnRes.value?.modules || [];
-                state.contentAvailability.concepts = Array.isArray(topics) && topics.length > 0;
-            }
-
-            if (casesRes.status === 'fulfilled' && casesRes.value) {
-                const cases = casesRes.value?.cases || casesRes.value || [];
-                state.contentAvailability.cases = Array.isArray(cases) && cases.length > 0;
-            }
-
-            if (practiceRes.status === 'fulfilled' && practiceRes.value) {
-                const questions = practiceRes.value?.questions || practiceRes.value || [];
-                state.contentAvailability.practice = Array.isArray(questions) && questions.length > 0;
-            }
+            const data = await fetchJson(`${API_BASE}/api/student/subject/${subjectId}/availability`);
+            state.contentAvailability = data;
+            return data;
         } catch (err) {
-            console.warn('Content availability check failed:', err);
+            console.error('Failed to fetch content availability:', err);
+            state.contentAvailability = {
+                has_learning_content: false,
+                has_cases: false,
+                has_practice: false,
+                has_notes: true,
+                first_learning_content_id: null,
+                first_case_id: null,
+                first_practice_id: null,
+                learn_count: 0,
+                cases_count: 0,
+                practice_count: 0
+            };
+            return state.contentAvailability;
         }
-
-        return state.contentAvailability;
     }
 
     function updateStudyModeCards() {
         const modeCards = document.querySelectorAll('.mode-card');
         const modes = ['concepts', 'cases', 'practice', 'notes'];
         
-        const modeMessages = {
-            concepts: 'Learning content is being prepared for this subject. Check back soon!',
-            cases: 'Case studies will be available once they are added to this subject.',
-            practice: 'Practice questions will unlock once they are added for this subject.',
-            notes: 'Create and organize your personal study notes.'
+        const modeMapping = {
+            concepts: {
+                available: state.contentAvailability.has_learning_content,
+                count: state.contentAvailability.learn_count,
+                enabledText: `${state.contentAvailability.learn_count} lessons available`,
+                disabledText: 'Learning content is being prepared for this subject. Check back soon!'
+            },
+            cases: {
+                available: state.contentAvailability.has_cases,
+                count: state.contentAvailability.cases_count,
+                enabledText: `${state.contentAvailability.cases_count} cases available`,
+                disabledText: 'Case studies will be available once they are added to this subject.'
+            },
+            practice: {
+                available: state.contentAvailability.has_practice,
+                count: state.contentAvailability.practice_count,
+                enabledText: `${state.contentAvailability.practice_count} questions available`,
+                disabledText: 'Practice questions will unlock once they are added for this subject.'
+            },
+            notes: {
+                available: true,
+                count: state.contentAvailability.notes_count || 0,
+                enabledText: 'Create and organize your personal study notes',
+                disabledText: ''
+            }
         };
 
         modeCards.forEach((card, index) => {
             const mode = modes[index];
             if (!mode) return;
             
-            const isAvailable = state.contentAvailability[mode];
+            const config = modeMapping[mode];
+            const isAvailable = config.available;
             
-            card.classList.remove('mode-card-disabled');
-            const existingBadge = card.querySelector('.mode-unavailable-badge');
+            card.classList.remove('mode-card-disabled', 'mode-card-enabled');
+            const existingBadge = card.querySelector('.mode-availability-badge');
             if (existingBadge) existingBadge.remove();
             
-            if (!isAvailable) {
-                card.classList.add('mode-card-disabled');
+            if (isAvailable) {
+                card.classList.add('mode-card-enabled');
+                card.onclick = () => window.studyApp.openMode(mode);
+                card.style.cursor = 'pointer';
                 
                 const badge = document.createElement('div');
-                badge.className = 'mode-unavailable-badge';
+                badge.className = 'mode-availability-badge mode-available';
                 badge.innerHTML = `
-                    <span class="unavailable-icon">🔒</span>
-                    <span class="unavailable-text">${modeMessages[mode]}</span>
+                    <span class="availability-icon">✓</span>
+                    <span class="availability-text">${config.enabledText}</span>
+                `;
+                card.appendChild(badge);
+            } else {
+                card.classList.add('mode-card-disabled');
+                card.onclick = null;
+                card.style.cursor = 'not-allowed';
+                
+                const badge = document.createElement('div');
+                badge.className = 'mode-availability-badge mode-unavailable';
+                badge.innerHTML = `
+                    <span class="availability-icon">🔒</span>
+                    <span class="availability-text">${config.disabledText}</span>
                 `;
                 card.appendChild(badge);
             }
         });
+        
+        updateContentComingSoonSection();
+    }
+    
+    function updateContentComingSoonSection() {
+        const studyMapContainer = document.getElementById('studyMapContainer');
+        if (!studyMapContainer) return;
+        
+        const hasAnyContent = state.contentAvailability.has_learning_content || 
+                             state.contentAvailability.has_cases || 
+                             state.contentAvailability.has_practice;
+        
+        if (!hasAnyContent) {
+            studyMapContainer.innerHTML = `
+                <div class="content-coming-soon">
+                    <div class="coming-soon-icon">📝</div>
+                    <h4>Content Coming Soon</h4>
+                    <p>We're preparing learning materials for <strong>${escapeHtml(state.currentSubject?.title || 'this subject')}</strong>.</p>
+                    <div class="coming-soon-suggestion">
+                        <strong>What you can do now:</strong><br>
+                        Use the <strong>My Notes</strong> feature to start creating your own study materials while you wait.
+                    </div>
+                </div>
+            `;
+        } else {
+            let availableItems = [];
+            if (state.contentAvailability.has_learning_content) {
+                availableItems.push(`${state.contentAvailability.learn_count} learning lessons`);
+            }
+            if (state.contentAvailability.has_cases) {
+                availableItems.push(`${state.contentAvailability.cases_count} case studies`);
+            }
+            if (state.contentAvailability.has_practice) {
+                availableItems.push(`${state.contentAvailability.practice_count} practice questions`);
+            }
+            
+            studyMapContainer.innerHTML = `
+                <div class="content-available">
+                    <div class="available-icon">✅</div>
+                    <h4>Ready to Learn</h4>
+                    <p>Select a study mode above to begin learning.</p>
+                    <div class="available-summary">
+                        <strong>Available:</strong> ${availableItems.join(' • ')}
+                    </div>
+                </div>
+            `;
+        }
     }
 
     async function selectSubject(subjectId) {
@@ -286,191 +359,8 @@
             `;
         }
         
-        await checkContentAvailability(subjectId);
+        await fetchContentAvailability(subjectId);
         updateStudyModeCards();
-        loadStudyMap(subjectId);
-    }
-    
-    async function loadStudyMap(subjectId) {
-        const studyMapContainer = document.getElementById('studyMapContainer');
-        if (!studyMapContainer) return;
-        
-        const hasAnyContent = state.contentAvailability.concepts || 
-                             state.contentAvailability.cases || 
-                             state.contentAvailability.practice;
-        
-        if (!hasAnyContent) {
-            studyMapContainer.innerHTML = `
-                <div class="study-map-empty">
-                    <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
-                    <h4>Content Coming Soon</h4>
-                    <p>We're preparing learning materials for <strong>${escapeHtml(state.currentSubject?.title || 'this subject')}</strong>.</p>
-                    <div style="background: #F1F5F9; padding: 16px; border-radius: 8px; margin-top: 16px; max-width: 400px; margin-left: auto; margin-right: auto;">
-                        <p style="color: #475569; font-size: 14px; margin: 0;">
-                            <strong>What you can do now:</strong><br>
-                            Use the <strong>My Notes</strong> feature to start creating your own study materials while you wait.
-                        </p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-        
-        try {
-            const studyMapData = await fetchJson(`${API_BASE}/api/curriculum/subjects/${subjectId}/study-map`);
-            renderStudyMap(studyMapContainer, studyMapData);
-        } catch (err) {
-            console.error('Failed to load study map:', err);
-            
-            let availableText = [];
-            if (state.contentAvailability.concepts) availableText.push('Learning concepts');
-            if (state.contentAvailability.cases) availableText.push('Case studies');
-            if (state.contentAvailability.practice) availableText.push('Practice questions');
-            
-            studyMapContainer.innerHTML = `
-                <div class="study-map-empty">
-                    <div style="font-size: 40px; margin-bottom: 12px;">✅</div>
-                    <h4>Content Available</h4>
-                    <p>Select a study mode above to start learning.</p>
-                    ${availableText.length > 0 ? `
-                        <div style="background: #f0fdf4; padding: 12px 16px; border-radius: 8px; margin-top: 12px; display: inline-block;">
-                            <p style="color: #166534; font-size: 13px; margin: 0;">
-                                <strong>Available:</strong> ${availableText.join(' • ')}
-                            </p>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-    }
-    
-    function renderStudyMap(container, data) {
-        if (!data.success) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <p style="color: #ef4444;">${escapeHtml(data.error || 'Failed to load study map')}</p>
-                </div>
-            `;
-            return;
-        }
-        
-        const studyMap = data.study_map || [];
-        
-        if (studyMap.length === 0) {
-            let availableText = [];
-            if (state.contentAvailability.concepts) availableText.push('Learning concepts');
-            if (state.contentAvailability.cases) availableText.push('Case studies');
-            if (state.contentAvailability.practice) availableText.push('Practice questions');
-            
-            container.innerHTML = `
-                <div class="study-map-empty">
-                    <div style="font-size: 40px; margin-bottom: 12px;">🚀</div>
-                    <h4>Ready to Learn</h4>
-                    <p>${escapeHtml(data.message || 'Select a study mode above to begin learning this subject!')}</p>
-                    ${availableText.length > 0 ? `
-                        <div style="background: #f0fdf4; padding: 12px 16px; border-radius: 8px; margin-top: 12px; display: inline-block;">
-                            <p style="color: #166534; font-size: 13px; margin: 0;">
-                                <strong>Available:</strong> ${availableText.join(' • ')}
-                            </p>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-            return;
-        }
-        
-        const html = `
-            <div class="study-map-header">
-                <h3>📍 Your Study Roadmap</h3>
-                <p>Personalized modules ordered by priority</p>
-            </div>
-            <div class="study-map-modules">
-                ${studyMap.map((module, index) => renderStudyMapModule(module, index)).join('')}
-            </div>
-        `;
-        
-        container.innerHTML = html;
-    }
-    
-    function renderStudyMapModule(module, index) {
-        const priorityColors = {
-            'High': '#ef4444',
-            'Medium': '#f59e0b',
-            'Low': '#22c55e'
-        };
-        const priorityBg = {
-            'High': '#fef2f2',
-            'Medium': '#fffbeb',
-            'Low': '#f0fdf4'
-        };
-        
-        const priority = module.priority || 'Medium';
-        const masteryPercent = Math.round(module.mastery_percent || 0);
-        const moduleType = module.module_type || 'learn';
-        const items = module.items || [];
-        
-        const typeIcons = {
-            'learn': '📘',
-            'cases': '⚖️',
-            'practice': '✍️'
-        };
-        
-        return `
-            <div class="study-map-module" style="border-left: 4px solid ${priorityColors[priority]};">
-                <div class="module-header">
-                    <div class="module-rank">${index + 1}</div>
-                    <div class="module-info">
-                        <h4>${typeIcons[moduleType] || '📚'} ${escapeHtml(module.module_title)}</h4>
-                        <div class="module-meta">
-                            <span class="priority-badge" style="background: ${priorityBg[priority]}; color: ${priorityColors[priority]};">${priority} Priority</span>
-                            <span class="mastery-badge">${masteryPercent}% mastery</span>
-                            <span class="items-badge">${items.length} items</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="module-why">
-                    <span class="why-icon">💡</span>
-                    <span>${escapeHtml(module.why || 'Recommended for your learning path')}</span>
-                </div>
-                ${items.length > 0 ? `
-                    <div class="module-items">
-                        ${items.slice(0, 5).map(item => renderStudyMapItem(item)).join('')}
-                        ${items.length > 5 ? `<div class="more-items">+${items.length - 5} more items</div>` : ''}
-                    </div>
-                ` : ''}
-                <div class="module-actions">
-                    <button class="action-btn action-btn-primary" onclick="window.studyApp.openModuleContent(${module.module_id}, '${moduleType}')">
-                        Start Learning →
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-    
-    function renderStudyMapItem(item) {
-        const typeLabels = {
-            'learn': '📖 Lesson',
-            'case': '⚖️ Case',
-            'practice': '✏️ Question'
-        };
-        const typeLabel = typeLabels[item.type] || item.type;
-        
-        return `
-            <div class="study-item">
-                <span class="item-type">${typeLabel}</span>
-                <span class="item-title">${escapeHtml(item.title || 'Untitled')}</span>
-            </div>
-        `;
-    }
-    
-    function openModuleContent(moduleId, moduleType) {
-        const modeMap = {
-            'learn': 'concepts',
-            'cases': 'cases',
-            'practice': 'practice'
-        };
-        const mode = modeMap[moduleType] || 'concepts';
-        openMode(mode);
     }
 
     function backToSubjects() {
@@ -479,10 +369,16 @@
         state.currentSubject = null;
         state.currentMode = '';
         state.contentAvailability = {
-            concepts: false,
-            cases: false,
-            practice: false,
-            notes: true
+            has_learning_content: false,
+            has_cases: false,
+            has_practice: false,
+            has_notes: true,
+            first_learning_content_id: null,
+            first_case_id: null,
+            first_practice_id: null,
+            learn_count: 0,
+            cases_count: 0,
+            practice_count: 0
         };
     }
 
@@ -491,252 +387,39 @@
     }
 
     function openMode(mode) {
-        if (mode !== 'notes' && !state.contentAvailability[mode]) {
-            const modeNames = {
-                concepts: 'Learning content',
-                cases: 'Case studies',
-                practice: 'Practice questions'
-            };
-            
-            const contentArea = document.getElementById('contentArea');
-            contentArea.classList.remove('hidden');
-            
-            const titles = {
-                concepts: 'Learn Concepts',
-                cases: 'Landmark Cases',
-                practice: 'Answer Writing Practice',
-                notes: 'My Notes'
-            };
-            document.getElementById('contentTitle').textContent = titles[mode] || mode;
-            
-            const contentBody = document.getElementById('contentBody');
-            contentBody.innerHTML = `
-                <div class="empty-state-container">
-                    <div class="empty-state-icon">🔒</div>
-                    <h3 class="empty-state-title">${modeNames[mode]} Coming Soon</h3>
-                    <p class="empty-state-message">
-                        We're preparing ${modeNames[mode].toLowerCase()} for <strong>${escapeHtml(state.currentSubject?.title || 'this subject')}</strong>.
-                    </p>
-                    <p class="empty-state-detail">
-                        This will be available once content is added to the curriculum.
-                    </p>
-                    <div class="empty-state-suggestion">
-                        <strong>💡 What you can do:</strong><br>
-                        Try the <strong>Notes</strong> feature to create your own study materials, or explore other subjects.
-                    </div>
-                    <button class="empty-state-btn" onclick="window.studyApp.backToModes()">
-                        ← Back to Study Modes
-                    </button>
-                </div>
-            `;
-            
-            contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const subject = state.currentSubject;
+        if (!subject) return;
+        
+        if (mode === 'concepts') {
+            if (state.contentAvailability.has_learning_content && state.contentAvailability.first_learning_content_id) {
+                window.location.href = `learn.html?content_id=${state.contentAvailability.first_learning_content_id}&subject_id=${subject.id}`;
+            }
             return;
         }
-
-        state.currentMode = mode;
-
-        const contentArea = document.getElementById('contentArea');
-        contentArea.classList.remove('hidden');
-
-        const titles = {
-            concepts: 'Learn Concepts',
-            cases: 'Landmark Cases',
-            practice: 'Answer Writing Practice',
-            notes: 'My Notes'
-        };
-
-        document.getElementById('contentTitle').textContent = titles[mode] || mode;
-
-        loadContent(mode);
-
-        contentArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        if (mode === 'cases') {
+            if (state.contentAvailability.has_cases) {
+                window.location.href = `cases.html?subject_id=${subject.id}`;
+            }
+            return;
+        }
+        
+        if (mode === 'practice') {
+            if (state.contentAvailability.has_practice) {
+                window.location.href = `practice.html?subject_id=${subject.id}`;
+            }
+            return;
+        }
+        
+        if (mode === 'notes') {
+            window.location.href = `notes.html?subject_id=${subject.id}`;
+            return;
+        }
     }
 
     function backToModes() {
         document.getElementById('contentArea').classList.add('hidden');
         state.currentMode = '';
-    }
-
-    async function loadContent(mode) {
-        const contentBody = document.getElementById('contentBody');
-        const subject = state.currentSubject;
-
-        if (!subject) {
-            contentBody.innerHTML = '<p style="color: #64748b; text-align: center; padding: 2rem;">No subject selected</p>';
-            return;
-        }
-
-        contentBody.innerHTML = `
-            <div style="text-align: center; padding: 3rem;">
-                <div style="width: 32px; height: 32px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-                <p style="color: #64748b;">Loading content...</p>
-            </div>
-        `;
-
-        try {
-            if (mode === 'concepts') {
-                const res = await fetchJson(`${API_BASE}/api/subjects/${subject.id}/learn`);
-                renderLearnContent(contentBody, res);
-            } else if (mode === 'cases') {
-                const res = await fetchJson(`${API_BASE}/api/subjects/${subject.id}/cases`);
-                renderCasesContent(contentBody, res);
-            } else if (mode === 'practice') {
-                const res = await fetchJson(`${API_BASE}/api/subjects/${subject.id}/practice`);
-                renderPracticeContent(contentBody, res);
-            } else if (mode === 'notes') {
-                renderNotesEditor(contentBody, subject);
-            }
-        } catch (err) {
-            console.error('Failed to load content:', err);
-            
-            const modeNames = {
-                concepts: 'learning content',
-                cases: 'case studies',
-                practice: 'practice questions'
-            };
-            
-            contentBody.innerHTML = `
-                <div class="empty-state-container">
-                    <div class="empty-state-icon">📭</div>
-                    <h3 class="empty-state-title">Content Coming Soon</h3>
-                    <p class="empty-state-message">
-                        We're preparing ${modeNames[mode] || 'content'} for <strong>${escapeHtml(subject.title)}</strong>.
-                    </p>
-                    <p class="empty-state-detail">
-                        This section will be populated once ${modeNames[mode] || 'materials'} are added to the curriculum.
-                    </p>
-                    <div class="empty-state-suggestion">
-                        <strong>💡 Tip:</strong> You can use the Notes feature to create your own study materials in the meantime.
-                    </div>
-                </div>
-            `;
-        }
-    }
-
-    function renderLearnContent(container, data) {
-        const topics = data?.topics || data?.content || data?.modules || [];
-        if (!topics.length) {
-            container.innerHTML = `
-                <div class="empty-state-container">
-                    <div class="empty-state-icon">📖</div>
-                    <h3 class="empty-state-title">No Learning Content Yet</h3>
-                    <p class="empty-state-message">
-                        Learning materials for <strong>${escapeHtml(state.currentSubject?.title || 'this subject')}</strong> are being prepared.
-                    </p>
-                    <div class="empty-state-suggestion">
-                        <strong>💡 Tip:</strong> Use the Notes feature to create your own study materials while you wait.
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="topic-list">
-                ${topics.map((topic, index) => `
-                    <div class="topic-item">
-                        <h4>${index + 1}. ${escapeHtml(topic.title || topic.name)}</h4>
-                        <p>${escapeHtml(topic.description || topic.content || topic.summary || '')}</p>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    function renderCasesContent(container, data) {
-        const cases = data?.cases || data || [];
-        if (!Array.isArray(cases) || !cases.length) {
-            container.innerHTML = `
-                <div class="empty-state-container">
-                    <div class="empty-state-icon">⚖️</div>
-                    <h3 class="empty-state-title">No Cases Available Yet</h3>
-                    <p class="empty-state-message">
-                        Landmark case studies for <strong>${escapeHtml(state.currentSubject?.title || 'this subject')}</strong> are being curated.
-                    </p>
-                    <div class="empty-state-suggestion">
-                        <strong>💡 Tip:</strong> Check back soon to study important legal precedents.
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="case-list">
-                ${cases.map((caseItem, index) => `
-                    <div class="case-item">
-                        <h4>${index + 1}. ${escapeHtml(caseItem.title || caseItem.name || caseItem.case_name)}</h4>
-                        ${caseItem.year || caseItem.citation ? `<div class="case-meta"><span class="meta-tag">${caseItem.year || ''} ${caseItem.citation || ''}</span></div>` : ''}
-                        <p>${escapeHtml(caseItem.summary || caseItem.description || caseItem.facts || '')}</p>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    function renderPracticeContent(container, data) {
-        const questions = data?.questions || data || [];
-        if (!Array.isArray(questions) || !questions.length) {
-            container.innerHTML = `
-                <div class="empty-state-container">
-                    <div class="empty-state-icon">✏️</div>
-                    <h3 class="empty-state-title">No Practice Questions Yet</h3>
-                    <p class="empty-state-message">
-                        Practice questions for <strong>${escapeHtml(state.currentSubject?.title || 'this subject')}</strong> are being developed.
-                    </p>
-                    <div class="empty-state-suggestion">
-                        <strong>💡 Tip:</strong> Check back soon to test your understanding with AI-powered feedback.
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="question-list">
-                ${questions.map((q, index) => `
-                    <div class="question-item">
-                        <h4>Q${index + 1}. ${escapeHtml(q.title || q.question || q.question_text)}</h4>
-                        ${q.marks ? `<div class="question-meta"><span class="meta-tag">${q.marks} Marks</span></div>` : ''}
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    function renderNotesEditor(container, subject) {
-        const savedNotes = localStorage.getItem(`notes_${subject.id}`) || '';
-
-        container.innerHTML = `
-            <div class="notes-editor">
-                <h3>Your Notes for ${escapeHtml(subject.title)}</h3>
-                <p style="color: #64748b; margin-bottom: 1rem;">Write your personal notes, summaries, and key points here. Notes are saved locally on your device.</p>
-                <textarea id="notesTextarea" placeholder="Start typing your notes...">${escapeHtml(savedNotes)}</textarea>
-                <button class="btn-save" onclick="window.studyApp.saveNotes()">Save Notes</button>
-            </div>
-        `;
-    }
-
-    function saveNotes() {
-        const textarea = document.getElementById('notesTextarea');
-        const subject = state.currentSubject;
-
-        if (!textarea || !subject) return;
-
-        localStorage.setItem(`notes_${subject.id}`, textarea.value);
-
-        const btn = document.querySelector('.btn-save');
-        if (btn) {
-            const originalText = btn.textContent;
-            btn.textContent = 'Saved!';
-            btn.style.background = '#10b981';
-
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = '';
-            }, 2000);
-        }
     }
 
     async function init() {
@@ -783,26 +466,13 @@
             state.isLoading = false;
             state.error = err.message;
 
+            const displayError = "We're having trouble loading study content. Please try again.";
+
             if (window.JurisErrorHandler) {
-                const result = window.JurisErrorHandler.handle(err, {
-                    context: 'Start Studying init',
-                    showToast: true
-                });
-                
-                if (!result.handled) {
-                    if (err.message.includes('Not authenticated') || err.message.includes('401')) {
-                        showError('Please log in to view your subjects.');
-                    } else {
-                        showError(err.message || 'Failed to load subjects. Please try again.');
-                    }
-                }
-            } else {
-                if (err.message.includes('Not authenticated') || err.message.includes('401')) {
-                    showError('Please log in to view your subjects.');
-                } else {
-                    showError(err.message || 'Failed to load subjects. Please try again.');
-                }
+                window.JurisErrorHandler.showToast(displayError, 'error');
             }
+            
+            showError(displayError);
         }
     }
 
@@ -812,8 +482,6 @@
         goBackToDashboard,
         openMode,
         backToModes,
-        saveNotes,
-        openModuleContent,
         getContentAvailability: () => state.contentAvailability
     };
 
@@ -822,7 +490,6 @@
     window.goBackToDashboard = goBackToDashboard;
     window.openMode = openMode;
     window.backToModes = backToModes;
-    window.saveNotes = saveNotes;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
