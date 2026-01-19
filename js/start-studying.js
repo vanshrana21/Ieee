@@ -210,11 +210,10 @@
         
         const modeMapping = {
             concepts: {
-                available: true,
-                count: state.contentAvailability.modules_count || 0,
-                enabledText: state.contentAvailability.modules_count > 0 
-                    ? `${state.contentAvailability.modules_count} module${state.contentAvailability.modules_count !== 1 ? 's' : ''} available`
-                    : 'Explore modules'
+                available: state.contentAvailability.has_modules,
+                count: state.contentAvailability.modules_count,
+                enabledText: `${state.contentAvailability.modules_count} module${state.contentAvailability.modules_count !== 1 ? 's' : ''} available`,
+                disabledText: 'Learning modules are being prepared for this subject. Check back soon!'
             },
             cases: {
                 available: state.contentAvailability.has_cases,
@@ -381,26 +380,26 @@
         window.location.href = 'dashboard-student.html';
     }
 
-    function handleExploreSubject(subjectId) {
-        window.location.href = `modules.html?subject_id=${subjectId}`;
-    }
-
     function openMode(mode) {
         const subject = state.currentSubject;
         if (!subject) return;
         
         if (mode === 'concepts') {
-            handleExploreSubject(subject.id);
+            window.location.href = `modules.html?subject_id=${subject.id}`;
             return;
         }
         
         if (mode === 'cases') {
-            window.location.href = `cases.html?subject_id=${subject.id}`;
+            if (state.contentAvailability.has_cases) {
+                window.location.href = `cases.html?subject_id=${subject.id}`;
+            }
             return;
         }
         
         if (mode === 'practice') {
-            window.location.href = `practice.html?subject_id=${subject.id}`;
+            if (state.contentAvailability.has_practice) {
+                window.location.href = `practice.html?subject_id=${subject.id}`;
+            }
             return;
         }
         
@@ -490,7 +489,6 @@
         goBackToDashboard,
         openMode,
         backToModes,
-        handleExploreSubject,
         getContentAvailability: () => state.contentAvailability
     };
 
@@ -499,7 +497,6 @@
     window.goBackToDashboard = goBackToDashboard;
     window.openMode = openMode;
     window.backToModes = backToModes;
-    window.handleExploreSubject = handleExploreSubject;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
