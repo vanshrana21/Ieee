@@ -33,6 +33,8 @@
             state.isLoading = false;
             
             document.getElementById('subjectTitle').textContent = state.subjectName;
+            document.getElementById('subjectSubtitle').textContent = 
+                `${state.modules.length} module${state.modules.length !== 1 ? 's' : ''} • Select a module to start learning`;
             
             renderModules();
         } catch (error) {
@@ -62,28 +64,30 @@
             return;
         }
 
-        modulesList.innerHTML = state.modules.map(module => {
+        modulesList.innerHTML = state.modules.map((module, index) => {
             const hasContent = module.total_contents > 0;
             const progressPercent = module.total_contents > 0 
                 ? Math.round((module.completed_contents / module.total_contents) * 100) 
                 : 0;
+            const moduleNumber = module.sequence_order || module.order_index || (index + 1);
+            const moduleId = module.module_id || module.id;
             
             const buttonText = module.completed_contents === 0 ? 'Start' : 
                               module.is_completed ? 'Review' : 'Continue';
             const buttonClass = module.is_completed ? 'secondary' : '';
             
             return `
-                <div class="module-card ${!hasContent ? 'no-content' : ''}" ${hasContent ? `onclick="navigateToModule(${module.module_id})"` : ''}>
+                <div class="module-card ${!hasContent ? 'no-content' : ''}" onclick="navigateToModule(${moduleId})">
                     <div class="module-card-header">
                         <div class="module-info">
                             <h3>${escapeHtml(module.title)}</h3>
                             <div class="module-meta">
-                                Module ${module.sequence_order} • ${module.total_contents} lesson${module.total_contents !== 1 ? 's' : ''}
+                                Module ${moduleNumber} • ${module.total_contents} lesson${module.total_contents !== 1 ? 's' : ''}
                             </div>
                         </div>
                         <div class="module-status">
                             ${module.is_completed ? '<span class="completion-badge">Completed</span>' : ''}
-                            ${hasContent ? `<button class="module-action-btn ${buttonClass}" onclick="event.stopPropagation(); navigateToModule(${module.module_id})">${buttonText}</button>` : ''}
+                            ${hasContent ? `<button class="module-action-btn ${buttonClass}" onclick="event.stopPropagation(); navigateToModule(${moduleId})">${buttonText}</button>` : ''}
                         </div>
                     </div>
                     ${hasContent ? `
@@ -94,7 +98,7 @@
                             <div class="progress-text">${module.completed_contents} of ${module.total_contents} completed (${progressPercent}%)</div>
                         </div>
                     ` : `
-                        <div class="no-content-msg">Content for this module is being prepared...</div>
+                        <div class="no-content-msg">No learning content added yet</div>
                     `}
                 </div>
             `;

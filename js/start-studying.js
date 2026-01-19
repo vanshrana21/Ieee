@@ -322,8 +322,7 @@
     }
 
     async function selectSubject(subjectId) {
-        const allSubjects = [...state.subjects, ...state.archiveSubjects];
-        const subject = allSubjects.find(s => s.id === subjectId);
+        const subject = state.subjects.find(s => s.id === subjectId);
 
         if (!subject) {
             console.error('Subject not found:', subjectId);
