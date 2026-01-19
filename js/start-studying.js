@@ -133,7 +133,7 @@
     function createSubjectCard(subject) {
         const progress = Math.round(subject.completion_percentage || 0);
         const icon = getCategoryIcon(subject.category);
-        const moduleCount = (subject.modules || []).length;
+        const moduleCount = subject.modules_count || 0;
 
         return `
             <div class="subject-card" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
@@ -141,7 +141,7 @@
                 <h3>${escapeHtml(subject.title)}</h3>
                 <p>${escapeHtml(subject.description || 'Explore this subject')}</p>
                 <div class="card-footer">
-                    <span class="topic-count">${moduleCount} Modules</span>
+                    <span class="topic-count">${moduleCount} Module${moduleCount !== 1 ? 's' : ''}</span>
                     <span class="progress-badge">${progress}%</span>
                 </div>
                 ${subject.semester ? `<div class="semester-badge">Semester ${subject.semester}</div>` : ''}
@@ -435,7 +435,7 @@
                 id: s.id,
                 title: s.title,
                 description: '',
-                modules: [],
+                modules_count: 0,
                 completion_percentage: 0
             }));
             state.courseName = subjectsData.course_name || null;
@@ -443,6 +443,19 @@
 
             state.isLoading = false;
 
+            renderSubjects();
+
+            const availabilityPromises = state.subjects.map(async (subject) => {
+                try {
+                    const availability = await fetchJson(`${API_BASE}/api/student/subject/${subject.id}/availability`);
+                    subject.modules_count = availability.modules_count || 0;
+                    subject.has_modules = availability.has_modules || false;
+                } catch (err) {
+                    console.warn(`Failed to fetch availability for subject ${subject.id}:`, err);
+                }
+            });
+
+            await Promise.all(availabilityPromises);
             renderSubjects();
 
             const urlParams = new URLSearchParams(window.location.search);
