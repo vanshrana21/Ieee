@@ -177,7 +177,9 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
             raise ValueError(f"Case not found: {case_identifier}")
     
     # Phase 2: Extract
-    full_detail = extract_full_case_details(raw_data)
+    # fetch_case_from_kannon returns {"data": {...}}
+    inner_data = raw_data.get("data", raw_data)
+    full_detail = extract_full_case_details(inner_data)
     
     # Phase 3: Prepare AI Input
     canonical_input = prepare_ai_input(full_detail)
