@@ -171,9 +171,10 @@ async def get_subjects_by_semester(
         unit_stmt = (
             select(
                 Unit.id,
+                Unit.subject_id,
                 Unit.title,
-                Unit.sequence_order,
-                Unit.description
+                Unit.description,
+                Unit.sequence_order
             )
             .where(Unit.subject_id == subj.id)
             .order_by(Unit.sequence_order)
@@ -184,6 +185,7 @@ async def get_subjects_by_semester(
         unit_list = [
             {
                 "id": unit.id,
+                "subject_id": unit.subject_id,
                 "title": unit.title,
                 "sequence_order": unit.sequence_order,
                 "description": unit.description
@@ -269,9 +271,10 @@ async def get_modules_by_subject(
     mod_stmt = (
         select(
             Unit.id,
+            Unit.subject_id,
             Unit.title,
-            Unit.sequence_order,
-            Unit.description
+            Unit.description,
+            Unit.sequence_order
         )
         .where(Unit.subject_id == subject_id)
         .order_by(Unit.sequence_order)
@@ -282,6 +285,7 @@ async def get_modules_by_subject(
     module_list = [
         {
             "id": mod.id,
+            "subject_id": mod.subject_id,
             "title": mod.title,
             "sequence_order": mod.sequence_order,
             "description": mod.description
