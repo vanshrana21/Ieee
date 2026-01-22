@@ -126,6 +126,7 @@
         </header>
 
         <div class="dashboard-content">
+            <!-- HERO SECTION -->
             <section class="hero-section">
                 <div class="hero-left">
                     <p class="greeting" id="greeting">Good evening</p>
@@ -180,112 +181,88 @@
                 </div>
             </section>
 
+            <!-- QUICK ACTIONS TICKER -->
             <section class="quick-actions-ticker">
-                <div class="ticker-container" id="tickerContainer">
-                    <div class="quick-actions-track" id="tickerTrack">
-                        <!-- Ticker items will be injected by ticker.js -->
-                    </div>
-                </div>
-            </section>
-
-            <section class="stats-section">
-                <div class="stat-card stat-course">
-                    <div class="stat-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                        </svg>
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Current Course</span>
-                        <span class="stat-value" id="currentCourse">Loading...</span>
-                    </div>
-                </div>
-                <div class="stat-card stat-progress">
-                    <div class="stat-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 20v-6M6 20V10M18 20V4"/>
-                        </svg>
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Overall Progress</span>
-                        <div class="stat-progress-bar">
-                            <div class="stat-progress-fill" id="overallProgressFill" style="width: 45%"></div>
-                        </div>
-                        <span class="stat-value-small" id="overallProgress">45% Complete</span>
-                    </div>
-                </div>
-                <div class="stat-card stat-accuracy">
-                    <div class="stat-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="m9 12 2 2 4-4"/>
-                        </svg>
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Practice Accuracy</span>
-                        <span class="stat-value" id="practiceAccuracy">78%</span>
-                    </div>
-                </div>
-                <div class="stat-card stat-time">
-                    <div class="stat-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Time This Week</span>
-                        <span class="stat-value" id="timeStudied">4h 32m</span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="resume-section" id="resumeSection">
-                <div class="resume-card">
-                    <div class="resume-badge">Continue where you left off</div>
-                    <div class="resume-content">
-                        <div class="resume-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                            </svg>
-                        </div>
-                        <div class="resume-info">
-                            <h3 class="resume-subject" id="resumeSubject">Loading...</h3>
-                            <p class="resume-topic" id="resumeTopic">Loading your progress...</p>
-                            <div class="resume-meta">
-                                <span class="resume-progress-label" id="resumeProgressLabel">65% complete</span>
-                                <div class="resume-progress">
-                                    <div class="resume-progress-fill" id="resumeProgressFill" style="width: 65%"></div>
-                                </div>
+                <div class="ticker-container">
+                    <div class="quick-actions-track">
+                        <!-- Card 1 -->
+                        <a href="./case-simplifier.html" class="quick-action-item" role="link" aria-label="Open Case Simplifier">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/case-simplifier.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
                             </div>
-                        </div>
-                    </div>
-                    <button class="resume-btn" id="resumeBtn">
-                        Resume
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                </div>
-            </section>
-
-            <section class="focus-section" id="focusSection">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <circle cx="12" cy="12" r="6"/>
-                            <circle cx="12" cy="12" r="2"/>
-                        </svg>
-                        Today's Focus
-                    </h2>
-                </div>
-                <div class="focus-grid" id="focusGrid">
-                    <div class="focus-loading">
-                        <div class="spinner"></div>
-                        <p>Loading your personalized focus...</p>
+                            <div class="qa-info">
+                                <span class="qa-title">Case Simplifier</span>
+                                <span class="qa-subtitle">Simplified judgments & exam-ready breakdowns</span>
+                            </div>
+                        </a>
+                        <!-- Card 2 -->
+                        <a href="./debate.html" class="quick-action-item" role="link" aria-label="Open Debate">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/debate.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
+                            </div>
+                            <div class="qa-info">
+                                <span class="qa-title">Debate</span>
+                                <span class="qa-subtitle">Live argument practice</span>
+                            </div>
+                        </a>
+                        <!-- Card 3 -->
+                        <a href="./start-studying.html" class="quick-action-item" role="link" aria-label="Start Studying">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/study.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
+                            </div>
+                            <div class="qa-info">
+                                <span class="qa-title">Start Studying</span>
+                                <span class="qa-subtitle">Open subject lessons</span>
+                            </div>
+                        </a>
+                        <!-- Card 4 -->
+                        <a href="./my-notes.html" class="quick-action-item" role="link" aria-label="Open My Notes">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/notes.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
+                            </div>
+                            <div class="qa-info">
+                                <span class="qa-title">My Notes</span>
+                                <span class="qa-subtitle">Create & organize notes</span>
+                            </div>
+                        </a>
+                        
+                        <!-- DUPLICATE FOR SEAMLESS LOOP -->
+                        <a href="./case-simplifier.html" class="quick-action-item" role="link" aria-label="Open Case Simplifier">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/case-simplifier.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
+                            </div>
+                            <div class="qa-info">
+                                <span class="qa-title">Case Simplifier</span>
+                                <span class="qa-subtitle">Simplified judgments & exam-ready breakdowns</span>
+                            </div>
+                        </a>
+                        <a href="./debate.html" class="quick-action-item" role="link" aria-label="Open Debate">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/debate.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
+                            </div>
+                            <div class="qa-info">
+                                <span class="qa-title">Debate</span>
+                                <span class="qa-subtitle">Live argument practice</span>
+                            </div>
+                        </a>
+                        <a href="./start-studying.html" class="quick-action-item" role="link" aria-label="Start Studying">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/study.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
+                            </div>
+                            <div class="qa-info">
+                                <span class="qa-title">Start Studying</span>
+                                <span class="qa-subtitle">Open subject lessons</span>
+                            </div>
+                        </a>
+                        <a href="./my-notes.html" class="quick-action-item" role="link" aria-label="Open My Notes">
+                            <div class="qa-icon" aria-hidden="true">
+                                <img src="../assets/icons/notes.svg" alt="" width="24" height="24" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230066FF%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z%22/%3E%3Cpolyline points=%2214 2 14 8 20 8%22/%3E%3C/svg%3E'">
+                            </div>
+                            <div class="qa-info">
+                                <span class="qa-title">My Notes</span>
+                                <span class="qa-subtitle">Create & organize notes</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </section>
@@ -392,6 +369,5 @@
     <script src="../js/sidebar.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/dashboard-v2.js"></script>
-    <script src="../js/ticker.js"></script>
 </body>
 </html>
