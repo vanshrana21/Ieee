@@ -122,31 +122,37 @@ function displayCaseOutput(data) {
     // Update Header Information
     document.getElementById('outputCaseName').textContent = raw_case.case_name || 'Judgment';
     document.getElementById('outputCourt').textContent = raw_case.court || 'Court';
-    document.getElementById('outputYear').textContent = raw_case.year || '';
+    document.getElementById('outputYear').textContent = raw_case.citation || '';
     
     // Importance badge (static for now)
     document.getElementById('outputImportance').textContent = 'Authoritative Source';
 
     // Render Full Judgment (Left Panel - Authoritative)
     const judgmentContainer = document.getElementById('fullJudgmentText');
-    const sections = [
-        { title: 'Facts', content: raw_case.facts },
-        { title: 'Issues', content: raw_case.issues },
-        { title: 'Arguments', content: raw_case.arguments },
-        { title: 'Judgment', content: raw_case.judgment },
-        { title: 'Ratio Decidendi', content: raw_case.ratio }
-    ];
     
-    judgmentContainer.innerHTML = sections
-        .filter(s => s.content && s.content.trim())
-        .map(s => `<h4>${s.title}</h4><div>${formatLegalText(s.content)}</div>`)
-        .join('<hr style="margin: 20px 0; opacity: 0.1;">');
+    // In the new backend structure, raw_case primarily contains the full judgment text
+    // If it's pre-segmented, we use those, otherwise we show the judgment field
+    const sections = [];
+    if (raw_case.judgment) {
+        sections.push({ title: 'Full Judgment', content: raw_case.judgment });
+    }
+    
+    if (sections.length > 0) {
+        judgmentContainer.innerHTML = sections
+            .map(s => `<h4>${s.title}</h4><div>${formatLegalText(s.content)}</div>`)
+            .join('<hr style="margin: 20px 0; opacity: 0.1;">');
+    } else {
+        judgmentContainer.innerHTML = '<p class="text-muted">Full judgment text not available.</p>';
+    }
 
     // Render AI Summary Sections (Right Panel - Assistive)
+    const summarySections = document.querySelectorAll('.summary-section');
+    summarySections.forEach(s => s.classList.add('active')); // Expand all by default
+
     if (ai_structured_summary) {
         renderSummarySection('factsText', ai_structured_summary.facts);
         renderSummarySection('issuesText', ai_structured_summary.issues);
-        renderSummarySection('argumentsText', "Arguments omitted for concise summary.");
+        renderSummarySection('argumentsText', ai_structured_summary.arguments);
         renderSummarySection('judgmentText', ai_structured_summary.judgment);
         renderSummarySection('ratioText', ai_structured_summary.ratio_decidendi);
         renderSummarySection('significanceText', "Focus on the ratio decidendi for exam preparation.");
@@ -155,7 +161,7 @@ function displayCaseOutput(data) {
         const summaryFields = ['factsText', 'issuesText', 'argumentsText', 'judgmentText', 'ratioText', 'significanceText'];
         summaryFields.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = '<p class="text-muted">Summary currently unavailable. Please refer to the full judgment.</p>';
+            if (el) el.innerHTML = '<p class="text-muted">AI summary unavailable. Please refer to the full judgment on the left.</p>';
         });
         showToast('ℹ️ AI Summary unavailable, showing full judgment');
     }
@@ -258,7 +264,7 @@ function saveCase() {
         id: currentCase.raw_case.id || Date.now(),
         name: currentCase.raw_case.case_name,
         court: currentCase.raw_case.court,
-        year: currentCase.raw_case.year,
+        citation: currentCase.raw_case.citation,
         date: new Date().toISOString()
     };
     
@@ -289,7 +295,7 @@ function loadSavedCases() {
     list.innerHTML = saved.map(s => `
         <div class="saved-item" onclick="loadFullCaseData('${s.id}')">
             <div class="saved-item-title">${s.name}</div>
-            <div class="saved-item-meta">${s.court} • ${s.year}</div>
+            <div class="saved-item-meta">${s.court} • ${s.citation || ''}</div>
         </div>
     `).join('');
 }
