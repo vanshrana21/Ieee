@@ -491,32 +491,75 @@ body {
 }
 
 /* --- OTHER SECTIONS --- */
-/* --- FOCUS STRIP SECTION --- */
-.subjects-section {
-    margin-bottom: 48px;
-    overflow: hidden;
+/* --- ACTIVE CONTEXT STRIP --- */
+.active-context-strip {
+    padding: 12px 32px;
+    margin-bottom: 24px;
+    background: transparent;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
 }
 
+.context-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    position: relative;
+    padding-left: 18px;
+}
+
+.context-text::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--success-light);
+}
+
+/* --- VISUAL RHYTHM & ALTERNATING BACKGROUNDS --- */
+.subjects-section {
+    margin-bottom: 64px;
+    padding: 40px 32px;
+    background: linear-gradient(to bottom, transparent, rgba(0, 102, 255, 0.02), transparent);
+}
+
+.two-col-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 8px;
+    padding: 0 32px 64px 32px;
+    align-items: stretch;
+}
+
+/* --- FOCUS STRIP SECTION --- */
 .focus-strip-container {
     position: relative;
     padding: 40px 0;
     margin: 0 -32px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none;  /* IE/Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     display: flex;
     align-items: center;
 }
 
 .focus-strip-container::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
 }
 
 .focus-strip-track {
     display: flex;
-    gap: 32px;
-    padding: 0 calc(50% - 160px); /* Center the first/last card */
+    gap: 40px;
+    padding: 0 calc(50% - 160px);
 }
 
 .subject-card {
@@ -528,52 +571,24 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
     scroll-snap-align: center;
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    opacity: 0.6;
+    opacity: 0.4;
     transform: scale(0.9);
+    filter: blur(1px);
 }
 
-/* Logic for active/center card will be handled via intersection observer or scroll position in JS, 
-   but for the demo we'll target it with a class .active-focus */
 .subject-card.active-focus {
     opacity: 1;
     transform: scale(1.05);
-    box-shadow: 0 20px 40px rgba(0, 102, 255, 0.12);
-    border-color: rgba(0, 102, 255, 0.2);
-}
-
-.subject-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.subject-info-main {
-    flex: 1;
-}
-
-.subject-name {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin: 0 0 6px 0;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-}
-
-.subject-subtitle {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0;
+    box-shadow: 0 25px 50px -12px rgba(0, 102, 255, 0.15);
+    border-color: var(--primary);
+    filter: blur(0);
+    z-index: 2;
 }
 
 /* Contextual Reveal UX */
@@ -581,16 +596,18 @@ body {
     max-height: 0;
     opacity: 0;
     overflow: hidden;
+    transform: translateY(10px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.subject-card:hover .contextual-reveal,
-.subject-card.active-focus:hover .contextual-reveal {
-    max-height: 200px;
+.subject-card.active-focus:hover .contextual-reveal,
+.subject-card:hover .contextual-reveal {
+    max-height: 300px;
     opacity: 1;
+    transform: translateY(0);
     margin-top: 10px;
 }
 
@@ -601,15 +618,10 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.contextual-hint::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: block;
+    background: var(--primary-light);
+    padding: 8px 12px;
+    border-radius: 10px;
+    width: fit-content;
 }
 
 .subject-actions {

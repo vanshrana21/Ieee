@@ -184,6 +184,7 @@
         const greetingEl = q('#greeting');
         const heroNameEl = q('#heroName');
         const avatarEl = q('#avatarInitial');
+        const contextTextEl = q('#contextText');
 
         if (greetingEl) greetingEl.textContent = getGreeting();
 
@@ -198,6 +199,15 @@
 
         if (avatarEl && firstName) {
             avatarEl.textContent = firstName.charAt(0).toUpperCase();
+        }
+
+        if (contextTextEl) {
+            const hour = new Date().getHours();
+            let msg = 'Your academic journey: Semester 1 Focus';
+            if (hour < 12) msg = 'Morning deep work: Focus on Tort Law fundamentals';
+            else if (hour < 17) msg = 'Mid-day review: High weightage cases to revise';
+            else msg = 'Evening reflection: Resume Legal Methods modules';
+            contextTextEl.textContent = msg;
         }
     }
 
@@ -413,25 +423,47 @@
         if (!list) return;
 
         if (!activities || activities.length === 0) {
-            // Keep the HTML-defined empty state if it's already there
-            if (list.querySelector('.empty-state-v2')) return;
+            // Intelligent suggestion instead of empty list
+            const suggestions = [
+                {
+                    title: 'Resume Tort Law',
+                    subtitle: 'Suggested: Pick up where you left off in Module 2',
+                    cta: 'Resume Studying',
+                    action: () => window.location.href = 'start-studying.html'
+                },
+                {
+                    title: 'Revise Maneka Gandhi Case',
+                    subtitle: 'Suggested: High probability topic for upcoming tests',
+                    cta: 'Start Revision',
+                    action: () => window.location.href = 'case-simplifier.html'
+                },
+                {
+                    title: 'Practice Constitutional Law',
+                    subtitle: 'Suggested: Strenghten your Article 21 concepts',
+                    cta: 'Start Practice',
+                    action: () => window.location.href = 'practice-content.html'
+                }
+            ];
+            
+            // Pick a suggestion based on day/randomness for demo
+            const suggestion = suggestions[new Date().getDay() % suggestions.length];
             
             list.innerHTML = `
                 <div class="empty-state-v2">
                     <div class="empty-illustration">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                            <path d="M8 11h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                            <path d="M8 15h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 8V12L15 15" />
+                            <circle cx="12" cy="12" r="9" />
                         </svg>
                     </div>
-                    <p class="empty-title">Your study history will appear here.</p>
-                    <p class="empty-subtitle">Start with a subject or case to begin tracking progress.</p>
-                    <a href="./start-studying.html" class="btn-secondary-sm">Start Studying</a>
+                    <p class="empty-title">${suggestion.title}</p>
+                    <p class="empty-subtitle">${suggestion.subtitle}</p>
+                    <button class="btn-secondary-sm" id="suggestionCTA">${suggestion.cta}</button>
                 </div>
             `;
+            
+            const cta = q('#suggestionCTA', list);
+            if (cta) cta.onclick = suggestion.action;
             return;
         }
 
