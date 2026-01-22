@@ -32,7 +32,8 @@
             'minor_i': 'Minor I',
             'minor_ii': 'Minor II',
             'optional': 'Optional',
-            'clinical': 'Clinical'
+            'clinical': 'Clinical',
+            'foundation': 'Foundation'
         };
         return typeMap[type] || type;
     }

@@ -267,6 +267,11 @@ body {
     color: #166534;
 }
 
+.subject-type-badge.foundation {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
 .subject-type-badge.clinical {
     background: #fee2e2;
     color: #991b1b;
