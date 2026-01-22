@@ -178,6 +178,7 @@ async def get_subjects_by_semester(
             "code": subj.code,
             "description": subj.description,
             "subject_type": subj.subject_type,
+            "is_foundation": subj.is_foundation,
             "is_optional": subj.is_optional,
             "option_group": subj.option_group,
             "is_variable": subj.is_variable,
