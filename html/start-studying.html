@@ -34,11 +34,16 @@
                 </div> -->
             </div>
 
-            <!-- Subject Grid (Dynamically populated by JS) -->
-            <div class="subject-grid">
-                <!-- Subjects will be rendered here by JavaScript -->
-                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-                    <p style="color: #64748b;">Loading subjects...</p>
+            <!-- Subject Focus Strip Section -->
+            <div class="focus-strip-wrapper">
+                <div class="subject-focus-strip" id="subjectFocusStrip">
+                    <!-- Subjects will be rendered here by JavaScript -->
+                </div>
+                
+                <!-- Focus Guidance (Micro-hint and Smart CTA) -->
+                <div id="focusGuidance" class="focus-guidance hidden">
+                    <p id="whyMicroHint" class="why-micro-hint"></p>
+                    <button id="smartCTA" class="smart-cta"></button>
                 </div>
             </div>
         </div>
