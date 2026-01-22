@@ -886,15 +886,64 @@ async def seed_ba_llb_curriculum():
                     logger.info(f"✓ Created {semester_data['name']}")
                 else:
                     logger.info(f"⟳ Updating {semester_data['name']}")
-                    # Optional: Clear existing subjects for this semester to ensure clean seed
-                    # Only doing this if it's Semester 1 as per specific request
+                    # CLEANUP: Clear existing subjects for this semester to ensure clean seed
                     if semester_num == 1:
                         from sqlalchemy import delete
-                        await session.execute(delete(BALLBSubject).where(BALLBSubject.semester_id == semester.id))
+                        from backend.orm.subject import Subject
+                        from backend.orm.curriculum import CourseCurriculum
+                        
+                        # 1. Clear BALLB subjects and their modules for this semester
+                        # Cascade should handle modules, but we'll be explicit
+                        subj_ids_stmt = select(BALLBSubject.id).where(BALLBSubject.semester_id == semester.id)
+                        subj_ids_res = await session.execute(subj_ids_stmt)
+                        subj_ids = subj_ids_res.scalars().all()
+                        
+                        if subj_ids:
+                            await session.execute(delete(BALLBModule).where(BALLBModule.subject_id.in_(subj_ids)))
+                            await session.execute(delete(BALLBSubject).where(BALLBSubject.id.in_(subj_ids)))
+                        
+                        # 2. Clear old subjects from the general subjects table that match Semester 1 BA LLB
+                        # This fixes the dashboard showing old subjects
+                        old_subject_titles = [
+                            'Legal Methods', 'Political Science I', 'Sociology I', 
+                            'English I', 'Law of Torts', 'Legal Method', 'Political Science-I',
+                            'General and Legal English', 'Fundamental Principles of Political Science',
+                            'Sociology – I (Legal Sociology)', 'Indian History – Part I',
+                            'Law of Torts including Motor Vehicle Accident and Consumer Protection Laws',
+                            'General Principles and Theories of Contract (Sections 1–75)',
+                            'Universal Human Values and Professional Ethics (Foundation Course)'
+                        ]
+                        
+                        # Find BA LLB courses
+                        from backend.orm.course import Course
+                        course_stmt = select(Course).where(Course.name.like('%BA LLB%'))
+                        course_result = await session.execute(course_stmt)
+                        courses = course_result.scalars().all()
+                        
+                        for course in courses:
+                            # Delete curriculum mappings for Semester 1
+                            await session.execute(
+                                delete(CourseCurriculum).where(
+                                    CourseCurriculum.course_id == course.id,
+                                    CourseCurriculum.semester_number == 1
+                                )
+                            )
+                            logger.info(f"  ✓ Cleared old CourseCurriculum mappings for {course.name} Semester 1")
+
+                        # 3. Delete specific old subjects from subjects table to prevent dashboard clutter
+                        from backend.orm.subject import Subject
+                        await session.execute(
+                            delete(Subject).where(Subject.title.in_(old_subject_titles))
+                        )
+                        logger.info(f"  ✓ Deleted old subjects from general subjects table")
+
                         await session.flush()
-                        logger.info(f"  ⚠ Cleared existing subjects for Semester 1 for clean update")
+                        logger.info(f"  ⚠ Cleared existing subjects and mappings for Semester 1 for clean update")
                 
                 for subj_order, subj_data in enumerate(semester_data["subjects"], 1):
+                    # Check if it's a foundation course
+                    is_foundation = "Foundation Course" in subj_data["name"] or subj_data.get("subject_type") == "foundation"
+                    
                     stmt = select(BALLBSubject).where(
                         BALLBSubject.semester_id == semester.id,
                         BALLBSubject.code == subj_data["code"]
@@ -908,6 +957,7 @@ async def seed_ba_llb_curriculum():
                             name=subj_data["name"],
                             code=subj_data["code"],
                             subject_type=subj_data["subject_type"],
+                            is_foundation=is_foundation,
                             is_optional=subj_data["is_optional"],
                             option_group=subj_data["option_group"],
                             is_variable=subj_data["is_variable"],
@@ -921,6 +971,7 @@ async def seed_ba_llb_curriculum():
                         # Update existing subject
                         subject.name = subj_data["name"]
                         subject.subject_type = subj_data["subject_type"]
+                        subject.is_foundation = is_foundation
                         subject.is_optional = subj_data["is_optional"]
                         subject.option_group = subj_data["option_group"]
                         subject.is_variable = subj_data["is_variable"]

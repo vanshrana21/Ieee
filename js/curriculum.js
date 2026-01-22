@@ -157,22 +157,28 @@
             return;
         }
 
-        grid.innerHTML = state.subjects.map(subject => `
-            <div class="subject-card" onclick="window.curriculumApp.selectSubject(${subject.id})">
-                <span class="subject-type-badge ${subject.subject_type}">${formatSubjectType(subject.subject_type)}</span>
-                <div class="subject-name">${escapeHtml(subject.name)}</div>
-                <div class="subject-code">${escapeHtml(subject.code)}</div>
-                <div class="subject-footer">
-                    <div class="module-count">
-                        <span class="module-count-number">${subject.module_count}</span>
-                        Module${subject.module_count !== 1 ? 's' : ''}
+        grid.innerHTML = state.subjects.map(subject => {
+            const isFoundation = subject.is_foundation || subject.subject_type === 'foundation' || subject.name.includes('Foundation Course');
+            const typeBadgeClass = isFoundation ? 'foundation' : subject.subject_type;
+            const typeLabel = isFoundation ? 'Foundation' : formatSubjectType(subject.subject_type);
+
+            return `
+                <div class="subject-card" onclick="window.curriculumApp.selectSubject(${subject.id})">
+                    <span class="subject-type-badge ${typeBadgeClass}">${typeLabel}</span>
+                    <div class="subject-name">${escapeHtml(subject.name)}</div>
+                    <div class="subject-code">${escapeHtml(subject.code)}</div>
+                    <div class="subject-footer">
+                        <div class="module-count">
+                            <span class="module-count-number">${subject.module_count}</span>
+                            Unit${subject.module_count !== 1 ? 's' : ''}
+                        </div>
+                        <button class="view-modules-btn" onclick="event.stopPropagation(); window.curriculumApp.selectSubject(${subject.id})">
+                            View Units
+                        </button>
                     </div>
-                    <button class="view-modules-btn" onclick="event.stopPropagation(); window.curriculumApp.selectSubject(${subject.id})">
-                        View Modules
-                    </button>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     async function selectSubject(subjectId) {

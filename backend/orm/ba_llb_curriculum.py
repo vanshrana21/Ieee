@@ -65,6 +65,7 @@ class BALLBSubject(BaseModel):
     )
     
     is_optional = Column(Boolean, default=False, nullable=False, index=True)
+    is_foundation = Column(Boolean, default=False, nullable=False, index=True)
     option_group = Column(String(100), nullable=True, index=True)
     is_variable = Column(Boolean, default=False, nullable=False)
     
