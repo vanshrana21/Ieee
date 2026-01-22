@@ -130,8 +130,26 @@ function displayCaseOutput(data) {
     // Render Full Judgment (Left Panel - Authoritative)
     const judgmentContainer = document.getElementById('fullJudgmentText');
     
-    // In the new backend structure, raw_case primarily contains the full judgment text
-    if (raw_case.judgment && raw_case.judgment.trim()) {
+    // Check for Local PDF Override (Landmark Case)
+    if (raw_case.pdf_url) {
+        judgmentContainer.innerHTML = `
+            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin: 0; color: #1e293b;">Full Judgment — Supreme Court of India (Official PDF)</h4>
+                <span class="meta-badge" style="background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;">✓ Authoritative Local Source</span>
+            </div>
+            <div style="height: 800px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f8fafc;">
+                <iframe 
+                    src="${raw_case.pdf_url}#toolbar=1&view=FitH" 
+                    width="100%" 
+                    height="100%" 
+                    style="border: none;"
+                ></iframe>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.85rem; color: #64748b; font-style: italic;">
+                Source: Supreme Court of India | judis.nic.in (Public Domain)
+            </div>
+        `;
+    } else if (raw_case.judgment && raw_case.judgment.trim()) {
         judgmentContainer.innerHTML = `<h4>Full Judgment</h4><div>${formatLegalText(raw_case.judgment)}</div>`;
     } else {
         judgmentContainer.innerHTML = `
