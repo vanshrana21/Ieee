@@ -20,23 +20,16 @@ logger = logging.getLogger(__name__)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    # Using gemini-1.5-flash as the primary model
-    model = genai.GenerativeModel("gemini-1.5-flash")
 else:
     logger.error("GEMINI_API_KEY not set")
-    model = None
 
-SYSTEM_PROMPT = """You are an expert Indian law professor and examiner.
+BASE_SYSTEM_PROMPT = """You are an expert Indian law professor and examiner.
 Your task is to provide a structured, academically rigorous summary of a legal case for exam preparation.
 
 STRICT INSTRUCTIONS:
-1. If full judgment text is provided, summarize it accurately.
-2. If only metadata (title, court, citation) is provided, use your deep legal training to reconstruct the summary for this landmark case.
-3. Use a formal, academic tone.
-4. DO NOT HALLUCINATE facts for unknown cases. If a case is not a well-known landmark and no text is provided, use "Information not available from authoritative source".
-5. For landmark cases with missing text, use phrases like "As per settled understanding..." to provide the facts and ratio.
-6. Ensure EVERY field in the JSON is non-empty. Use "Based on settled legal understanding" as a filler if necessary.
-7. Output MUST be valid JSON only.
+1. Use a formal, academic tone.
+2. Output MUST be valid JSON only.
+3. Ensure EVERY field in the JSON is non-empty.
 
 REQUIRED JSON STRUCTURE:
 {
@@ -52,13 +45,21 @@ REQUIRED JSON STRUCTURE:
   "exam_importance": "Why this case is a must-read for law exams"
 }"""
 
-METADATA_ONLY_PROMPT = """THE SOURCE TEXT IS MISSING.
-Analyze this case based on your legal knowledge.
+FULL_TEXT_SYSTEM_PROMPT = BASE_SYSTEM_PROMPT + """
+MODE: FULL TEXT SUMMARIZATION
+- You have been provided with the full judgment or substantial facts.
+- Summarize the provided text accurately.
+- Do not add outside information unless it clarifies the legal principle.
+"""
 
-Case Metadata:
-{metadata_json}
-
-Provide a doctrinal analysis. If this is a landmark case (e.g., Kesavananda Bharati, Maneka Gandhi, etc.), provide full details from your knowledge base.
+METADATA_ONLY_SYSTEM_PROMPT = BASE_SYSTEM_PROMPT + """
+MODE: DOCTRINAL ANALYSIS (METADATA-ONLY)
+- The source text is missing.
+- Use your deep legal training and internal knowledge base to reconstruct the summary for this case.
+- If this is a landmark case, provide full details from your knowledge.
+- If the case is obscure, provide a doctrinal analysis based on the case name, court, and year.
+- Use phrases like "As per settled understanding..." or "Based on doctrinal principles..." when source text is absent.
+- DO NOT return "Information not available". Instead, provide the most likely legal context based on the case metadata.
 """
 
 def normalize_case_identifier(identifier: str) -> str:
@@ -76,29 +77,34 @@ def normalize_case_identifier(identifier: str) -> str:
     return normalized
 
 async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) -> Optional[Dict[str, Any]]:
-    """Generates a structured AI summary with strict validation."""
-    if not model:
+    """Generates a structured AI summary with dynamic prompt selection."""
+    if not GEMINI_API_KEY:
         logger.error("AI service unavailable: Gemini API key not set.")
         return None
 
     try:
         is_metadata_only = not canonical_input.get("judgment") and not canonical_input.get("facts")
         
+        system_instruction = METADATA_ONLY_SYSTEM_PROMPT if is_metadata_only else FULL_TEXT_SYSTEM_PROMPT
+        
+        # Initialize model with appropriate system instruction
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=system_instruction
+        )
+        
         if is_metadata_only:
-            user_prompt = METADATA_ONLY_PROMPT.format(metadata_json=json.dumps(canonical_input, indent=2))
+            user_prompt = f"Analyze this case based on metadata only: {json.dumps(canonical_input, indent=2)}"
         else:
             user_prompt = f"Summarize the following case details:\n\n{json.dumps(canonical_input, indent=2)}"
         
         logger.info(f"Generating summary for: {canonical_input.get('case_name')} (Metadata only: {is_metadata_only})")
         
         response = await model.generate_content_async(
-            contents=[
-                {"role": "user", "parts": [SYSTEM_PROMPT]},
-                {"role": "user", "parts": [user_prompt]}
-            ],
+            user_prompt,
             generation_config=genai.types.GenerationConfig(
                 response_mime_type="application/json",
-                temperature=0.2 # Lower temperature for more factual legal output
+                temperature=0.2
             )
         )
         
@@ -118,13 +124,13 @@ async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) ->
         final_data = {}
         for k, v in summary_data.items():
             mapped_key = field_mapping.get(k, k)
-            final_data[mapped_key] = v or "Information not available from authoritative source"
+            final_data[mapped_key] = v
 
-        # Ensure all required fields for CanonicalAIInput exist
+        # Ensure all required fields for CanonicalAIInput exist and are non-empty
         required_fields = ["case_name", "citation", "court", "year", "facts", "issues", "arguments", "judgment", "ratio_decidendi", "exam_importance"]
         for field in required_fields:
-            if field not in final_data or not final_data[field]:
-                final_data[field] = "Based on settled legal understanding"
+            if field not in final_data or not final_data[field] or str(final_data[field]).lower().strip() in ["n/a", "none", "null"]:
+                final_data[field] = "Based on settled legal understanding and doctrinal analysis."
 
         # Final Validation
         try:
@@ -134,13 +140,14 @@ async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) ->
             logger.error(f"Pydantic Validation Error: {e}")
             if retry:
                 return await summarize_case(canonical_input, retry=False)
-            return final_data # Return raw mapped data as last resort
+            return final_data
 
     except Exception as e:
         logger.error(f"Summarization failed: {str(e)}")
         if retry:
             return await summarize_case(canonical_input, retry=False)
         return None
+
 
 async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
     """Orchestrates the full case simplification flow."""
