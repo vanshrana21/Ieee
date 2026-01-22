@@ -463,141 +463,189 @@ body {
 }
 
 /* --- OTHER SECTIONS --- */
+/* --- FOCUS STRIP SECTION --- */
 .subjects-section {
-    margin-bottom: 32px;
+    margin-bottom: 48px;
+    overflow: hidden;
 }
 
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.section-title {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text-primary);
+.focus-strip-container {
+    position: relative;
+    padding: 40px 0;
+    margin: 0 -32px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE/Edge */
     display: flex;
     align-items: center;
-    gap: 12px;
 }
 
-.subjects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 20px;
+.focus-strip-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.focus-strip-track {
+    display: flex;
+    gap: 32px;
+    padding: 0 calc(50% - 160px); /* Center the first/last card */
 }
 
 .subject-card {
+    flex: 0 0 320px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
+    border-radius: 24px;
+    padding: 32px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-sm);
+    gap: 20px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    scroll-snap-align: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0.6;
+    transform: scale(0.9);
 }
 
-.subject-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+/* Logic for active/center card will be handled via intersection observer or scroll position in JS, 
+   but for the demo we'll target it with a class .active-focus */
+.subject-card.active-focus {
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 0 20px 40px rgba(0, 102, 255, 0.12);
+    border-color: rgba(0, 102, 255, 0.2);
 }
 
 .subject-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 }
 
-.subject-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.subject-icon-blue { background: #EBF5FF; color: #3B82F6; }
-.subject-icon-green { background: #ECFDF5; color: #10B981; }
-.subject-icon-orange { background: #FFF7ED; color: #F97316; }
-.subject-icon-purple { background: #F5F3FF; color: #8B5CF6; }
-
-.subject-card-body {
+.subject-info-main {
     flex: 1;
 }
 
 .subject-name {
     font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 20px;
+    font-weight: 800;
     color: var(--text-primary);
-    margin: 0 0 4px 0;
-    line-height: 1.3;
+    margin: 0 0 6px 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
 }
 
 .subject-subtitle {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
-    font-weight: 500;
-    margin-bottom: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0;
 }
 
-.subject-progress {
-    height: 4px;
-    background: var(--border-light);
-    border-radius: 2px;
+/* Contextual Reveal UX */
+.contextual-reveal {
+    max-height: 0;
+    opacity: 0;
     overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.subject-progress-fill {
-    height: 100%;
+.subject-card:hover .contextual-reveal,
+.subject-card.active-focus:hover .contextual-reveal {
+    max-height: 200px;
+    opacity: 1;
+    margin-top: 10px;
+}
+
+.contextual-hint {
+    font-size: 14px;
+    color: var(--primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.contextual-hint::before {
+    content: '';
+    width: 6px;
+    height: 6px;
     background: var(--primary);
-    border-radius: 2px;
-    transition: width 0.6s ease;
+    border-radius: 50%;
+    display: block;
 }
 
 .subject-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 12px;
 }
 
 .subject-btn {
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 600;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
-    border: 1px solid transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .subject-btn-primary {
     background: var(--primary);
     color: white;
+    box-shadow: var(--shadow-primary);
 }
 
 .subject-btn-primary:hover {
     background: var(--primary-dark);
+    transform: translateY(-2px);
 }
 
 .subject-btn-secondary {
-    background: transparent;
-    border-color: var(--border);
-    color: var(--text-secondary);
+    background: var(--primary-light);
+    color: var(--primary);
 }
 
 .subject-btn-secondary:hover {
-    background: var(--bg-main);
-    border-color: var(--text-muted);
+    background: #DEEBFF;
+    transform: translateY(-2px);
 }
+
+.subject-progress-minimal {
+    width: 100%;
+    height: 4px;
+    background: var(--border-light);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.progress-fill-minimal {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: width 1s ease;
+}
+
+/* Hide old grid styles */
+.subjects-grid {
+    display: none;
+}
+
 
 .two-col-layout {
     display: grid;
