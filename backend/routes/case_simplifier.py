@@ -30,16 +30,9 @@ async def get_case_simplifier(
     
     try:
         # Orchestrate all phases
-        result = await get_case_simplification(case_identifier)
-        
-        # Format response according to Phase 5 contract
-        # raw_case = authoritative legal source
-        # ai_structured_summary = assistive, secondary
-        
-        response = {
-            "raw_case": result.get("full_case_detail"),
-            "ai_structured_summary": result.get("ai_summary")
-        }
+        # get_case_simplification now returns exactly the required contract:
+        # { "raw_case": {...}, "ai_structured_summary": {...} }
+        response = await get_case_simplification(case_identifier)
         
         logger.info(f"Successfully processed case simplifier for: {case_identifier}")
         return response

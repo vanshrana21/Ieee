@@ -55,6 +55,24 @@ async def test_extract_case(case_id: str):
         logger.error(f"Extraction test error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/search")
+async def test_search_case(q: str):
+    """
+    Internal test endpoint to verify Kanoon search logic.
+    """
+    try:
+        from backend.services.kannon_service import search_case_in_kannon
+        logger.info(f"Search test triggered for: {q}")
+        case_id = search_case_in_kannon(q)
+        return {
+            "success": True,
+            "query": q,
+            "resolved_id": case_id
+        }
+    except Exception as e:
+        logger.error(f"Search test error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/simplify/{case_id}")
 async def test_simplify_case(case_id: str):
     """
