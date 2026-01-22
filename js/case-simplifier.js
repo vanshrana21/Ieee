@@ -120,7 +120,7 @@ function displayCaseOutput(data) {
     document.getElementById('outputSection').classList.remove('hidden');
 
     // Update Header Information
-    document.getElementById('outputCaseName').textContent = raw_case.case_name || 'Judgment';
+    document.getElementById('outputCaseName').textContent = raw_case.case_name || 'Case title unavailable (Authoritative source limitation)';
     document.getElementById('outputCourt').textContent = raw_case.court || 'Court';
     document.getElementById('outputYear').textContent = raw_case.citation || '';
     
@@ -131,18 +131,17 @@ function displayCaseOutput(data) {
     const judgmentContainer = document.getElementById('fullJudgmentText');
     
     // In the new backend structure, raw_case primarily contains the full judgment text
-    // If it's pre-segmented, we use those, otherwise we show the judgment field
-    const sections = [];
-    if (raw_case.judgment) {
-        sections.push({ title: 'Full Judgment', content: raw_case.judgment });
-    }
-    
-    if (sections.length > 0) {
-        judgmentContainer.innerHTML = sections
-            .map(s => `<h4>${s.title}</h4><div>${formatLegalText(s.content)}</div>`)
-            .join('<hr style="margin: 20px 0; opacity: 0.1;">');
+    if (raw_case.judgment && raw_case.judgment.trim()) {
+        judgmentContainer.innerHTML = `<h4>Full Judgment</h4><div>${formatLegalText(raw_case.judgment)}</div>`;
     } else {
-        judgmentContainer.innerHTML = '<p class="text-muted">Full judgment text not available.</p>';
+        judgmentContainer.innerHTML = `
+            <div style="background: rgba(234, 179, 8, 0.1); border-left: 4px solid #eab308; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <p style="color: #854d0e; margin: 0; font-weight: 500;">
+                    ⚠️ Full judgment text not available from authoritative source (Kannon). Metadata-only case.
+                </p>
+            </div>
+            <p class="text-muted">Authoritative text unavailable for this specific citation.</p>
+        `;
     }
 
     // Render AI Summary Sections (Right Panel - Assistive)
@@ -161,9 +160,9 @@ function displayCaseOutput(data) {
         const summaryFields = ['factsText', 'issuesText', 'argumentsText', 'judgmentText', 'ratioText', 'significanceText'];
         summaryFields.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = '<p class="text-muted">AI summary unavailable. Please refer to the full judgment on the left.</p>';
+            if (el) el.innerHTML = '<p class="text-muted">AI summary unavailable due to missing source text.</p>';
         });
-        showToast('ℹ️ AI Summary unavailable, showing full judgment');
+        showToast('ℹ️ AI Summary unavailable');
     }
 
     // Scroll to top
