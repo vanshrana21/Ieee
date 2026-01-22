@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
+    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `${window.location.protocol}//${window.location.hostname}:8000` : '');
 
     const state = {
         semesters: [],
@@ -39,21 +39,33 @@
     }
 
     function showView(viewId) {
+        console.log(`Switching to view: ${viewId}`);
         document.querySelectorAll('.view-section').forEach(section => {
             section.classList.add('hidden');
         });
-        document.getElementById(viewId).classList.remove('hidden');
+        const view = document.getElementById(viewId);
+        if (view) {
+            view.classList.remove('hidden');
+        } else {
+            console.error(`View not found: ${viewId}`);
+        }
     }
 
     async function fetchSemesters() {
+        console.log('Fetching semesters...');
         const grid = document.getElementById('semesterGrid');
+        if (!grid) return;
+        
         grid.innerHTML = '<div class="loading-placeholder">Loading semesters...</div>';
 
         try {
-            const response = await fetch(`${API_BASE}/api/ba-llb/semesters`);
-            if (!response.ok) throw new Error('Failed to fetch semesters');
+            const url = `${API_BASE}/api/ba-llb/semesters`;
+            console.log(`GET ${url}`);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
             const data = await response.json();
+            console.log('Semesters data received:', data);
             state.semesters = data.semesters || [];
 
             let totalSubjects = 0;
@@ -82,13 +94,18 @@
     }
 
     function updateStatsDisplay() {
-        document.getElementById('totalSemesters').textContent = state.stats.totalSemesters;
-        document.getElementById('totalSubjects').textContent = state.stats.totalSubjects;
-        document.getElementById('totalModules').textContent = state.stats.totalModules;
+        const elSem = document.getElementById('totalSemesters');
+        const elSub = document.getElementById('totalSubjects');
+        const elMod = document.getElementById('totalModules');
+        
+        if (elSem) elSem.textContent = state.stats.totalSemesters;
+        if (elSub) elSub.textContent = state.stats.totalSubjects;
+        if (elMod) elMod.textContent = state.stats.totalModules;
     }
 
     function renderSemesters() {
         const grid = document.getElementById('semesterGrid');
+        if (!grid) return;
         
         if (state.semesters.length === 0) {
             grid.innerHTML = `
@@ -106,48 +123,65 @@
                 <div class="semester-name">${escapeHtml(semester.name)}</div>
                 <div class="semester-stats">
                     <span class="semester-stat">${semester.subject_count} Subjects</span>
-                    <span class="semester-stat">${semester.total_modules} Modules</span>
+                    <span class="semester-stat">${semester.total_modules} Units</span>
                 </div>
             </div>
         `).join('');
     }
 
     async function selectSemester(semesterNumber) {
+        console.log(`Selecting semester: ${semesterNumber}`);
         state.currentSemester = semesterNumber;
         
-        document.getElementById('currentSemesterBreadcrumb').textContent = `Semester ${semesterNumber}`;
-        document.getElementById('semesterTitle').textContent = `Semester ${semesterNumber} - Subjects`;
-        document.getElementById('semesterBreadcrumb').textContent = `Semester ${semesterNumber}`;
+        const elCrumb = document.getElementById('currentSemesterBreadcrumb');
+        const elTitle = document.getElementById('semesterTitle');
+        const elBread = document.getElementById('semesterBreadcrumb');
+        
+        if (elCrumb) elCrumb.textContent = `Semester ${semesterNumber}`;
+        if (elTitle) elTitle.textContent = `Semester ${semesterNumber} - Subjects`;
+        if (elBread) elBread.textContent = `Semester ${semesterNumber}`;
         
         const grid = document.getElementById('subjectGrid');
-        grid.innerHTML = '<div class="loading-placeholder">Loading subjects...</div>';
+        if (grid) {
+            grid.innerHTML = '<div class="loading-placeholder">Loading subjects...</div>';
+        }
         
         showView('subjectView');
 
         try {
-            const response = await fetch(`${API_BASE}/api/ba-llb/semesters/${semesterNumber}/subjects`);
-            if (!response.ok) throw new Error('Failed to fetch subjects');
+            const url = `${API_BASE}/api/ba-llb/semesters/${semesterNumber}/subjects`;
+            console.log(`GET ${url}`);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
             const data = await response.json();
+            console.log('Subjects data received:', data);
+            
+            // Critical Fix: Ensure we extract the subjects array correctly
             state.subjects = data.subjects || [];
+            console.log(`State updated with ${state.subjects.length} subjects`);
             
             renderSubjects();
         } catch (error) {
             console.error('Error fetching subjects:', error);
-            grid.innerHTML = `
-                <div class="error-state">
-                    <h3>Failed to load subjects</h3>
-                    <p>${escapeHtml(error.message)}</p>
-                    <button onclick="window.curriculumApp.selectSemester(${semesterNumber})">Retry</button>
-                </div>
-            `;
+            if (grid) {
+                grid.innerHTML = `
+                    <div class="error-state">
+                        <h3>Failed to load subjects</h3>
+                        <p>${escapeHtml(error.message)}</p>
+                        <button onclick="window.curriculumApp.selectSemester(${semesterNumber})">Retry</button>
+                    </div>
+                `;
+            }
         }
     }
 
     function renderSubjects() {
+        console.log('Rendering subjects, count:', state.subjects.length);
         const grid = document.getElementById('subjectGrid');
+        if (!grid) return;
         
-        if (state.subjects.length === 0) {
+        if (!state.subjects || state.subjects.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
                     <h3>No Subjects Found</h3>
@@ -159,7 +193,7 @@
 
         grid.innerHTML = state.subjects.map(subject => {
             const isFoundation = subject.is_foundation || subject.subject_type === 'foundation' || subject.name.includes('Foundation Course');
-            const typeBadgeClass = isFoundation ? 'foundation' : subject.subject_type;
+            const typeBadgeClass = isFoundation ? 'foundation' : (subject.subject_type || 'core');
             const typeLabel = isFoundation ? 'Foundation' : formatSubjectType(subject.subject_type);
 
             return `
@@ -169,7 +203,7 @@
                     <div class="subject-code">${escapeHtml(subject.code)}</div>
                     <div class="subject-footer">
                         <div class="module-count">
-                            <span class="module-count-number">${subject.module_count}</span>
+                            <span class="module-count-number">${subject.module_count || 0}</span>
                             Unit${subject.module_count !== 1 ? 's' : ''}
                         </div>
                         <button class="view-modules-btn" onclick="event.stopPropagation(); window.curriculumApp.selectSubject(${subject.id})">
