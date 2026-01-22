@@ -24,6 +24,7 @@ from backend.orm.ba_llb_curriculum import BALLBSemester, BALLBSubject, BALLBModu
 try:
     from backend.orm.user import User
     from backend.orm.exam_session import ExamSession
+    from backend.orm.exam_answer import ExamAnswer
 except ImportError:
     pass
 
