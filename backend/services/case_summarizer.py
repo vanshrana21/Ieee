@@ -6,6 +6,7 @@ Phase 4: AI Structured Summary Generation.
 import json
 import logging
 import os
+import re
 from typing import Dict, Any, Optional
 
 import google.generativeai as genai
@@ -47,6 +48,34 @@ LOCKED OUTPUT FORMAT:
   "judgment": "...",
   "ratio_decidendi": "..."
 }"""
+
+def normalize_case_identifier(identifier: str) -> str:
+    """
+    Normalizes case identifier for better resolution.
+    - Lowercases input
+    - Normalizes 'vs', 'vs.', 'v.' -> 'v'
+    - Removes brackets, commas, extra symbols
+    - Trims whitespace
+    """
+    if not identifier:
+        return ""
+    
+    # Lowercase
+    normalized = identifier.lower()
+    
+    # Normalize vs/v. to v
+    normalized = re.sub(r'\bvs\.?\b', 'v', normalized)
+    normalized = re.sub(r'\bv\.\b', 'v', normalized)
+    
+    # Remove brackets, commas, extra symbols
+    # Keep alphanumeric, spaces, and hyphens (for IDs)
+    normalized = re.sub(r'[\[\]\(\),]', ' ', normalized)
+    normalized = re.sub(r'[^a-z0-9\s\-]', '', normalized)
+    
+    # Trim whitespace and normalize internal spaces
+    normalized = " ".join(normalized.split())
+    
+    return normalized
 
 async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) -> Optional[Dict[str, Any]]:
     """
@@ -110,7 +139,7 @@ async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) ->
             return await summarize_case(canonical_input, retry=False)
         return None
 
-async def get_case_simplification(case_id: str) -> Dict[str, Any]:
+async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
     """
     Complete Case Simplification Flow:
     Phase 1: Fetch raw data
@@ -124,9 +153,13 @@ async def get_case_simplification(case_id: str) -> Dict[str, Any]:
     from backend.utils.case_extractor import extract_full_case_details
     from backend.utils.ai_preparer import prepare_ai_input
 
+    # Normalize input
+    normalized_id = normalize_case_identifier(case_identifier)
+    logger.info(f"Normalized identifier: {normalized_id}")
+
     try:
         # Phase 1: Fetch
-        raw_data = fetch_case_from_kannon(case_id)
+        raw_data = fetch_case_from_kannon(normalized_id)
         
         # Phase 2: Extract
         full_detail = extract_full_case_details(raw_data)
@@ -135,7 +168,12 @@ async def get_case_simplification(case_id: str) -> Dict[str, Any]:
         canonical_input = prepare_ai_input(full_detail)
         
         # Phase 4: Generate AI Summary
-        ai_summary = await summarize_case(canonical_input)
+        # Graceful degradation: if AI fails, we still return full_detail
+        ai_summary = None
+        try:
+            ai_summary = await summarize_case(canonical_input)
+        except Exception as ai_err:
+            logger.error(f"AI summarization failed gracefully: {str(ai_err)}")
         
         return {
             "success": True,
@@ -144,6 +182,9 @@ async def get_case_simplification(case_id: str) -> Dict[str, Any]:
             "is_simplified": ai_summary is not None
         }
 
+    except ValueError as e:
+        logger.error(f"Validation/Not found error in simplification: {str(e)}")
+        raise
     except Exception as e:
-        logger.error(f"Failed to simplify case {case_id}: {str(e)}")
+        logger.info(f"Attempting to handle failure in simplification for {normalized_id}: {str(e)}")
         raise

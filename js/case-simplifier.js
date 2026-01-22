@@ -45,10 +45,11 @@ function resetForm() {
 
 /**
  * Main Simplify Case function
- * Searches for case, fetches full data, and renders output
+ * Directly calls the unified Case Simplifier API
  */
 async function simplifyCase() {
-    const caseName = document.getElementById('caseName').value.trim();
+    const caseNameInput = document.getElementById('caseName');
+    const caseName = caseNameInput.value.trim();
     if (!caseName) {
         showToast('⚠️ Please enter a case name');
         return;
@@ -58,65 +59,38 @@ async function simplifyCase() {
     setLoadingState(true);
 
     try {
-        // Step 1: Search for the case
-        // We search curriculum first for better quality
-        const searchResponse = await api.get(`/api/search/content?q=${encodeURIComponent(caseName)}&content_types=cases`);
-        let cases = searchResponse.results || [];
-
-        // If not found in curriculum, try CourtListener
-        if (cases.length === 0) {
-            const publicSearch = await api.post('/api/search/search', { query: caseName });
-            cases = publicSearch.results || [];
-        }
-
-        if (cases.length === 0) {
-            showToast('❌ No cases found matching that name');
-            setLoadingState(false);
-            return;
-        }
-
-        // If multiple cases found, for simplicity we'll take the first best match
-        // In a real app, we'd show a selection list
-        const targetCase = cases[0];
-        await loadFullCaseData(targetCase.id);
-
-    } catch (error) {
-        console.error('Error simplifying case:', error);
-        showToast('❌ Failed to process case: ' + (error.message || 'Unknown error'));
-        setLoadingState(false);
-    }
-}
-
-/**
- * Fetch and display full case data
- */
-async function loadFullCaseData(caseId) {
-    try {
-        setLoadingState(true);
+        // Direct call to the unified Case Simplifier API
+        const data = await api.get(`/api/case-simplifier/${encodeURIComponent(caseName)}`);
         
-        // Call the new Phase 3.2 API
-        const data = await api.get(`/api/cases/${caseId}/full`);
-        
-        if (!data || !data.case) {
-            throw new Error('Invalid case data received');
+        if (!data || !data.raw_case) {
+            throw new Error('Case data not available');
         }
 
         currentCase = data;
         displayCaseOutput(data);
-        
+
     } catch (error) {
-        console.error('Error loading full case:', error);
-        showToast('❌ Error fetching judgment details');
+        console.error('Error simplifying case:', error);
+        showToast('❌ Failed to process case: ' + (error.message || 'Unknown error'));
     } finally {
         setLoadingState(false);
     }
 }
 
 /**
+ * Fetch and display full case data
+ * DEPRECATED: Combined into simplifyCase for the unified API
+ */
+async function loadFullCaseData(caseId) {
+    document.getElementById('caseName').value = caseId;
+    return simplifyCase();
+}
+
+/**
  * Render Case Output to UI
  */
 function displayCaseOutput(data) {
-    const { case: caseMeta, full_text, summary, is_curriculum_case } = data;
+    const { raw_case, ai_structured_summary } = data;
     
     // Switch views
     document.getElementById('inputSection').classList.add('hidden');
@@ -124,29 +98,45 @@ function displayCaseOutput(data) {
     document.getElementById('outputSection').classList.remove('hidden');
 
     // Update Header Information
-    document.getElementById('outputCaseName').textContent = caseMeta.title;
-    document.getElementById('outputCourt').textContent = caseMeta.court;
-    document.getElementById('outputYear').textContent = caseMeta.year;
+    document.getElementById('outputCaseName').textContent = raw_case.case_name || 'Judgment';
+    document.getElementById('outputCourt').textContent = raw_case.court || 'Court';
+    document.getElementById('outputYear').textContent = raw_case.year || '';
     
-    // Syllabus Warning
-    const warningBadge = document.getElementById('syllabusWarning');
-    if (is_curriculum_case) {
-        warningBadge.classList.add('hidden');
-    } else {
-        warningBadge.classList.remove('hidden');
-    }
+    // Importance badge (static for now)
+    document.getElementById('outputImportance').textContent = 'Authoritative Source';
 
-    // Render Full Judgment
+    // Render Full Judgment (Left Panel - Authoritative)
     const judgmentContainer = document.getElementById('fullJudgmentText');
-    judgmentContainer.innerHTML = formatLegalText(full_text);
+    const sections = [
+        { title: 'Facts', content: raw_case.facts },
+        { title: 'Issues', content: raw_case.issues },
+        { title: 'Arguments', content: raw_case.arguments },
+        { title: 'Judgment', content: raw_case.judgment },
+        { title: 'Ratio Decidendi', content: raw_case.ratio }
+    ];
+    
+    judgmentContainer.innerHTML = sections
+        .filter(s => s.content && s.content.trim())
+        .map(s => `<h4>${s.title}</h4><div>${formatLegalText(s.content)}</div>`)
+        .join('<hr style="margin: 20px 0; opacity: 0.1;">');
 
-    // Render Summary Sections
-    renderSummarySection('factsText', summary.facts);
-    renderSummarySection('issuesText', summary.issues);
-    renderSummarySection('argumentsText', summary.arguments);
-    renderSummarySection('judgmentText', summary.judgment);
-    renderSummarySection('ratioText', summary.ratio);
-    renderSummarySection('significanceText', summary.exam_significance);
+    // Render AI Summary Sections (Right Panel - Assistive)
+    if (ai_structured_summary) {
+        renderSummarySection('factsText', ai_structured_summary.facts);
+        renderSummarySection('issuesText', ai_structured_summary.issues);
+        renderSummarySection('argumentsText', "Arguments omitted for concise summary.");
+        renderSummarySection('judgmentText', ai_structured_summary.judgment);
+        renderSummarySection('ratioText', ai_structured_summary.ratio_decidendi);
+        renderSummarySection('significanceText', "Focus on the ratio decidendi for exam preparation.");
+    } else {
+        // Graceful degradation for AI failure
+        const summaryFields = ['factsText', 'issuesText', 'argumentsText', 'judgmentText', 'ratioText', 'significanceText'];
+        summaryFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<p class="text-muted">Summary currently unavailable. Please refer to the full judgment.</p>';
+        });
+        showToast('ℹ️ AI Summary unavailable, showing full judgment');
+    }
 
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
