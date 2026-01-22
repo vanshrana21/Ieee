@@ -17,6 +17,7 @@ from backend.orm.tutor_message import TutorMessage
 from backend.orm.topic_mastery import TopicMastery 
 from backend.orm.study_plan import StudyPlan  # PHASE 9C
 from backend.orm.study_plan_item import StudyPlanItem
+from backend.orm.ba_llb_curriculum import BALLBSemester, BALLBSubject, BALLBModule
 
 load_dotenv()
 
