@@ -76,7 +76,9 @@
             "Mid-semester exams approaching soon",
             "A foundational subject for your law career",
             "Great time to dive into legal principles",
-            "Perfect for a deep focus session today"
+            "Perfect for a deep focus session today",
+            "You haven't studied this in 5 days",
+            "Recommended based on last session"
         ];
         // Semi-random but consistent hint for the subject
         return hints[subject.id % hints.length];
@@ -84,12 +86,10 @@
 
     function createSubjectCard(subject) {
         const icon = getCategoryIcon(subject.category);
-        const isFoundation = subject.is_foundation === true || (subject.title && subject.title.toLowerCase().includes('human values'));
         const moduleCount = subject.modules_count || 0;
 
         return `
             <div class="subject-card" data-subject-id="${subject.id}" id="card-${subject.id}">
-                ${isFoundation ? '<div class="foundation-badge">Foundation</div>' : ''}
                 <div class="subject-icon">${icon}</div>
                 <h3>${escapeHtml(subject.title)}</h3>
                 <span class="semester-text">Semester ${subject.semester || state.currentSemester || 'N/A'}</span>
