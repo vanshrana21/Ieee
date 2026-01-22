@@ -167,11 +167,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function initializePage() {
-    if (window.JurisSessionManager && !window.JurisSessionManager.checkAuth()) {
-        window.JurisSessionManager.requireAuth();
-        return;
-    }
-
     loadSubjects(); // Load subjects BEFORE attaching listeners
     setupEventListeners();
     setupSidebarToggle();
@@ -180,36 +175,60 @@ async function initializePage() {
 }
 
 function setupEventListeners() {
-    const subjectSelect = document.getElementById('subjectSelect');
-    const moduleSelect = document.getElementById('moduleSelect');
+    const subjectSelect = document.querySelectorAll("select")[0];
+    const moduleSelect  = document.querySelectorAll("select")[1];
+
+    console.log("Subject select bound:", subjectSelect);
+    console.log("Module select bound:", moduleSelect);
 
     if (subjectSelect) {
-        subjectSelect.addEventListener('change', handleSubjectChange);
+        subjectSelect.addEventListener("change", () => {
+            console.log("Subject changed:", subjectSelect.value);
+            populatePracticeModules(subjectSelect.value);
+        });
     }
     
     if (moduleSelect) {
         moduleSelect.addEventListener('change', handleModuleChange);
     }
 
-    document.getElementById('startPracticeBtn').addEventListener('click', startPractice);
-    document.getElementById('submitAnswerBtn').addEventListener('click', submitAnswer);
-    document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
+    const startPracticeBtn = document.querySelector('#startPracticeBtn');
+    if (startPracticeBtn) {
+        startPracticeBtn.addEventListener('click', startPractice);
+    }
+    
+    const submitAnswerBtn = document.querySelector('#submitAnswerBtn');
+    if (submitAnswerBtn) {
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+    }
+    
+    const nextQuestionBtn = document.querySelector('#nextQuestionBtn');
+    if (nextQuestionBtn) {
+        nextQuestionBtn.addEventListener('click', nextQuestion);
+    }
 
     document.querySelectorAll('.option-btn').forEach(btn => {
         btn.addEventListener('click', () => selectOption(btn.dataset.option));
     });
 
-    document.getElementById('textAnswer').addEventListener('input', function() {
-        document.getElementById('submitAnswerBtn').disabled = !this.value.trim();
-    });
+    const textAnswer = document.querySelector('#textAnswer');
+    if (textAnswer) {
+        textAnswer.addEventListener('input', function() {
+            const submitBtn = document.querySelector('#submitAnswerBtn');
+            if (submitBtn) submitBtn.disabled = !this.value.trim();
+        });
+    }
 
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    const logoutBtn = document.querySelector('#logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
 }
 
 function setupSidebarToggle() {
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
+    const menuToggle = document.querySelector('#menuToggle');
+    const sidebar = document.querySelector('#sidebar');
+    const overlay = document.querySelector('#sidebarOverlay');
 
     if (menuToggle && sidebar) {
         menuToggle.addEventListener('click', () => {
@@ -230,7 +249,8 @@ async function loadUserInfo() {
     try {
         const response = await apiRequest('/api/users/me');
         if (response && response.email) {
-            document.getElementById('userName').textContent = response.full_name || response.email.split('@')[0];
+            const userNameEl = document.querySelector('#userName');
+            if (userNameEl) userNameEl.textContent = response.full_name || response.email.split('@')[0];
         }
     } catch (err) {
         console.error('Failed to load user info:', err);
@@ -238,7 +258,7 @@ async function loadUserInfo() {
 }
 
 function loadSubjects() {
-    const select = document.getElementById('subjectSelect');
+    const select = document.querySelectorAll("select")[0];
     if (!select) return;
 
     // Clear and populate
@@ -259,25 +279,27 @@ function handleSubjectChange(e) {
 }
 
 function populatePracticeModules(subjectId) {
-    const moduleSelect = document.getElementById('moduleSelect');
-    const startBtn = document.getElementById('startPracticeBtn');
+    const moduleSelect = document.querySelectorAll("select")[1];
+    const startBtn = document.querySelector('#startPracticeBtn');
 
     if (!moduleSelect) return;
 
-    // Clear the module dropdown ONCE
+    // MANDATORY: Clear moduleSelect.innerHTML
     moduleSelect.innerHTML = '<option value="">-- Select Practice Module --</option>';
-    moduleSelect.disabled = true;
-    if (startBtn) startBtn.disabled = true;
-    state.modules = [];
-
-    if (!subjectId) return;
+    
+    if (!subjectId) {
+        moduleSelect.disabled = true;
+        if (startBtn) startBtn.disabled = true;
+        state.modules = [];
+        return;
+    }
 
     const subject = state.subjects.find(s => s.id === subjectId);
     if (!subject) return;
 
     state.modules = subject.modules;
     
-    // Insert module <option> elements
+    // MANDATORY: Appends <option> elements
     subject.modules.forEach(moduleName => {
         const option = document.createElement('option');
         option.value = moduleName;
@@ -285,14 +307,15 @@ function populatePracticeModules(subjectId) {
         moduleSelect.appendChild(option);
     });
 
-    // Enable the module dropdown
+    // MANDATORY: Sets moduleSelect.disabled = false
     moduleSelect.disabled = false;
     console.log("Modules loaded for:", subjectId);
 }
 
 function handleModuleChange(e) {
     const moduleName = e.target.value;
-    document.getElementById('startPracticeBtn').disabled = !moduleName;
+    const startBtn = document.querySelector('#startPracticeBtn');
+    if (startBtn) startBtn.disabled = !moduleName;
     state.currentModuleId = moduleName;
     state.currentModuleTitle = moduleName;
 }
@@ -303,13 +326,13 @@ function checkURLParams() {
     const moduleName = params.get('module_name');
 
     if (subjectId) {
-        const subjectSelect = document.getElementById('subjectSelect');
+        const subjectSelect = document.querySelectorAll("select")[0];
         if (subjectSelect) {
             subjectSelect.value = subjectId;
             populatePracticeModules(subjectId);
             
             if (moduleName) {
-                const moduleSelect = document.getElementById('moduleSelect');
+                const moduleSelect = document.querySelectorAll("select")[1];
                 if (moduleSelect) {
                     moduleSelect.value = moduleName;
                     handleModuleChange({ target: { value: moduleName } });
@@ -320,7 +343,8 @@ function checkURLParams() {
 }
 
 async function startPractice() {
-    const subjectSelect = document.getElementById('subjectSelect');
+    const subjectSelect = document.querySelectorAll("select")[0];
+    if (!subjectSelect) return;
     const subjectId = subjectSelect.value;
     const moduleName = state.currentModuleId;
 
@@ -373,50 +397,50 @@ async function startPractice() {
 }
 
 function showQuizSection() {
-    document.getElementById('moduleSelectionSection').classList.add('hidden');
-    document.getElementById('emptyStateSection').classList.add('hidden');
-    document.getElementById('quizCompleteSection').classList.add('hidden');
-    document.getElementById('quizSection').classList.remove('hidden');
+    document.querySelector('#moduleSelectionSection').classList.add('hidden');
+    document.querySelector('#emptyStateSection').classList.add('hidden');
+    document.querySelector('#quizCompleteSection').classList.add('hidden');
+    document.querySelector('#quizSection').classList.remove('hidden');
 }
 
 function showEmptyState() {
-    document.getElementById('moduleSelectionSection').classList.add('hidden');
-    document.getElementById('quizSection').classList.add('hidden');
-    document.getElementById('quizCompleteSection').classList.add('hidden');
-    document.getElementById('emptyStateSection').classList.remove('hidden');
+    document.querySelector('#moduleSelectionSection').classList.add('hidden');
+    document.querySelector('#quizSection').classList.add('hidden');
+    document.querySelector('#quizCompleteSection').classList.add('hidden');
+    document.querySelector('#emptyStateSection').classList.remove('hidden');
 }
 
 function goToModuleSelection() {
     stopTimer();
-    document.getElementById('quizSection').classList.add('hidden');
-    document.getElementById('emptyStateSection').classList.add('hidden');
-    document.getElementById('quizCompleteSection').classList.add('hidden');
-    document.getElementById('moduleSelectionSection').classList.remove('hidden');
+    document.querySelector('#quizSection').classList.add('hidden');
+    document.querySelector('#emptyStateSection').classList.add('hidden');
+    document.querySelector('#quizCompleteSection').classList.add('hidden');
+    document.querySelector('#moduleSelectionSection').classList.remove('hidden');
 }
 
 function renderQuestion() {
     const question = state.questions[state.currentQuestionIndex];
     if (!question) return;
 
-    document.getElementById('moduleTitle').textContent = state.currentModuleTitle;
-    document.getElementById('questionCounter').textContent = 
+    document.querySelector('#moduleTitle').textContent = state.currentModuleTitle;
+    document.querySelector('#questionCounter').textContent = 
         `Q${state.currentQuestionIndex + 1} / Q${state.questions.length}`;
 
-    const diffBadge = document.getElementById('difficultyBadge');
+    const diffBadge = document.querySelector('#difficultyBadge');
     diffBadge.textContent = question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1);
     diffBadge.className = `difficulty-badge ${question.difficulty}`;
 
-    document.getElementById('topicTag').textContent = question.topic_tag || 'General';
-    document.getElementById('questionText').textContent = question.question;
+    document.querySelector('#topicTag').textContent = question.topic_tag || 'General';
+    document.querySelector('#questionText').textContent = question.question;
 
     const isMCQ = question.type === 'mcq';
-    document.getElementById('mcqOptions').classList.toggle('hidden', !isMCQ);
-    document.getElementById('textAnswerContainer').classList.toggle('hidden', isMCQ);
+    document.querySelector('#mcqOptions').classList.toggle('hidden', !isMCQ);
+    document.querySelector('#textAnswerContainer').classList.toggle('hidden', isMCQ);
 
     if (isMCQ && question.options) {
         const letters = ['A', 'B', 'C', 'D'];
         question.options.forEach((opt, i) => {
-            const optionEl = document.getElementById(`option${letters[i]}`);
+            const optionEl = document.querySelector(`#option${letters[i]}`);
             if (optionEl) optionEl.textContent = opt;
         });
 
@@ -425,12 +449,14 @@ function renderQuestion() {
             btn.disabled = false;
         });
     } else {
-        document.getElementById('textAnswer').value = '';
+        const textAnswer = document.querySelector('#textAnswer');
+        if (textAnswer) textAnswer.value = '';
     }
 
     state.selectedAnswer = null;
-    document.getElementById('submitAnswerBtn').disabled = true;
-    document.getElementById('feedbackPanel').classList.add('hidden');
+    const submitBtn = document.querySelector('#submitAnswerBtn');
+    if (submitBtn) submitBtn.disabled = true;
+    document.querySelector('#feedbackPanel').classList.add('hidden');
 }
 
 function selectOption(option) {
@@ -443,7 +469,8 @@ function selectOption(option) {
         }
     });
 
-    document.getElementById('submitAnswerBtn').disabled = false;
+    const submitBtn = document.querySelector('#submitAnswerBtn');
+    if (submitBtn) submitBtn.disabled = false;
 }
 
 async function submitAnswer() {
@@ -451,18 +478,24 @@ async function submitAnswer() {
     if (!question) return;
 
     const isMCQ = question.type === 'mcq';
-    let answer = isMCQ ? state.selectedAnswer : document.getElementById('textAnswer').value.trim();
+    let answer = '';
+    if (isMCQ) {
+        answer = state.selectedAnswer;
+    } else {
+        const textAnswerEl = document.querySelector('#textAnswer');
+        answer = textAnswerEl ? textAnswerEl.value.trim() : '';
+    }
 
     if (!answer) {
         showToast('Please provide an answer');
         return;
     }
 
-    document.getElementById('submitAnswerBtn').disabled = true;
+    const submitBtn = document.querySelector('#submitAnswerBtn');
+    if (submitBtn) submitBtn.disabled = true;
     document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
 
     try {
-        // FOR DEMO: Evaluate locally to ensure reliability
         const isCorrect = isMCQ ? (answer === question.correct_answer) : true;
         
         const mockResponse = {
@@ -491,7 +524,7 @@ async function submitAnswer() {
     } catch (err) {
         console.error('Failed to submit answer:', err);
         showToast('Error submitting answer.');
-        document.getElementById('submitAnswerBtn').disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
         document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = false);
     }
 }
@@ -513,49 +546,67 @@ function showMCQFeedback(response, userAnswer) {
         }
     });
 
-    const feedbackPanel = document.getElementById('feedbackPanel');
-    const feedbackIcon = document.getElementById('feedbackIcon');
-    const feedbackStatus = document.getElementById('feedbackStatus');
+    const feedbackPanel = document.querySelector('#feedbackPanel');
+    const feedbackIcon = document.querySelector('#feedbackIcon');
+    const feedbackStatus = document.querySelector('#feedbackStatus');
 
-    feedbackIcon.textContent = isCorrect ? '✔' : '❌';
-    feedbackStatus.textContent = isCorrect ? 'Correct!' : 'Incorrect';
-    feedbackStatus.className = `feedback-status ${isCorrect ? 'correct' : 'incorrect'}`;
-
-    document.getElementById('correctAnswerText').textContent = correctAnswer || 'N/A';
-    document.getElementById('explanationText').textContent = explanation || 'No explanation provided.';
-
-    if (response.mastery_update) {
-        document.getElementById('masteryText').textContent = 
-            `Subject mastery: ${response.mastery_update.subject_mastery_percent}% (${response.mastery_update.strength_label})`;
-        document.getElementById('masteryUpdate').classList.remove('hidden');
-    } else {
-        document.getElementById('masteryUpdate').classList.add('hidden');
+    if (feedbackIcon) feedbackIcon.textContent = isCorrect ? '✔' : '❌';
+    if (feedbackStatus) {
+        feedbackStatus.textContent = isCorrect ? 'Correct!' : 'Incorrect';
+        feedbackStatus.className = `feedback-status ${isCorrect ? 'correct' : 'incorrect'}`;
     }
 
-    feedbackPanel.classList.remove('hidden');
+    const correctAnsTxt = document.querySelector('#correctAnswerText');
+    if (correctAnsTxt) correctAnsTxt.textContent = correctAnswer || 'N/A';
+    
+    const explanationTxt = document.querySelector('#explanationText');
+    if (explanationTxt) explanationTxt.textContent = explanation || 'No explanation provided.';
+
+    const masteryUpdate = document.querySelector('#masteryUpdate');
+    const masteryTxt = document.querySelector('#masteryText');
+    if (response.mastery_update && masteryTxt) {
+        masteryTxt.textContent = 
+            `Subject mastery: ${response.mastery_update.subject_mastery_percent}% (${response.mastery_update.strength_label})`;
+        masteryUpdate.classList.remove('hidden');
+    } else if (masteryUpdate) {
+        masteryUpdate.classList.add('hidden');
+    }
+
+    if (feedbackPanel) feedbackPanel.classList.remove('hidden');
 
     const isLast = state.currentQuestionIndex >= state.questions.length - 1;
-    document.getElementById('nextQuestionBtn').textContent = isLast ? 'Finish Quiz' : 'Next Question';
+    const nextBtn = document.querySelector('#nextQuestionBtn');
+    if (nextBtn) nextBtn.textContent = isLast ? 'Finish Quiz' : 'Next Question';
 }
 
 function showTextFeedback(response) {
-    const feedbackPanel = document.getElementById('feedbackPanel');
-    const feedbackIcon = document.getElementById('feedbackIcon');
-    const feedbackStatus = document.getElementById('feedbackStatus');
+    const feedbackPanel = document.querySelector('#feedbackPanel');
+    const feedbackIcon = document.querySelector('#feedbackIcon');
+    const feedbackStatus = document.querySelector('#feedbackStatus');
 
-    feedbackIcon.textContent = '📝';
-    feedbackStatus.textContent = 'Answer Saved';
-    feedbackStatus.className = 'feedback-status pending';
+    if (feedbackIcon) feedbackIcon.textContent = '📝';
+    if (feedbackStatus) {
+        feedbackStatus.textContent = 'Answer Saved';
+        feedbackStatus.className = 'feedback-status pending';
+    }
 
-    document.getElementById('correctAnswerSection').innerHTML = 
-        '<strong>Status:</strong><span>Answer saved. Evaluation pending.</span>';
-    document.getElementById('explanationSection').classList.add('hidden');
-    document.getElementById('masteryUpdate').classList.add('hidden');
+    const correctAnsSection = document.querySelector('#correctAnswerSection');
+    if (correctAnsSection) {
+        correctAnsSection.innerHTML = 
+            '<strong>Status:</strong><span>Answer saved. Evaluation pending.</span>';
+    }
+    
+    const explanationSection = document.querySelector('#explanationSection');
+    if (explanationSection) explanationSection.classList.add('hidden');
+    
+    const masteryUpdate = document.querySelector('#masteryUpdate');
+    if (masteryUpdate) masteryUpdate.classList.add('hidden');
 
-    feedbackPanel.classList.remove('hidden');
+    if (feedbackPanel) feedbackPanel.classList.remove('hidden');
 
     const isLast = state.currentQuestionIndex >= state.questions.length - 1;
-    document.getElementById('nextQuestionBtn').textContent = isLast ? 'Finish Quiz' : 'Next Question';
+    const nextBtn = document.querySelector('#nextQuestionBtn');
+    if (nextBtn) nextBtn.textContent = isLast ? 'Finish Quiz' : 'Next Question';
 }
 
 function nextQuestion() {
@@ -572,16 +623,22 @@ function nextQuestion() {
 function showQuizComplete() {
     stopTimer();
 
-    document.getElementById('quizSection').classList.add('hidden');
-    document.getElementById('quizCompleteSection').classList.remove('hidden');
+    document.querySelector('#quizSection').classList.add('hidden');
+    document.querySelector('#quizCompleteSection').classList.remove('hidden');
 
-    document.getElementById('correctCount').textContent = state.results.correct;
-    document.getElementById('totalCount').textContent = state.results.total;
+    const correctCountEl = document.querySelector('#correctCount');
+    if (correctCountEl) correctCountEl.textContent = state.results.correct;
+    
+    const totalCountEl = document.querySelector('#totalCount');
+    if (totalCountEl) totalCountEl.textContent = state.results.total;
 
-    const accuracy = state.results.total > 0 
-        ? Math.round((state.results.correct / state.results.total) * 100) 
-        : 0;
-    document.getElementById('accuracyPercent').textContent = `${accuracy}%`;
+    const accuracyPercentEl = document.querySelector('#accuracyPercent');
+    if (accuracyPercentEl) {
+        const accuracy = state.results.total > 0 
+            ? Math.round((state.results.correct / state.results.total) * 100) 
+            : 0;
+        accuracyPercentEl.textContent = `${accuracy}%`;
+    }
 }
 
 function retryQuiz() {
@@ -590,7 +647,7 @@ function retryQuiz() {
     state.results = { correct: 0, total: 0 };
     state.timerSeconds = 0;
 
-    document.getElementById('quizCompleteSection').classList.add('hidden');
+    document.querySelector('#quizCompleteSection').classList.add('hidden');
     showQuizSection();
     renderQuestion();
     startTimer();
@@ -618,8 +675,11 @@ function stopTimer() {
 function updateTimerDisplay() {
     const minutes = Math.floor(state.timerSeconds / 60);
     const seconds = state.timerSeconds % 60;
-    document.getElementById('timerDisplay').textContent = 
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const timerDisplay = document.querySelector('#timerDisplay');
+    if (timerDisplay) {
+        timerDisplay.textContent = 
+            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
 }
 
 async function apiRequest(endpoint, method = 'GET', body = null) {
@@ -642,21 +702,14 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
-
     if (!response.ok) {
         if (response.status === 401) {
-            if (window.JurisErrorHandler) {
-                window.JurisErrorHandler.handleAuthError();
-            } else {
-                localStorage.removeItem('access_token');
-                window.location.href = '/html/login.html';
-            }
+            localStorage.removeItem('access_token');
+            window.location.href = '/html/login.html';
         }
-        throw new Error(data.detail || 'API request failed');
+        throw new Error('API request failed');
     }
-
-    return data;
+    return await response.json();
 }
 
 function showToast(message, type = 'info') {
@@ -664,7 +717,7 @@ function showToast(message, type = 'info') {
         window.JurisErrorHandler.showToast(message, type === 'error' ? 'error' : 'info');
         return;
     }
-    const toast = document.getElementById('toast');
+    const toast = document.querySelector('#toast');
     if (!toast) return;
     toast.textContent = message;
     toast.classList.add('show');
