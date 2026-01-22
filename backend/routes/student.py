@@ -56,6 +56,11 @@ async def verify_subject_access(user: User, subject_id: int, db: AsyncSession) -
 class SubjectListItem(BaseModel):
     id: int
     title: str
+    code: Optional[str] = None
+    description: Optional[str] = None
+    unit_count: int = 0
+    module_count: int = 0
+    units: List[Dict] = []
 
 
 class SubjectListResponse(BaseModel):
@@ -222,11 +227,67 @@ async def get_student_subjects(
     subjects_result = await db.execute(subjects_stmt)
     subjects_map = {s.id: s for s in subjects_result.scalars().all()}
     
+    # BA LLB check
+    is_ba_llb = False
+    if current_user.course_id:
+        course_stmt = select(Course).where(Course.id == current_user.course_id)
+        course_result = await db.execute(course_stmt)
+        course = course_result.scalar_one_or_none()
+        if course and ("BA LLB" in course.name.upper() or "BA.LLB" in course.name.upper()):
+            is_ba_llb = True
+
     subjects_list = []
     for item in curriculum_items:
         subject = subjects_map.get(item.subject_id)
         if subject:
-            subjects_list.append(SubjectListItem(id=subject.id, title=subject.title))
+            unit_list = []
+            if is_ba_llb:
+                from backend.orm.ba_llb_curriculum import BALLBModule
+                unit_stmt = (
+                    select(BALLBModule)
+                    .where(BALLBModule.subject_id == subject.id)
+                    .order_by(BALLBModule.sequence_order)
+                )
+                unit_result = await db.execute(unit_stmt)
+                units = unit_result.scalars().all()
+                unit_list = [
+                    {
+                        "id": u.id,
+                        "title": u.title,
+                        "sequence_order": u.sequence_order,
+                        "description": u.description
+                    }
+                    for u in units
+                ]
+            else:
+                # For generic subjects, map ContentModule to units
+                mod_stmt = select(ContentModule).where(
+                    and_(
+                        ContentModule.subject_id == subject.id,
+                        ContentModule.module_type == "learn",
+                        ContentModule.status == "active"
+                    )
+                ).order_by(ContentModule.order_index)
+                mod_result = await db.execute(mod_stmt)
+                mods = mod_result.scalars().all()
+                unit_list = [
+                    {
+                        "id": m.id,
+                        "title": m.title,
+                        "sequence_order": m.order_index,
+                        "description": None
+                    }
+                    for m in mods
+                ]
+
+            subjects_list.append(SubjectListItem(
+                id=subject.id, 
+                title=subject.title,
+                code=subject.code,
+                description=subject.description,
+                unit_count=len(unit_list),
+                units=unit_list
+            ))
     
     return SubjectListResponse(
         subjects=subjects_list,
@@ -265,7 +326,8 @@ class SubjectModulesResponse(BaseModel):
     subject_id: int
     subject_name: str
     modules: List[ModuleListItem]
-
+    units: Optional[List[Dict]] = None
+    unit_count: Optional[int] = 0
 
 class ModuleResumeResponse(BaseModel):
     module_id: int
@@ -473,6 +535,55 @@ async def get_subject_modules(
     
     subject_name = subject.title if subject else "Unknown Subject"
     
+    # BA LLB check
+    is_ba_llb = False
+    if current_user.course_id:
+        course_stmt = select(Course).where(Course.id == current_user.course_id)
+        course_result = await db.execute(course_stmt)
+        course = course_result.scalar_one_or_none()
+        if course and ("BA LLB" in course.name.upper() or "BA.LLB" in course.name.upper()):
+            is_ba_llb = True
+
+    if is_ba_llb:
+        from backend.orm.ba_llb_curriculum import BALLBModule
+        stmt = (
+            select(BALLBModule)
+            .where(BALLBModule.subject_id == subject_id)
+            .order_by(BALLBModule.sequence_order)
+        )
+        result = await db.execute(stmt)
+        units = result.scalars().all()
+        
+        unit_list = [
+            {
+                "id": unit.id,
+                "title": unit.title,
+                "sequence_order": unit.sequence_order,
+                "description": unit.description
+            }
+            for unit in units
+        ]
+        
+        module_list = [
+            ModuleListItem(
+                module_id=unit.id,
+                title=unit.title,
+                sequence_order=unit.sequence_order,
+                total_contents=0,
+                completed_contents=0,
+                is_completed=False
+            )
+            for unit in units
+        ]
+        
+        return SubjectModulesResponse(
+            subject_id=subject_id,
+            subject_name=subject_name,
+            modules=module_list,
+            units=unit_list,
+            unit_count=len(unit_list)
+        )
+
     modules_stmt = select(ContentModule).where(
         and_(
             ContentModule.subject_id == subject_id,

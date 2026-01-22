@@ -45,6 +45,8 @@ class SubjectResponse(BaseModel):
     completed_items: int = 0
     total_items: int = 0
     last_activity: Optional[str] = None
+    unit_count: Optional[int] = 0
+    units: Optional[List[dict]] = None
 
     class Config:
         from_attributes = True
@@ -96,6 +98,55 @@ async def get_my_subjects(
         progress_result = await db.execute(progress_stmt)
         progress = progress_result.scalar_one_or_none()
         
+        # Determine if BA LLB to fetch units
+        unit_list = []
+        is_ba_llb = False
+        if current_user.course_id:
+            course_stmt = select(Course).where(Course.id == current_user.course_id)
+            course_result = await db.execute(course_stmt)
+            course = course_result.scalar_one_or_none()
+            if course and ("BA LLB" in course.name.upper() or "BA.LLB" in course.name.upper()):
+                is_ba_llb = True
+        
+        if is_ba_llb:
+            from backend.orm.ba_llb_curriculum import BALLBModule
+            unit_stmt = (
+                select(BALLBModule)
+                .where(BALLBModule.subject_id == subject.id)
+                .order_by(BALLBModule.sequence_order)
+            )
+            unit_result = await db.execute(unit_stmt)
+            units = unit_result.scalars().all()
+            unit_list = [
+                {
+                    "id": u.id,
+                    "title": u.title,
+                    "sequence_order": u.sequence_order,
+                    "description": u.description
+                }
+                for u in units
+            ]
+        else:
+            # Map generic modules to units
+            mod_stmt = select(ContentModule).where(
+                and_(
+                    ContentModule.subject_id == subject.id,
+                    ContentModule.module_type == ModuleType.LEARN,
+                    ContentModule.status == "active"
+                )
+            ).order_by(ContentModule.order_index)
+            mod_result = await db.execute(mod_stmt)
+            mods = mod_result.scalars().all()
+            unit_list = [
+                {
+                    "id": m.id,
+                    "title": m.title,
+                    "sequence_order": m.order_index,
+                    "description": None
+                }
+                for m in mods
+            ]
+
         subjects.append(SubjectResponse(
             id=subject.id,
             title=subject.title,
@@ -107,7 +158,9 @@ async def get_my_subjects(
             progress=progress.completion_percentage if progress else 0.0,
             completed_items=progress.completed_items if progress else 0,
             total_items=progress.total_items if progress else 0,
-            last_activity=progress.last_activity_at.isoformat() if progress and progress.last_activity_at else None
+            last_activity=progress.last_activity_at.isoformat() if progress and progress.last_activity_at else None,
+            unit_count=len(unit_list),
+            units=unit_list
         ))
         
     return subjects
