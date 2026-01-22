@@ -20,6 +20,13 @@ from sqlalchemy import select
 from backend.database import AsyncSessionLocal, init_db
 from backend.orm.ba_llb_curriculum import BALLBSemester, BALLBSubject, BALLBModule
 
+# Fix for SQLAlchemy mapper error: ensure all related models are loaded
+try:
+    from backend.orm.user import User
+    from backend.orm.exam_session import ExamSession
+except ImportError:
+    pass
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -29,88 +36,103 @@ BA_LLB_CURRICULUM = {
         "name": "Semester 1",
         "subjects": [
             {
-                "name": "General English",
-                "code": "SEM1_ENG",
+                "name": "General and Legal English",
+                "code": "SEM1_ENG_LEGAL",
                 "subject_type": "core",
                 "is_optional": False,
                 "option_group": None,
                 "is_variable": False,
                 "modules": [
-                    "Basic Grammar: Tense, Voice, Direct/Indirect Speech",
-                    "Vocabulary: Synonyms, Antonyms, One-word Substitution",
-                    "Formal Correspondence: Letters, Notices, and Emails",
-                    "Legal Terms and Maxims",
-                    "Comprehension and Precis Writing",
-                    "Composition: Essays on Legal and Social Themes",
-                    "Introduction to Phonetics and Oral Communication",
+                    "Unit 1: Introduction to Language",
+                    "Unit 2: Structure, Usage and Vocabulary",
+                    "Unit 3: Legal Language",
+                    "Unit 4: Reading, Speaking and Listening Skills",
+                    "Unit 5: Oral Presentation Strategies",
                 ]
             },
             {
-                "name": "Major–I (Political Science: Political Theory)",
-                "code": "SEM1_POL_THEORY",
+                "name": "Fundamental Principles of Political Science",
+                "code": "SEM1_POL_SCI",
                 "subject_type": "major",
                 "is_optional": False,
                 "option_group": None,
                 "is_variable": True,
                 "modules": [
-                    "Introduction: Nature, Scope, and Importance of Political Science",
-                    "The State: Elements, Theories of Origin, and Sovereignty",
-                    "Key Concepts: Liberty, Equality, and Justice",
-                    "Rights and Duties: Meaning, Types, and Theories",
-                    "Power, Authority, and Legitimacy",
-                    "Democracy: Meaning, Types, and Challenges",
-                    "Major Political Ideologies: Liberalism, Socialism, and Marxism",
+                    "Unit 1: Introduction to Political Science",
+                    "Unit 2: Political Concepts",
+                    "Unit 3: Organs of Government",
+                    "Unit 4: Political Ideologies",
                 ]
             },
             {
-                "name": "Minor–I (Paper 1: General Sociology)",
-                "code": "SEM1_SOC_GEN",
+                "name": "Sociology – I (Legal Sociology)",
+                "code": "SEM1_SOC_LEGAL",
                 "subject_type": "minor_i",
                 "is_optional": False,
                 "option_group": None,
                 "is_variable": True,
                 "modules": [
-                    "Sociology: Definition, Nature, and Relationship with Law",
-                    "Basic Concepts: Society, Community, Association, and Institution",
-                    "Social Groups: Primary, Secondary, and Reference Groups",
-                    "Social Stratification: Caste, Class, and Gender",
-                    "Social Institutions: Marriage, Family, and Kinship",
-                    "Social Control: Formal and Informal Agencies",
-                    "Social Change: Meaning, Factors, and Theories",
+                    "Unit 1: Introduction to Sociology",
+                    "Unit 2: Legal Sociology and Social Control",
+                    "Unit 3: Family and Community",
+                    "Unit 4: Social Disorganization and Problems",
                 ]
             },
             {
-                "name": "Minor–II (Paper 1: Logic and Reasoning)",
-                "code": "SEM1_LOGIC",
+                "name": "Indian History – Part I",
+                "code": "SEM1_HISTORY1",
                 "subject_type": "minor_ii",
                 "is_optional": False,
                 "option_group": None,
                 "is_variable": True,
                 "modules": [
-                    "Introduction to Logic: Definition and Nature",
-                    "Terms and Propositions: Classification and Quality/Quantity",
-                    "Categorical Syllogisms: Structure, Rules, and Fallacies",
-                    "Immediate Inference: Opposition of Propositions",
-                    "Induction: Nature, Types, and Importance",
-                    "Logical Fallacies: Formal and Informal",
-                    "Legal Reasoning: Use of Logic in Judicial Decisions",
+                    "Unit 1: Pre-Historic and Ancient India",
+                    "Unit 2: Early Medieval India",
+                    "Unit 3: Later Medieval India",
+                    "Unit 4: Mughal Era",
                 ]
             },
             {
-                "name": "Legal Methods",
-                "code": "SEM1_LEGAL_METHODS",
+                "name": "Law of Torts including Motor Vehicle Accident and Consumer Protection Laws",
+                "code": "SEM1_TORTS_MV_CP",
                 "subject_type": "core",
                 "is_optional": False,
                 "option_group": None,
                 "is_variable": False,
                 "modules": [
-                    "Meaning and Classification of Law",
-                    "Sources of Law: Custom, Precedent, and Legislation",
-                    "The Indian Legal System: Evolution and Structure",
-                    "Legal Research: Types, Methods, and Citation",
-                    "Statute Reading and Interpretation: Basic Rules",
-                    "Legal Writing and Advocacy Skills",
-                    "Law and Justice: Relationship and Emerging Trends",
+                    "Unit 1: Introduction to Torts",
+                    "Unit 2: Specific Torts",
+                    "Unit 3: Vicarious Liability and Remedies",
+                    "Unit 4: Consumer Protection and MV Act",
+                ]
+            },
+            {
+                "name": "General Principles and Theories of Contract (Sections 1–75)",
+                "code": "SEM1_CONTRACT1",
+                "subject_type": "core",
+                "is_optional": False,
+                "option_group": None,
+                "is_variable": False,
+                "modules": [
+                    "Unit 1: Introduction and Formation of Contract",
+                    "Unit 2: Capacity and Validity of Contract",
+                    "Unit 3: Discharge of Contract",
+                    "Unit 4: Quasi Contract and Damages",
+                ]
+            },
+            {
+                "name": "Universal Human Values and Professional Ethics (Foundation Course)",
+                "code": "SEM1_VALUES_ETHICS",
+                "subject_type": "foundation",
+                "is_optional": False,
+                "option_group": None,
+                "is_variable": False,
+                "modules": [
+                    "Introduction to Value Education",
+                    "Harmony in Human Being",
+                    "Harmony in Family and Society",
+                    "Harmony in Nature and Existence",
+                    "Ethical Implications in Profession",
                 ]
             },
         ]
@@ -862,7 +884,14 @@ async def seed_ba_llb_curriculum():
                     total_semesters += 1
                     logger.info(f"✓ Created {semester_data['name']}")
                 else:
-                    logger.info(f"⏭ {semester_data['name']} exists")
+                    logger.info(f"⟳ Updating {semester_data['name']}")
+                    # Optional: Clear existing subjects for this semester to ensure clean seed
+                    # Only doing this if it's Semester 1 as per specific request
+                    if semester_num == 1:
+                        from sqlalchemy import delete
+                        await session.execute(delete(BALLBSubject).where(BALLBSubject.semester_id == semester.id))
+                        await session.flush()
+                        logger.info(f"  ⚠ Cleared existing subjects for Semester 1 for clean update")
                 
                 for subj_order, subj_data in enumerate(semester_data["subjects"], 1):
                     stmt = select(BALLBSubject).where(
@@ -888,24 +917,28 @@ async def seed_ba_llb_curriculum():
                         total_subjects += 1
                         logger.info(f"  ✓ Created subject: {subj_data['name'][:50]}...")
                     else:
-                        logger.info(f"  ⏭ Subject exists: {subj_data['name'][:50]}...")
+                        # Update existing subject
+                        subject.name = subj_data["name"]
+                        subject.subject_type = subj_data["subject_type"]
+                        subject.is_optional = subj_data["is_optional"]
+                        subject.option_group = subj_data["option_group"]
+                        subject.is_variable = subj_data["is_variable"]
+                        subject.display_order = subj_order
+                        
+                        # Clear modules to re-seed in correct order
+                        from sqlalchemy import delete
+                        await session.execute(delete(BALLBModule).where(BALLBModule.subject_id == subject.id))
+                        await session.flush()
+                        logger.info(f"  ⟳ Updated subject and cleared modules: {subj_data['name'][:50]}...")
                     
                     for mod_order, mod_title in enumerate(subj_data["modules"], 1):
-                        stmt = select(BALLBModule).where(
-                            BALLBModule.subject_id == subject.id,
-                            BALLBModule.sequence_order == mod_order
+                        module = BALLBModule(
+                            subject_id=subject.id,
+                            title=mod_title,
+                            sequence_order=mod_order
                         )
-                        result = await session.execute(stmt)
-                        module = result.scalar_one_or_none()
-                        
-                        if not module:
-                            module = BALLBModule(
-                                subject_id=subject.id,
-                                title=mod_title,
-                                sequence_order=mod_order
-                            )
-                            session.add(module)
-                            total_modules += 1
+                        session.add(module)
+                        total_modules += 1
             
             await session.commit()
             
