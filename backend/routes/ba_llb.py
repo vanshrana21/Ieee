@@ -21,6 +21,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.database import get_db
 from backend.orm.ba_llb_curriculum import BALLBSemester, BALLBSubject, BALLBModule
+from backend.orm.unit import Unit
 
 logger = logging.getLogger(__name__)
 
@@ -166,11 +167,11 @@ async def get_subjects_by_semester(
     
     subject_list = []
     for subj in subjects:
-        # Load units for each subject
+        # Load units for each subject from the official 'units' table
         unit_stmt = (
-            select(BALLBModule)
-            .where(BALLBModule.subject_id == subj.id)
-            .order_by(BALLBModule.sequence_order)
+            select(Unit)
+            .where(Unit.subject_id == subj.id)
+            .order_by(Unit.sequence_order)
         )
         unit_result = await db.execute(unit_stmt)
         units = unit_result.scalars().all()
@@ -261,9 +262,9 @@ async def get_modules_by_subject(
         )
     
     mod_stmt = (
-        select(BALLBModule)
-        .where(BALLBModule.subject_id == subject_id)
-        .order_by(BALLBModule.sequence_order)
+        select(Unit)
+        .where(Unit.subject_id == subject_id)
+        .order_by(Unit.sequence_order)
     )
     mod_result = await db.execute(mod_stmt)
     modules = mod_result.scalars().all()

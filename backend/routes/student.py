@@ -242,11 +242,11 @@ async def get_student_subjects(
         if subject:
             unit_list = []
             if is_ba_llb:
-                from backend.orm.ba_llb_curriculum import BALLBModule
+                from backend.orm.unit import Unit
                 unit_stmt = (
-                    select(BALLBModule)
-                    .where(BALLBModule.subject_id == subject.id)
-                    .order_by(BALLBModule.sequence_order)
+                    select(Unit)
+                    .where(Unit.subject_id == subject.id)
+                    .order_by(Unit.sequence_order)
                 )
                 unit_result = await db.execute(unit_stmt)
                 units = unit_result.scalars().all()
