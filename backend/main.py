@@ -3,6 +3,7 @@ import sys
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
+from backend.routes import case_simplifier
 from backend.routes import progress, subjects, dashboard
 from backend.routes import auth, user, curriculum, modules, content, progress
 from backend.routes.practice import router as practice_router
@@ -236,6 +237,7 @@ async def root():
         "docs": "/docs" if os.getenv("ENVIRONMENT", "development") == "development" else None
     }
 
+app.include_router(case_simplifier.router)
 app.include_router(router, prefix="/api")
 app.include_router(subjects.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
