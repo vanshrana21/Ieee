@@ -282,14 +282,14 @@
     }
 
     function renderSubjectsEmpty() {
-        const grid = q('#subjectsGrid');
-        if (!grid) return;
+        const track = q('#focusStripTrack');
+        if (!track) return;
 
-        grid.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-                <div style="font-size: 48px; margin-bottom: 12px;">📚</div>
-                <h3 style="color: #0F172A; margin-bottom: 8px; font-size: 16px;">No Subjects Yet</h3>
-                <p style="color: #64748B; font-size: 14px;">Your curriculum will appear here once it's set up.</p>
+        track.innerHTML = `
+            <div class="empty-state-v2" style="width: 100%; padding: 3rem;">
+                <div class="empty-illustration">📚</div>
+                <p class="empty-title">No Subjects Yet</p>
+                <p class="empty-subtitle">Your curriculum will appear here once it's set up.</p>
             </div>
         `;
     }
@@ -413,10 +413,23 @@
         if (!list) return;
 
         if (!activities || activities.length === 0) {
+            // Keep the HTML-defined empty state if it's already there
+            if (list.querySelector('.empty-state-v2')) return;
+            
             list.innerHTML = `
-                <div class="empty-state" style="text-align: center; padding: 2rem;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
-                    <p style="color: #64748B; font-size: 13px;">No recent activity yet.<br>Start learning to see your history here.</p>
+                <div class="empty-state-v2">
+                    <div class="empty-illustration">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M8 11h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M8 15h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <p class="empty-title">Your study history will appear here.</p>
+                    <p class="empty-subtitle">Start with a subject or case to begin tracking progress.</p>
+                    <a href="./start-studying.html" class="btn-secondary-sm">Start Studying</a>
                 </div>
             `;
             return;
@@ -789,7 +802,6 @@
         showLoadingState('stats');
         showLoadingState('activity');
         showLoadingState('focus');
-        renderRecentActivity([]);
 
         try {
             // Step 1: Fetch Academic Profile
