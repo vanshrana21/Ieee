@@ -294,9 +294,19 @@
                         <h2 class="section-title">Recent Activity</h2>
                     </div>
                     <div class="activity-list" id="activityList">
-                        <div class="empty-state" style="text-align: center; padding: 2rem;">
-                            <div style="width: 32px; height: 32px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
-                            <p style="color: #64748B; font-size: 13px;">Loading activity...</p>
+                        <div class="empty-state-v2">
+                            <div class="empty-illustration">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    <path d="M8 11h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    <path d="M8 15h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <p class="empty-title">Your study history will appear here.</p>
+                            <p class="empty-subtitle">Start with a subject or case to begin tracking progress.</p>
+                            <a href="./start-studying.html" class="btn-secondary-sm">Start Studying</a>
                         </div>
                     </div>
                 </section>
@@ -313,20 +323,21 @@
                         </h2>
                     </div>
                     <div class="ai-card">
-                        <p class="ai-desc">Get instant help with legal concepts, case analysis, and exam preparation.</p>
+                        <p class="ai-subtitle">Your personal legal study assistant</p>
                         <div class="ai-input-wrapper">
-                            <input type="text" id="aiInput" class="ai-input" placeholder="Ask anything about law...">
+                            <input type="text" id="aiInput" class="ai-input" placeholder="Ask about cases, concepts, or exam preparation…">
                             <button class="ai-send-btn" id="aiSendBtn">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="22" y1="2" x2="11" y2="13"/>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="19" x2="12" y2="5"/>
+                                    <polyline points="5 12 12 5 19 12"/>
                                 </svg>
                             </button>
                         </div>
                         <div class="ai-suggestions">
-                            <button class="ai-chip" data-query="Explain Article 21 simply">Article 21</button>
-                            <button class="ai-chip" data-query="Kesavananda Bharati case summary">Kesavananda</button>
+                            <button class="ai-chip" data-query="Explain Article 21 simply">Article 21 explained</button>
+                            <button class="ai-chip" data-query="Maneka Gandhi case summary">Maneka Gandhi case</button>
                             <button class="ai-chip" data-query="What is judicial review">Judicial Review</button>
+                            <button class="ai-chip" data-query="Tips for writing law answers">Answer writing tips</button>
                         </div>
                     </div>
                 </section>
