@@ -1,12 +1,152 @@
 /**
  * Practice Content - Phase 3.3 + Phase 9.4 Robustness
- * Module-Aware Practice Mode for Indian Law Students
+ * Semester 1 ONLY - Demo Standard
  */
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
+// Semester 1 Fixed Curriculum Data
+const SEM1_CURRICULUM = [
+    {
+        id: 'eng_1',
+        title: 'General and Legal English',
+        modules: [
+            'Vocabulary & Legal Terminology',
+            'Grammar & Sentence Correction',
+            'Comprehension Passages',
+            'Legal Writing (Short Notes / Paragraphs)',
+            'Essay Writing (10–15 marks)',
+            'Precis Writing'
+        ]
+    },
+    {
+        id: 'pol_1',
+        title: 'Fundamental Principles of Political Science',
+        modules: [
+            'Political Theory Concepts (State, Sovereignty, Power)',
+            'Thinkers-Based Questions (Plato, Aristotle, Hobbes, Locke, Rousseau)',
+            'Short Answer Practice (2–5 marks)',
+            'Long Answer Practice (10–15 marks)',
+            'Conceptual MCQs'
+        ]
+    },
+    {
+        id: 'soc_1',
+        title: 'Sociology–I (Legal Sociology)',
+        modules: [
+            'Law and Society (Basics)',
+            'Social Institutions & Law',
+            'Law as an Instrument of Social Change',
+            'Short Notes Practice',
+            'Case-Based Sociological Questions',
+            'Conceptual MCQs'
+        ]
+    },
+    {
+        id: 'his_1',
+        title: 'Indian History – Part I',
+        modules: [
+            'Ancient Indian History',
+            'Medieval Indian History',
+            'Society, Culture & Administration',
+            'Short Answer Practice',
+            'Long Answer Practice',
+            'Timeline & Assertion-Based MCQs'
+        ]
+    }
+];
+
+// Deterministic Mock Questions for Demo
+const MOCK_QUESTIONS = {
+    'eng_1': {
+        'Vocabulary & Legal Terminology': [
+            {
+                id: 'q1',
+                type: 'mcq',
+                difficulty: 'medium',
+                topic_tag: 'Legal Terms',
+                question: 'What does the legal term "Amicus Curiae" literally translate to?',
+                options: ['Friend of the court', 'Enemy of the state', 'Legal representative', 'Presiding officer'],
+                correct_answer: 'A',
+                explanation: 'Amicus Curiae is a Latin phrase meaning "friend of the court". It refers to someone who is not a party to a case but offers information that bears on the case.'
+            }
+        ],
+        'Grammar & Sentence Correction': [
+            {
+                id: 'q2',
+                type: 'mcq',
+                difficulty: 'easy',
+                topic_tag: 'Grammar',
+                question: 'Identify the grammatically correct sentence:',
+                options: [
+                    'The judge has gave his verdict.',
+                    'The judge has given his verdict.',
+                    'The judge have given his verdict.',
+                    'The judge had give his verdict.'
+                ],
+                correct_answer: 'B',
+                explanation: 'The present perfect tense requires "has" (for singular) + past participle (given).'
+            }
+        ]
+    },
+    'pol_1': {
+        'Political Theory Concepts (State, Sovereignty, Power)': [
+            {
+                id: 'q3',
+                type: 'mcq',
+                difficulty: 'medium',
+                topic_tag: 'Sovereignty',
+                question: 'According to Austin, what is the essential characteristic of sovereignty?',
+                options: ['Indivisibility', 'Popular will', 'Divine right', 'Moral authority'],
+                correct_answer: 'A',
+                explanation: 'John Austin characterized sovereignty as absolute, perpetual, and indivisible.'
+            }
+        ],
+        'Thinkers-Based Questions (Plato, Aristotle, Hobbes, Locke, Rousseau)': [
+            {
+                id: 'q4',
+                type: 'mcq',
+                difficulty: 'hard',
+                topic_tag: 'Thinkers',
+                question: 'Who is the author of the work "Leviathan"?',
+                options: ['John Locke', 'Thomas Hobbes', 'Jean-Jacques Rousseau', 'Niccolò Machiavelli'],
+                correct_answer: 'B',
+                explanation: 'Thomas Hobbes published "Leviathan" in 1651, outlining his social contract theory.'
+            }
+        ]
+    },
+    'soc_1': {
+        'Law and Society (Basics)': [
+            {
+                id: 'q5',
+                type: 'mcq',
+                difficulty: 'medium',
+                topic_tag: 'Sociology',
+                question: 'Who coined the term "Sociology"?',
+                options: ['Max Weber', 'Karl Marx', 'Auguste Comte', 'Emile Durkheim'],
+                correct_answer: 'C',
+                explanation: 'Auguste Comte is often called the "Father of Sociology" for coining the term in 1838.'
+            }
+        ]
+    },
+    'his_1': {
+        'Ancient Indian History': [
+            {
+                id: 'q6',
+                type: 'mcq',
+                difficulty: 'easy',
+                topic_tag: 'Indus Valley',
+                question: 'Which was the major port city of the Indus Valley Civilization?',
+                options: ['Harappa', 'Mohenjo-daro', 'Lothal', 'Kalibangan'],
+                correct_answer: 'C',
+                explanation: 'Lothal was a prominent port city of the Indus Valley Civilization, located in modern-day Gujarat.'
+            }
+        ]
+    }
+};
+
 let state = {
-    subjects: [],
+    subjects: SEM1_CURRICULUM,
     modules: [],
     questions: [],
     currentQuestionIndex: 0,
@@ -35,7 +175,7 @@ async function initializePage() {
     setupEventListeners();
     setupSidebarToggle();
     await loadUserInfo();
-    await loadSubjects();
+    loadSubjects(); // Synchronous for demo
     checkURLParams();
 }
 
@@ -88,102 +228,101 @@ async function loadUserInfo() {
     }
 }
 
-async function loadSubjects() {
-    try {
-        const response = await apiRequest('/api/curriculum/my-subjects');
-        state.subjects = response.subjects || [];
+function loadSubjects() {
+    const select = document.getElementById('subjectSelect');
+    select.innerHTML = '<option value="">-- Select Subject --</option>';
 
-        const select = document.getElementById('subjectSelect');
-        select.innerHTML = '<option value="">-- Select Subject --</option>';
-
-        state.subjects.forEach(subject => {
-            const option = document.createElement('option');
-            option.value = subject.id;
-            option.textContent = subject.title;
-            select.appendChild(option);
-        });
-    } catch (err) {
-        console.error('Failed to load subjects:', err);
-        showToast('Failed to load subjects. Please try again.');
-    }
+    state.subjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject.id;
+        option.textContent = subject.title;
+        select.appendChild(option);
+    });
 }
 
-async function handleSubjectChange(e) {
+function handleSubjectChange(e) {
     const subjectId = e.target.value;
     const moduleSelect = document.getElementById('moduleSelect');
     const startBtn = document.getElementById('startPracticeBtn');
 
-    moduleSelect.innerHTML = '<option value="">-- Select Module --</option>';
+    moduleSelect.innerHTML = '<option value="">-- Select Practice Module --</option>';
     moduleSelect.disabled = true;
     startBtn.disabled = true;
     state.modules = [];
 
     if (!subjectId) return;
 
-    try {
-        const response = await apiRequest(`/api/content/subjects/${subjectId}/modules`);
-        const modules = response.modules || [];
+    const subject = state.subjects.find(s => s.id === subjectId);
+    if (!subject) return;
 
-        const practiceModules = modules.filter(m => m.module_type === 'practice' && m.status === 'active');
+    state.modules = subject.modules;
+    moduleSelect.disabled = false;
 
-        if (practiceModules.length === 0) {
-            moduleSelect.innerHTML = '<option value="">No practice modules available</option>';
-            return;
-        }
-
-        state.modules = practiceModules;
-        moduleSelect.disabled = false;
-
-        practiceModules.forEach(module => {
-            const option = document.createElement('option');
-            option.value = module.id;
-            option.textContent = module.title;
-            moduleSelect.appendChild(option);
-        });
-    } catch (err) {
-        console.error('Failed to load modules:', err);
-        showToast('Failed to load modules');
-    }
+    subject.modules.forEach(moduleName => {
+        const option = document.createElement('option');
+        option.value = moduleName;
+        option.textContent = moduleName;
+        moduleSelect.appendChild(option);
+    });
 }
 
 function handleModuleChange(e) {
-    const moduleId = e.target.value;
-    document.getElementById('startPracticeBtn').disabled = !moduleId;
-    state.currentModuleId = moduleId;
-
-    const selectedModule = state.modules.find(m => m.id == moduleId);
-    state.currentModuleTitle = selectedModule ? selectedModule.title : 'Practice';
+    const moduleName = e.target.value;
+    document.getElementById('startPracticeBtn').disabled = !moduleName;
+    state.currentModuleId = moduleName;
+    state.currentModuleTitle = moduleName;
 }
 
 function checkURLParams() {
     const params = new URLSearchParams(window.location.search);
-    const moduleId = params.get('module_id');
     const subjectId = params.get('subject_id');
+    const moduleName = params.get('module_name');
 
-    if (moduleId) {
-        state.currentModuleId = moduleId;
-        if (subjectId) {
-            document.getElementById('subjectSelect').value = subjectId;
-            handleSubjectChange({ target: { value: subjectId } }).then(() => {
-                document.getElementById('moduleSelect').value = moduleId;
-                handleModuleChange({ target: { value: moduleId } });
-            });
+    if (subjectId) {
+        document.getElementById('subjectSelect').value = subjectId;
+        handleSubjectChange({ target: { value: subjectId } });
+        
+        if (moduleName) {
+            document.getElementById('moduleSelect').value = moduleName;
+            handleModuleChange({ target: { value: moduleName } });
         }
     }
 }
 
 async function startPractice() {
-    if (!state.currentModuleId) {
-        showToast('Please select a module first');
+    const subjectSelect = document.getElementById('subjectSelect');
+    const subjectId = subjectSelect.value;
+    const moduleName = state.currentModuleId;
+
+    if (!subjectId || !moduleName) {
+        showToast('Please select both subject and module');
         return;
     }
 
     try {
-        showToast('Loading questions...');
-        const response = await apiRequest(`/api/practice/module/${state.currentModuleId}`);
+        showToast('Starting Practice Session...');
+        
+        // Use Mock Data if available, otherwise fallback to "Coming Soon" or generic
+        let questions = [];
+        if (MOCK_QUESTIONS[subjectId] && MOCK_QUESTIONS[subjectId][moduleName]) {
+            questions = MOCK_QUESTIONS[subjectId][moduleName];
+        } else {
+            // Generic mock questions for other modules
+            questions = [
+                {
+                    id: 'gen_q1',
+                    type: 'mcq',
+                    difficulty: 'medium',
+                    topic_tag: 'Practice',
+                    question: `Practice question for ${moduleName} in ${subjectSelect.options[subjectSelect.selectedIndex].text}.`,
+                    options: ['Option A', 'Option B', 'Option C', 'Option D'],
+                    correct_answer: 'A',
+                    explanation: 'Detailed explanation for the correct answer.'
+                }
+            ];
+        }
 
-        state.questions = response.questions || [];
-        state.currentModuleTitle = response.module?.title || 'Practice';
+        state.questions = questions;
         state.currentQuestionIndex = 0;
         state.selectedAnswer = null;
         state.results = { correct: 0, total: 0 };
@@ -199,7 +338,7 @@ async function startPractice() {
 
     } catch (err) {
         console.error('Failed to start practice:', err);
-        showToast('Failed to load questions. Please try again.');
+        showToast('Error starting practice.');
     }
 }
 
@@ -293,22 +432,35 @@ async function submitAnswer() {
     document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
 
     try {
-        const response = await apiRequest(`/api/content/practice/${question.id}/attempt`, 'POST', {
-            selected_option: answer,
-            time_taken_seconds: state.timerSeconds
-        });
+        // FOR DEMO: Evaluate locally to ensure reliability
+        const isCorrect = isMCQ ? (answer === question.correct_answer) : true;
+        
+        const mockResponse = {
+            attempt: {
+                is_correct: isCorrect,
+                selected_option: answer
+            },
+            question: {
+                correct_answer: question.correct_answer,
+                explanation: question.explanation
+            },
+            mastery_update: {
+                subject_mastery_percent: 75,
+                strength_label: 'Strong'
+            }
+        };
 
         state.results.total++;
 
         if (isMCQ) {
-            showMCQFeedback(response, answer);
+            showMCQFeedback(mockResponse, answer);
         } else {
-            showTextFeedback(response);
+            showTextFeedback(mockResponse);
         }
 
     } catch (err) {
         console.error('Failed to submit answer:', err);
-        showToast('Failed to submit answer. Please try again.');
+        showToast('Error submitting answer.');
         document.getElementById('submitAnswerBtn').disabled = false;
         document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = false);
     }
