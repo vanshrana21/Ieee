@@ -169,12 +169,17 @@ async def get_subjects_by_semester(
     for subj in subjects:
         # Load units for each subject from the official 'units' table
         unit_stmt = (
-            select(Unit)
+            select(
+                Unit.id,
+                Unit.title,
+                Unit.sequence_order,
+                Unit.description
+            )
             .where(Unit.subject_id == subj.id)
             .order_by(Unit.sequence_order)
         )
         unit_result = await db.execute(unit_stmt)
-        units = unit_result.scalars().all()
+        units = unit_result.all()
         
         unit_list = [
             {
@@ -262,12 +267,17 @@ async def get_modules_by_subject(
         )
     
     mod_stmt = (
-        select(Unit)
+        select(
+            Unit.id,
+            Unit.title,
+            Unit.sequence_order,
+            Unit.description
+        )
         .where(Unit.subject_id == subject_id)
         .order_by(Unit.sequence_order)
     )
     mod_result = await db.execute(mod_stmt)
-    modules = mod_result.scalars().all()
+    modules = mod_result.all()
     
     module_list = [
         {
