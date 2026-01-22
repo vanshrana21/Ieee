@@ -1,12 +1,14 @@
 (function () {
     'use strict';
 
-    const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
+    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `${window.location.protocol}//${window.location.hostname}:8000` : '');
 
     const state = {
         user: null,
         curriculum: null,
         subjects: [],
+        courseName: null,
+        currentSemester: null,
         archiveSubjects: [],
         analytics: null,
         recentActivity: [],
@@ -764,6 +766,17 @@
         renderRecentActivity([]);
 
         try {
+            // Step 1: Fetch Academic Profile
+            console.log('Fetching academic profile...');
+            const profile = await fetchJson(`${API_BASE}/api/student/academic-profile`).catch(err => {
+                console.warn('Academic profile fetch failed, using defaults');
+                return { course_name: null, current_semester: 1 };
+            });
+            
+            state.courseName = profile.course_name || null;
+            state.currentSemester = profile.current_semester || null;
+
+            // Step 2: Fetch Dashboard Stats
             const dashboardStatsRes = await fetchJson(`${API_BASE}/api/dashboard/stats`).catch(err => {
                 handleFetchError(err, 'stats', 'Dashboard stats fetch failed');
                 return null;
@@ -774,36 +787,54 @@
             }
             hideLoadingState('stats');
 
-            const subjectsRes = await fetchJson(`${API_BASE}/api/subjects`).catch(err => {
-                handleFetchError(err, 'subjects', 'Subjects fetch failed');
-                return null;
-            });
+            // Step 3: Fetch Subjects (with BA LLB detection)
+            let subjectsData = [];
+            const isBALLB = state.courseName && (
+                state.courseName.toUpperCase().includes('BA LLB') || 
+                state.courseName.toUpperCase().includes('BA.LLB') ||
+                state.courseName.toUpperCase().includes('BACHELOR OF ARTS')
+            );
 
-            if (subjectsRes && Array.isArray(subjectsRes)) {
-                state.subjects = subjectsRes.map(s => ({
-                    ...s,
-                    completion_percentage: s.progress || 0
+            if (isBALLB && state.currentSemester) {
+                console.log(`BA LLB detected. Fetching subjects for Semester ${state.currentSemester}...`);
+                const baLlbData = await fetchJson(`${API_BASE}/api/ba-llb/semesters/${state.currentSemester}/subjects`);
+                subjectsData = (baLlbData.subjects || []).map(s => ({
+                    id: s.id,
+                    title: s.name,
+                    description: s.description || '',
+                    semester: state.currentSemester,
+                    completion_percentage: 0, // In production, this would come from a progress API
+                    progress: 0,
+                    category: s.subject_type || 'core'
                 }));
+            } else {
+                console.log('Using generic subjects API...');
+                const genericSubjects = await fetchJson(`${API_BASE}/api/subjects`).catch(() => []);
+                if (Array.isArray(genericSubjects) && genericSubjects.length > 0) {
+                    subjectsData = genericSubjects.map(s => ({
+                        ...s,
+                        completion_percentage: s.progress || 0
+                    }));
+                } else {
+                    const curriculumRes = await fetchJson(`${API_BASE}/api/curriculum/dashboard`).catch(() => null);
+                    if (curriculumRes) {
+                        state.curriculum = curriculumRes;
+                        subjectsData = curriculumRes.active_subjects || [];
+                        state.archiveSubjects = curriculumRes.archive_subjects || [];
+                    }
+                }
+            }
+
+            state.subjects = subjectsData;
+            if (state.subjects.length > 0) {
                 renderSubjects(state.subjects, null);
                 updateResumeSection();
             } else {
-                const curriculumRes = await fetchJson(`${API_BASE}/api/curriculum/dashboard`).catch(err => {
-                    handleFetchError(err, 'subjects', 'Curriculum fetch failed');
-                    return null;
-                });
-
-                if (curriculumRes) {
-                    state.curriculum = curriculumRes;
-                    state.subjects = curriculumRes.active_subjects || [];
-                    state.archiveSubjects = curriculumRes.archive_subjects || [];
-                    renderSubjects(state.subjects, null);
-                    updateResumeSection();
-                } else {
-                    renderSubjectsEmpty();
-                }
+                renderSubjectsEmpty();
             }
             hideLoadingState('subjects');
 
+            // Step 4: Fetch Activity & Focus
             const lastActivityRes = await fetchJson(`${API_BASE}/api/dashboard/last-activity`).catch(err => {
                 handleFetchError(err, 'activity', 'Last activity fetch failed');
                 return null;
