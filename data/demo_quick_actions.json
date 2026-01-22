@@ -1,0 +1,6 @@
+[
+  {"id":"case-simplifier","title":"Case Simplifier","subtitle":"Simplified judgments & exam-ready breakdown","icon":"assets/icons/case-simplifier.svg","href":"./case-simplifier.html"},
+  {"id":"debate","title":"Debate","subtitle":"Live argument practice","icon":"assets/icons/debate.svg","href":"./debate.html"},
+  {"id":"start-studying","title":"Start Studying","subtitle":"Open subject lessons","icon":"assets/icons/study.svg","href":"./start-studying.html"},
+  {"id":"my-notes","title":"My Notes","subtitle":"Create & sync notes","icon":"assets/icons/my-notes.html"}
+]
