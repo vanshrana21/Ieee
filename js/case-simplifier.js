@@ -176,9 +176,11 @@ function renderSummarySection(elementId, content) {
     const element = document.getElementById(elementId);
     if (!element) return;
     
-    if (!content || content === "N/A" || content.includes("Not found")) {
+    if (!content || content === "N/A" || content.toLowerCase().includes("not found")) {
         element.innerHTML = '<p class="text-muted">Information not available in judgment text.</p>';
     } else {
+        // If content contains "Not available from authoritative source", it's still content we want to show
+        // but maybe with a different style if it's the ONLY thing there.
         element.innerHTML = formatLegalText(content);
     }
 }
