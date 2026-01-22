@@ -180,12 +180,12 @@ function setupEventListeners() {
     const subjectSelect = document.querySelectorAll("select")[0];
     const moduleSelect  = document.querySelectorAll("select")[1];
 
-    console.log("Subject select bound:", subjectSelect);
-    console.log("Module select bound:", moduleSelect);
+    console.log("Subject select bound");
+    console.log("Subject changed");
 
     if (subjectSelect) {
         subjectSelect.addEventListener("change", () => {
-            console.log("Subject changed:", subjectSelect.value);
+            console.log("Subject changed");
             populatePracticeModules(subjectSelect.value);
         });
     }
