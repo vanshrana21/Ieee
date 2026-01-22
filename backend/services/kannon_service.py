@@ -16,33 +16,35 @@ KANOON_API_KEY = os.getenv("KANOON_API_KEY")
 def search_case_in_kannon(query_text: str) -> Optional[str]:
     """
     Search for a case by text and return the ID of the first match.
+    Uses fuzzy matching on names/parties.
     """
     if not KANOON_API_KEY:
         logger.error("KANOON_API_KEY not set for search")
         return None
         
-    headers = {
-        "Authorization": f"Bearer {KANOON_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    # We use 'text' parameter for fuzzy search on names/parties
-    # Note: query is required, so we use 'object:case' as a broad base
+    # Kannon search works best with the query parameter for free-text search.
+    # We use the token parameter for authentication as verified.
     params = {
-        "query": "object:case", 
-        "text": query_text,
-        "limit": 1
+        "query": query_text,
+        "token": KANOON_API_KEY,
+        "limit": 5
     }
     
     try:
         url = f"{KANOON_API_BASE}/search/cases"
         logger.info(f"Searching Kannon for: {query_text}")
-        response = requests.get(url, headers=headers, params=params, timeout=30)
-        response.raise_for_status()
-        data = response.json()
+        response = requests.get(url, params=params, timeout=30)
         
-        if data.get("data") and len(data["data"]) > 0:
-            case_id = data["data"][0]["id"]
+        if response.status_code != 200:
+            logger.error(f"Kannon search returned status {response.status_code}: {response.text}")
+            return None
+            
+        data = response.json()
+        results = data.get("data", [])
+        
+        if results and len(results) > 0:
+            # We take the first result as the most relevant
+            case_id = results[0]["id"]
             logger.info(f"Found case ID via search: {case_id}")
             return case_id
             
@@ -66,29 +68,43 @@ def fetch_case_from_kannon(case_identifier: str) -> Dict:
         logger.error("KANOON_API_KEY not set in environment")
         raise ValueError("Kanoon API key not configured")
 
-    headers = {
-        "Authorization": f"Bearer {KANOON_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
     # Helper for direct fetching
     def _do_fetch(cid: str) -> Optional[Dict]:
-        court_id = cid.split('-')[0] if '-' in cid else None
-        if not court_id:
-            return None
-        
+        # Kannon IDs are usually COURT-NUMBER-YEAR or just NUMBER
+        # Extract court_id from prefix (e.g., SC-123 -> SC, PHHC01-123 -> PHHC01)
+        if '-' in cid:
+            parts = cid.split('-')
+            court_id = parts[0]
+        else:
+            court_id = "SC" # Default fallback
+            
         url = f"{KANOON_API_BASE}/courts/{court_id}/cases/{cid}"
+        params = {"token": KANOON_API_KEY}
+        
         try:
-            resp = requests.get(url, headers=headers, timeout=30)
+            resp = requests.get(url, params=params, timeout=30)
             if resp.status_code == 200:
                 return resp.json()
+            
+            # Fallback: if CID has no hyphen but failed with SC, try common courts
+            if '-' not in cid:
+                for alt_court in ["JKHC", "DLHC", "PHHC", "KLHC"]:
+                    alt_url = f"{KANOON_API_BASE}/courts/{alt_court}/cases/{cid}"
+                    alt_resp = requests.get(alt_url, params=params, timeout=10)
+                    if alt_resp.status_code == 200:
+                        return alt_resp.json()
+            
             return None
         except:
             return None
 
-    # Step 1: Try direct fetch if it looks like an ID
-    if '-' in case_identifier:
-        logger.info(f"Attempting direct fetch for: {case_identifier}")
+    # Step 1: Try direct fetch if it looks like an ID (contains hyphen or starts with court code)
+    # Check for common Indian court prefixes
+    court_prefixes = ["SC", "JKHC", "DLHC", "PHHC", "KLHC", "BHC", "MHC"]
+    is_potential_id = '-' in case_identifier or any(case_identifier.upper().startswith(p) for p in court_prefixes)
+    
+    if is_potential_id:
+        logger.info(f"Attempting direct fetch for potential ID: {case_identifier}")
         direct_data = _do_fetch(case_identifier)
         if direct_data:
             return direct_data

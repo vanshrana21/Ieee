@@ -54,6 +54,7 @@ def normalize_case_identifier(identifier: str) -> str:
     Normalizes case identifier for better resolution.
     - Lowercases input
     - Normalizes 'vs', 'vs.', 'v.' -> 'v'
+    - Removes year (1978)
     - Removes brackets, commas, extra symbols
     - Trims whitespace
     """
@@ -66,6 +67,10 @@ def normalize_case_identifier(identifier: str) -> str:
     # Normalize vs/v. to v
     normalized = re.sub(r'\bvs\.?\b', 'v', normalized)
     normalized = re.sub(r'\bv\.\b', 'v', normalized)
+    
+    # Remove year patterns like (1978), [1978], 1978
+    normalized = re.sub(r'[\(\[\{]\d{4}[\)\]\}]', ' ', normalized)
+    normalized = re.sub(r'\b\d{4}\b', ' ', normalized)
     
     # Remove brackets, commas, extra symbols
     # Keep alphanumeric, spaces, and hyphens (for IDs)
@@ -122,6 +127,10 @@ async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) ->
         
         # Validation Layer
         try:
+            # Handle potential mismatch in key name: AI might return ratio instead of ratio_decidendi
+            if "ratio" in summary_data and "ratio_decidendi" not in summary_data:
+                summary_data["ratio_decidendi"] = summary_data.pop("ratio")
+            
             validated_summary = CanonicalAIInput(**summary_data)
             logger.info("AI summary validated successfully.")
             return validated_summary.model_dump()
@@ -142,12 +151,11 @@ async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) ->
 async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
     """
     Complete Case Simplification Flow:
-    Phase 1: Fetch raw data
-    Phase 2: Extract full case detail
-    Phase 3: Prepare canonical AI input
-    Phase 4: Generate AI structured summary
-    
-    Failure Safety: Returns full case detail if AI fails.
+    Returns format:
+    {
+      "raw_case": { ... },
+      "ai_structured_summary": { ... }
+    }
     """
     from backend.services.kannon_service import fetch_case_from_kannon
     from backend.utils.case_extractor import extract_full_case_details
@@ -157,34 +165,32 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
     normalized_id = normalize_case_identifier(case_identifier)
     logger.info(f"Normalized identifier: {normalized_id}")
 
+    # Phase 1: Fetch
     try:
-        # Phase 1: Fetch
         raw_data = fetch_case_from_kannon(normalized_id)
-        
-        # Phase 2: Extract
-        full_detail = extract_full_case_details(raw_data)
-        
-        # Phase 3: Prepare AI Input
-        canonical_input = prepare_ai_input(full_detail)
-        
-        # Phase 4: Generate AI Summary
-        # Graceful degradation: if AI fails, we still return full_detail
-        ai_summary = None
-        try:
-            ai_summary = await summarize_case(canonical_input)
-        except Exception as ai_err:
-            logger.error(f"AI summarization failed gracefully: {str(ai_err)}")
-        
-        return {
-            "success": True,
-            "full_case_detail": full_detail,
-            "ai_summary": ai_summary,
-            "is_simplified": ai_summary is not None
-        }
-
-    except ValueError as e:
-        logger.error(f"Validation/Not found error in simplification: {str(e)}")
-        raise
     except Exception as e:
-        logger.info(f"Attempting to handle failure in simplification for {normalized_id}: {str(e)}")
-        raise
+        # If normalization was too aggressive, try original identifier as fallback
+        logger.info(f"Normalization failed for {normalized_id}, trying original: {case_identifier}")
+        try:
+            raw_data = fetch_case_from_kannon(case_identifier)
+        except Exception:
+            raise ValueError(f"Case not found: {case_identifier}")
+    
+    # Phase 2: Extract
+    full_detail = extract_full_case_details(raw_data)
+    
+    # Phase 3: Prepare AI Input
+    canonical_input = prepare_ai_input(full_detail)
+    
+    # Phase 4: Generate AI Summary
+    # Graceful degradation: if AI fails, we still return full_detail
+    ai_summary = None
+    try:
+        ai_summary = await summarize_case(canonical_input)
+    except Exception as ai_err:
+        logger.error(f"AI summarization failed gracefully: {str(ai_err)}")
+    
+    return {
+        "raw_case": full_detail,
+        "ai_structured_summary": ai_summary
+    }
