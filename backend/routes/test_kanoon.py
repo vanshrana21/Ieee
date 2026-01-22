@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from backend.services.kannon_service import fetch_case_from_kannon
 from backend.utils.case_extractor import extract_full_case_details
+from backend.services.case_summarizer import get_case_simplification
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,4 +53,21 @@ async def test_extract_case(case_id: str):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Extraction test error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/simplify/{case_id}")
+async def test_simplify_case(case_id: str):
+    """
+    Internal test endpoint to verify Phase 4: AI Structured Summary Generation.
+    Returns both full case detail and AI-generated summary.
+    """
+    try:
+        logger.info(f"Simplification test triggered for case: {case_id}")
+        result = await get_case_simplification(case_id)
+        return result
+    except ValueError as e:
+        logger.error(f"Simplification test validation error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Simplification test error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
