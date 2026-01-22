@@ -558,8 +558,8 @@ body {
 .reading-experience {
     display: flex;
     gap: 1.5rem;
-    height: calc(100vh - 250px);
-    min-height: 600px;
+    height: calc(100vh - 200px); /* Increased height */
+    min-height: 700px;
     margin-top: 1.5rem;
 }
 
@@ -572,21 +572,59 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.judgment-panel.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    border-radius: 0;
 }
 
 .panel-header {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.5rem;
     background: #F8F9FA;
     border-bottom: 1px solid #E0E0E0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .panel-header h3 {
     font-size: 1.1rem;
     font-weight: 700;
     color: #0C2B4E;
+}
+
+.panel-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fullscreen-btn {
+    background: #1A3D6F;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.fullscreen-btn:hover {
+    background: #2E6F95;
 }
 
 .panel-actions input {
@@ -608,10 +646,6 @@ body {
     background: #FFFEF9; /* Legal paper feel */
 }
 
-.judgment-content p {
-    margin-bottom: 1.5rem;
-}
-
 /* Right Panel: Summary */
 .summary-panel {
     flex: 2;
@@ -623,10 +657,32 @@ body {
     overflow: hidden;
 }
 
-.summary-scrollable {
+.summary-scrollable-container {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto; /* Independent scrolling for the whole right panel */
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.academic-summary-container {
+    flex-shrink: 0; /* Don't shrink */
+}
+
+.academic-summary-scroll {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 0 0 10px 10px;
+    background: #f8fafc;
+}
+
+.exam-breakdown-container {
+    flex-shrink: 0;
+}
+
+.summary-content {
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -658,11 +714,21 @@ body {
     font-size: 0.95rem;
     line-height: 1.6;
     color: #333;
-    display: block; /* Shown by default */
+    display: none; /* Collapsed by default unless toggled */
 }
 
-.summary-section.collapsed .section-content {
-    display: none;
+.summary-section.active .section-content {
+    display: block;
+}
+
+.summary-section.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.toggle-icon {
+    transition: transform 0.2s ease;
+    font-size: 0.8rem;
+    color: #64748b;
 }
 
 .summary-section.highlight {
@@ -672,6 +738,10 @@ body {
 .summary-section.exam {
     border-left: 4px solid #2E6F95;
     background: #F0F7FF;
+}
+
+.part-b-label.hidden {
+    display: none;
 }
 
 /* Warning Badge */
