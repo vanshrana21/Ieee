@@ -8,6 +8,7 @@ from .subject import Subject
 from .content_module import ContentModule
 from .learn_content import LearnContent
 from .case_content import CaseContent
+from .unit import Unit
 from .practice_question import PracticeQuestion
 from .practice_attempt import PracticeAttempt
 from .practice_evaluation import PracticeEvaluation

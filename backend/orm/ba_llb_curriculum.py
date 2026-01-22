@@ -78,6 +78,12 @@ class BALLBSubject(BaseModel):
         cascade="all, delete-orphan",
         order_by="BALLBModule.sequence_order"
     )
+    units_new = relationship(
+        "Unit",
+        back_populates="subject",
+        cascade="all, delete-orphan",
+        order_by="Unit.sequence_order"
+    )
     
     __table_args__ = (
         UniqueConstraint("semester_id", "code", name="uq_ballb_semester_subject_code"),
