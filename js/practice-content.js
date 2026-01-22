@@ -172,16 +172,25 @@ async function initializePage() {
         return;
     }
 
+    loadSubjects(); // Load subjects BEFORE attaching listeners
     setupEventListeners();
     setupSidebarToggle();
     await loadUserInfo();
-    loadSubjects(); // Synchronous for demo
     checkURLParams();
 }
 
 function setupEventListeners() {
-    document.getElementById('subjectSelect').addEventListener('change', handleSubjectChange);
-    document.getElementById('moduleSelect').addEventListener('change', handleModuleChange);
+    const subjectSelect = document.getElementById('subjectSelect');
+    const moduleSelect = document.getElementById('moduleSelect');
+
+    if (subjectSelect) {
+        subjectSelect.addEventListener('change', handleSubjectChange);
+    }
+    
+    if (moduleSelect) {
+        moduleSelect.addEventListener('change', handleModuleChange);
+    }
+
     document.getElementById('startPracticeBtn').addEventListener('click', startPractice);
     document.getElementById('submitAnswerBtn').addEventListener('click', submitAnswer);
     document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
@@ -230,6 +239,9 @@ async function loadUserInfo() {
 
 function loadSubjects() {
     const select = document.getElementById('subjectSelect');
+    if (!select) return;
+
+    // Clear and populate
     select.innerHTML = '<option value="">-- Select Subject --</option>';
 
     state.subjects.forEach(subject => {
@@ -242,12 +254,20 @@ function loadSubjects() {
 
 function handleSubjectChange(e) {
     const subjectId = e.target.value;
+    console.log("Subject changed:", subjectId);
+    populatePracticeModules(subjectId);
+}
+
+function populatePracticeModules(subjectId) {
     const moduleSelect = document.getElementById('moduleSelect');
     const startBtn = document.getElementById('startPracticeBtn');
 
+    if (!moduleSelect) return;
+
+    // Clear the module dropdown ONCE
     moduleSelect.innerHTML = '<option value="">-- Select Practice Module --</option>';
     moduleSelect.disabled = true;
-    startBtn.disabled = true;
+    if (startBtn) startBtn.disabled = true;
     state.modules = [];
 
     if (!subjectId) return;
@@ -256,14 +276,18 @@ function handleSubjectChange(e) {
     if (!subject) return;
 
     state.modules = subject.modules;
-    moduleSelect.disabled = false;
-
+    
+    // Insert module <option> elements
     subject.modules.forEach(moduleName => {
         const option = document.createElement('option');
         option.value = moduleName;
         option.textContent = moduleName;
         moduleSelect.appendChild(option);
     });
+
+    // Enable the module dropdown
+    moduleSelect.disabled = false;
+    console.log("Modules loaded for:", subjectId);
 }
 
 function handleModuleChange(e) {
@@ -279,12 +303,18 @@ function checkURLParams() {
     const moduleName = params.get('module_name');
 
     if (subjectId) {
-        document.getElementById('subjectSelect').value = subjectId;
-        handleSubjectChange({ target: { value: subjectId } });
-        
-        if (moduleName) {
-            document.getElementById('moduleSelect').value = moduleName;
-            handleModuleChange({ target: { value: moduleName } });
+        const subjectSelect = document.getElementById('subjectSelect');
+        if (subjectSelect) {
+            subjectSelect.value = subjectId;
+            populatePracticeModules(subjectId);
+            
+            if (moduleName) {
+                const moduleSelect = document.getElementById('moduleSelect');
+                if (moduleSelect) {
+                    moduleSelect.value = moduleName;
+                    handleModuleChange({ target: { value: moduleName } });
+                }
+            }
         }
     }
 }
