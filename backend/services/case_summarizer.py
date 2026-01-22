@@ -29,13 +29,14 @@ SYSTEM_PROMPT = """You are an expert law student assistant specializing in legal
 Your task is to summarize the provided legal case into a strict structured format.
 
 STRICT RULES:
-1. Use ONLY the information provided in the input. DO NOT add external legal knowledge or facts.
-2. DO NOT reinterpret or speculate on the judgment.
-3. Use concise, exam-ready language suitable for revision.
-4. Maintain the exact JSON structure provided.
-5. If a field lacks data in the input, return an empty string (""), do not make assumptions.
-6. Rephrase and condense, but do not omit essential legal points.
-7. Return ONLY valid JSON. No preamble, no postamble.
+1. Use the information provided in the input. 
+2. If the judgment text is missing or minimal, use your extensive legal knowledge to summarize this landmark case based on known jurisprudence.
+3. DO NOT hallucinate facts. If facts are uncertain or missing from the source, say "As per settled understanding..." or "Information not available from authoritative source".
+4. Use concise, exam-ready language suitable for revision.
+5. Maintain the exact JSON structure provided.
+6. If a field lacks data and cannot be inferred from legal knowledge, return "Not available from authoritative source".
+7. Rephrase and condense, but do not omit essential legal points.
+8. Return ONLY valid JSON. No preamble, no postamble.
 
 LOCKED OUTPUT FORMAT:
 {
@@ -48,6 +49,16 @@ LOCKED OUTPUT FORMAT:
   "judgment": "...",
   "ratio_decidendi": "..."
 }"""
+
+METADATA_ONLY_PROMPT = """The authoritative judgment text for this case is missing. 
+Summarize this landmark Indian case based on known legal jurisprudence and your training data.
+Focus on the core facts, legal issues, and the final decision/ratio as understood in Indian law.
+If you are unsure of specific details, use phrases like 'Based on settled legal understanding...'
+Do NOT invent citations or dates if not provided.
+
+Case Metadata:
+{metadata_json}
+"""
 
 def normalize_case_identifier(identifier: str) -> str:
     """
@@ -98,9 +109,15 @@ async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) ->
         return None
 
     try:
-        user_prompt = f"Summarize this case following the strict rules:\n\n{json.dumps(canonical_input, indent=2)}"
+        # Check if judgment/facts are missing to use special metadata-only prompt
+        is_metadata_only = not canonical_input.get("judgment") and not canonical_input.get("facts")
         
-        logger.info(f"Requesting AI summary for case: {canonical_input.get('case_name')}")
+        if is_metadata_only:
+            user_prompt = METADATA_ONLY_PROMPT.format(metadata_json=json.dumps(canonical_input, indent=2))
+        else:
+            user_prompt = f"Summarize this case following the strict rules:\n\n{json.dumps(canonical_input, indent=2)}"
+        
+        logger.info(f"Requesting AI summary for case: {canonical_input.get('case_name')} (Metadata only: {is_metadata_only})")
         
         response = await model.generate_content_async(
             contents=[
@@ -185,12 +202,25 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
     canonical_input = prepare_ai_input(full_detail)
     
     # Phase 4: Generate AI Summary
-    # Graceful degradation: if AI fails, we still return full_detail
+    # Always return a structured summary, even if it's a fallback
     ai_summary = None
     try:
         ai_summary = await summarize_case(canonical_input)
     except Exception as ai_err:
-        logger.error(f"AI summarization failed gracefully: {str(ai_err)}")
+        logger.error(f"AI summarization failed: {str(ai_err)}")
+    
+    # Final Response Contract Enforcement (STRICT)
+    if not ai_summary:
+        ai_summary = {
+            "case_name": full_detail.get("case_name", "Unknown Case"),
+            "citation": full_detail.get("citation", ""),
+            "court": full_detail.get("court", ""),
+            "year": str(full_detail.get("year", "")),
+            "facts": "Information not available from authoritative source.",
+            "issues": "Information not available from authoritative source.",
+            "judgment": "Information not available from authoritative source.",
+            "ratio_decidendi": "Information not available from authoritative source."
+        }
     
     return {
         "raw_case": full_detail,
