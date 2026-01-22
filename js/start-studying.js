@@ -8,7 +8,7 @@
         courseName: null,
         currentSemester: null,
         currentSubject: null,
-        currentMode: '',
+        activeSubjectId: null,
         isLoading: true,
         error: null,
         contentAvailability: {
@@ -17,10 +17,6 @@
             has_cases: false,
             has_practice: false,
             has_notes: true,
-            first_learning_content_id: null,
-            first_case_id: null,
-            first_practice_id: null,
-            learn_count: 0,
             modules_count: 0,
             cases_count: 0,
             practice_count: 0
@@ -40,11 +36,7 @@
         const token = window.auth?.getToken?.() || localStorage.getItem('access_token');
         
         if (!token) {
-            if (window.JurisSessionManager) {
-                window.JurisSessionManager.requireAuth();
-            } else {
-                window.location.href = 'login.html';
-            }
+            window.location.href = 'login.html';
             throw new Error('Not authenticated');
         }
         
@@ -55,14 +47,9 @@
         const resp = await fetch(url, { ...opts, headers });
         
         if (resp.status === 401) {
-            if (window.JurisErrorHandler) {
-                window.JurisErrorHandler.handleAuthError();
-            } else {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('user_role');
-                window.location.href = 'login.html';
-            }
-            throw new Error('Session expired. Please log in again.');
+            localStorage.removeItem('access_token');
+            window.location.href = 'login.html';
+            throw new Error('Session expired');
         }
         
         const text = await resp.text();
@@ -83,491 +70,209 @@
         return icons[(category || '').toLowerCase()] || '📚';
     }
 
-    function showLoading() {
-        const grid = document.querySelector('.subject-grid');
-        if (grid) {
-            grid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
-                    <div style="width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-                    <p style="color: #64748b; font-size: 15px;">Loading your subjects...</p>
-                </div>
-                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-            `;
-        }
-    }
-
-    function showError(message) {
-        const grid = document.querySelector('.subject-grid');
-        if (grid) {
-            grid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                    <h3 style="color: #0F172A; margin-bottom: 8px;">Unable to Load Subjects</h3>
-                    <p style="color: #64748b; margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto;">${escapeHtml(message)}</p>
-                    <button onclick="window.location.reload()" style="background: #0066FF; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Try Again</button>
-                </div>
-            `;
-        }
-    }
-
-    function showEmptyState(courseName, semester) {
-        const grid = document.querySelector('.subject-grid');
-        if (grid) {
-            const semesterInfo = courseName && semester 
-                ? `<p style="color: #64748b; margin-bottom: 12px;"><strong>${escapeHtml(courseName)}</strong> - Semester ${semester}</p>`
-                : '';
-            
-            grid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-                    <h3 style="color: #0F172A; margin-bottom: 8px;">No Subjects for This Semester</h3>
-                    ${semesterInfo}
-                    <p style="color: #64748b; margin-bottom: 20px;">There are no subjects available for your current semester. Please update your academic profile or contact your administrator.</p>
-                    <a href="academic-profile.html" style="background: #0066FF; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; margin-right: 10px;">Update Profile</a>
-                    <a href="dashboard-student.html" style="background: #64748b; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block;">Back to Dashboard</a>
-                </div>
-            `;
-        }
+    function getMicroHint(subject) {
+        const hints = [
+            "Recommended based on your curriculum",
+            "Mid-semester exams approaching soon",
+            "A foundational subject for your law career",
+            "Great time to dive into legal principles",
+            "Perfect for a deep focus session today"
+        ];
+        // Semi-random but consistent hint for the subject
+        return hints[subject.id % hints.length];
     }
 
     function createSubjectCard(subject) {
-        const progress = Math.round(subject.completion_percentage || 0);
         const icon = getCategoryIcon(subject.category);
-        const moduleCount = subject.unit_count || subject.modules_count || 0;
-        const isFoundation = subject.is_foundation === true || (subject.title && subject.title.toLowerCase().includes('universal human values'));
+        const isFoundation = subject.is_foundation === true || (subject.title && subject.title.toLowerCase().includes('human values'));
+        const moduleCount = subject.modules_count || 0;
 
         return `
-            <div class="subject-card" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
+            <div class="subject-card" data-subject-id="${subject.id}" id="card-${subject.id}">
+                ${isFoundation ? '<div class="foundation-badge">Foundation</div>' : ''}
                 <div class="subject-icon">${icon}</div>
-                ${isFoundation ? '<div class="foundation-badge">Foundation Course</div>' : ''}
                 <h3>${escapeHtml(subject.title)}</h3>
-                <p>${escapeHtml(subject.description || 'Explore this subject')}</p>
-                <div class="card-footer">
-                    <span class="topic-count">${moduleCount} Unit${moduleCount !== 1 ? 's' : ''}</span>
-                    <span class="progress-badge">${progress}%</span>
-                </div>
-                ${subject.semester ? `<div class="semester-badge">Semester ${subject.semester}</div>` : ''}
-                <div class="progress-bar-mini">
-                    <div class="progress-fill" style="width: ${progress}%"></div>
+                <span class="semester-text">Semester ${subject.semester || state.currentSemester || 'N/A'}</span>
+                
+                <div class="reveal-panel">
+                    <p class="reveal-hint">${moduleCount} modules left for mid-sem</p>
+                    <div class="reveal-actions">
+                        <button class="btn-primary" onclick="event.stopPropagation(); window.studyApp.selectSubject(${subject.id})">Start Studying</button>
+                        <button class="btn-secondary" onclick="event.stopPropagation(); window.studyApp.openMode('practice', ${subject.id})">Practice</button>
+                    </div>
                 </div>
             </div>
         `;
     }
 
     function renderSubjects() {
-        console.log('Rendering subjects. Count:', state.subjects.length);
-        const grid = document.querySelector('.subject-grid');
-        if (!grid) return;
+        const strip = document.getElementById('subjectFocusStrip');
+        if (!strip) return;
 
         if (state.subjects.length === 0) {
-            console.warn('No subjects found to render.');
-            showEmptyState(state.courseName, state.currentSemester);
+            strip.innerHTML = '<div style="padding: 2rem; color: #64748b;">No subjects found.</div>';
             return;
         }
 
-        let html = '';
+        strip.innerHTML = state.subjects.map(s => createSubjectCard(s)).join('');
         
-        if (state.courseName && state.currentSemester) {
-            html += `
-                <div class="category-header" style="grid-column: 1 / -1;">
-                    <h2>${escapeHtml(state.courseName)} - Semester ${state.currentSemester} <span class="current-badge">Current</span></h2>
-                    <p>${state.subjects.length} subject${state.subjects.length !== 1 ? 's' : ''}</p>
-                </div>
-            `;
-        }
-
-        state.subjects.forEach(subject => {
-            html += createSubjectCard(subject);
-        });
-
-        grid.innerHTML = html;
-        console.log('Subjects rendered successfully.');
+        // Add scroll event listener for focus detection
+        strip.addEventListener('scroll', handleScroll, { passive: true });
+        
+        // Initial update
+        setTimeout(() => {
+            handleScroll();
+            document.getElementById('focusGuidance').classList.remove('hidden');
+        }, 100);
     }
 
-    async function fetchContentAvailability(subjectId) {
-        try {
-            const data = await fetchJson(`${API_BASE}/api/student/subject/${subjectId}/availability`);
-            state.contentAvailability = data;
-            return data;
-        } catch (err) {
-            console.error('Failed to fetch content availability:', err);
-            state.contentAvailability = {
-                has_learning_content: false,
-                has_modules: false,
-                has_cases: false,
-                has_practice: false,
-                has_notes: true,
-                first_learning_content_id: null,
-                first_case_id: null,
-                first_practice_id: null,
-                learn_count: 0,
-                modules_count: 0,
-                cases_count: 0,
-                practice_count: 0
-            };
-            return state.contentAvailability;
+    function handleScroll() {
+        const strip = document.getElementById('subjectFocusStrip');
+        const cards = strip.querySelectorAll('.subject-card');
+        const stripCenter = strip.scrollLeft + (strip.offsetWidth / 2);
+        
+        let closestCard = null;
+        let minDistance = Infinity;
+
+        cards.forEach(card => {
+            const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
+            const distance = Math.abs(stripCenter - cardCenter);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestCard = card;
+            }
+        });
+
+        if (closestCard && state.activeSubjectId !== parseInt(closestCard.dataset.subjectId)) {
+            setActiveCard(closestCard);
         }
     }
 
-    function updateStudyModeCards() {
-        const modeCards = document.querySelectorAll('.mode-card');
-        const modes = ['concepts', 'cases', 'practice', 'notes'];
-        
-        const modeMapping = {
-            concepts: {
-                available: state.contentAvailability.has_modules,
-                count: state.contentAvailability.modules_count,
-                enabledText: `${state.contentAvailability.modules_count} module${state.contentAvailability.modules_count !== 1 ? 's' : ''} available`,
-                disabledText: 'Learning modules are being prepared for this subject. Check back soon!'
-            },
-            cases: {
-                available: state.contentAvailability.has_cases,
-                count: state.contentAvailability.cases_count,
-                enabledText: `${state.contentAvailability.cases_count} cases available`,
-                disabledText: 'Case studies will be available once they are added to this subject.'
-            },
-            practice: {
-                available: state.contentAvailability.has_practice,
-                count: state.contentAvailability.practice_count,
-                enabledText: `${state.contentAvailability.practice_count} questions available`,
-                disabledText: 'Practice questions will unlock once they are added for this subject.'
-            },
-            notes: {
-                available: true,
-                count: state.contentAvailability.notes_count || 0,
-                enabledText: 'Create and organize your personal study notes',
-                disabledText: ''
-            }
-        };
+    function setActiveCard(cardElement) {
+        const id = parseInt(cardElement.dataset.subjectId);
+        state.activeSubjectId = id;
 
-        modeCards.forEach((card, index) => {
-            const mode = modes[index];
-            if (!mode) return;
+        // Update UI states
+        document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('active'));
+        cardElement.classList.add('active');
+
+        // Update guidance content
+        const subject = state.subjects.find(s => s.id === id);
+        if (subject) {
+            const hintEl = document.getElementById('whyMicroHint');
+            const ctaEl = document.getElementById('smartCTA');
             
-            const config = modeMapping[mode];
-            const isAvailable = config.available;
+            hintEl.textContent = getMicroHint(subject);
+            ctaEl.textContent = `Continue with ${subject.title} →`;
+            ctaEl.onclick = () => selectSubject(id);
             
-            card.classList.remove('mode-card-disabled', 'mode-card-enabled');
-            const existingBadge = card.querySelector('.mode-availability-badge');
-            if (existingBadge) existingBadge.remove();
-            
-            if (isAvailable) {
-                card.classList.add('mode-card-enabled');
-                card.onclick = () => window.studyApp.openMode(mode);
-                card.style.cursor = 'pointer';
-                
-                const badge = document.createElement('div');
-                badge.className = 'mode-availability-badge mode-available';
-                badge.innerHTML = `
-                    <span class="availability-icon">✓</span>
-                    <span class="availability-text">${config.enabledText}</span>
-                `;
-                card.appendChild(badge);
-            } else {
-                card.classList.add('mode-card-disabled');
-                card.onclick = null;
-                card.style.cursor = 'not-allowed';
-                
-                const badge = document.createElement('div');
-                badge.className = 'mode-availability-badge mode-unavailable';
-                badge.innerHTML = `
-                    <span class="availability-icon">🔒</span>
-                    <span class="availability-text">${config.disabledText}</span>
-                `;
-                card.appendChild(badge);
-            }
-        });
-        
-        updateContentComingSoonSection();
-    }
-    
-    function updateContentComingSoonSection() {
-        const studyMapContainer = document.getElementById('studyMapContainer');
-        if (!studyMapContainer) return;
-        
-        const hasAnyContent = state.contentAvailability.has_modules || 
-                             state.contentAvailability.has_cases || 
-                             state.contentAvailability.has_practice;
-        
-        if (!hasAnyContent) {
-            studyMapContainer.innerHTML = `
-                <div class="content-coming-soon">
-                    <div class="coming-soon-icon">📝</div>
-                    <h4>Content Coming Soon</h4>
-                    <p>We're preparing learning materials for <strong>${escapeHtml(state.currentSubject?.title || 'this subject')}</strong>.</p>
-                    <div class="coming-soon-suggestion">
-                        <strong>What you can do now:</strong><br>
-                        Use the <strong>My Notes</strong> feature to start creating your own study materials while you wait.
-                    </div>
-                </div>
-            `;
-        } else {
-            let availableItems = [];
-            if (state.contentAvailability.has_modules) {
-                availableItems.push(`${state.contentAvailability.modules_count} learning modules`);
-            }
-            if (state.contentAvailability.has_cases) {
-                availableItems.push(`${state.contentAvailability.cases_count} case studies`);
-            }
-            if (state.contentAvailability.has_practice) {
-                availableItems.push(`${state.contentAvailability.practice_count} practice questions`);
-            }
-            
-            studyMapContainer.innerHTML = `
-                <div class="content-available">
-                    <div class="available-icon">✅</div>
-                    <h4>Ready to Learn</h4>
-                    <p>Select a study mode above to begin learning.</p>
-                    <div class="available-summary">
-                        <strong>Available:</strong> ${availableItems.join(' • ')}
-                    </div>
-                </div>
-            `;
+            // Subtle entrance animation for guidance
+            hintEl.style.opacity = '0';
+            ctaEl.style.opacity = '0';
+            setTimeout(() => {
+                hintEl.style.transition = 'opacity 0.4s ease';
+                ctaEl.style.transition = 'opacity 0.4s ease';
+                hintEl.style.opacity = '1';
+                ctaEl.style.opacity = '1';
+            }, 50);
         }
     }
 
     async function selectSubject(subjectId) {
         const subject = state.subjects.find(s => s.id === subjectId);
-
-        if (!subject) {
-            console.error('Subject not found:', subjectId);
-            return;
-        }
+        if (!subject) return;
 
         state.currentSubject = subject;
-
         document.getElementById('subjectSelection').classList.add('hidden');
-
-        const studyHub = document.getElementById('studyHub');
-        studyHub.classList.remove('hidden');
-
+        document.getElementById('studyHub').classList.remove('hidden');
         document.getElementById('currentSubject').textContent = subject.title;
         document.getElementById('subjectTitle').textContent = subject.title;
 
-        document.getElementById('contentArea').classList.add('hidden');
-        
-        const studyMapContainer = document.getElementById('studyMapContainer');
-        if (studyMapContainer) {
-            studyMapContainer.innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <div style="width: 32px; height: 32px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
-                    <p style="color: #64748b; font-size: 14px;">Checking available content...</p>
-                </div>
-            `;
-        }
-        
-        await fetchContentAvailability(subjectId);
+        // Fetch availability for mode enablement
+        const avail = await fetchJson(`${API_BASE}/api/student/subject/${subjectId}/availability`);
+        state.contentAvailability = avail;
         updateStudyModeCards();
     }
 
-    function backToSubjects() {
-        document.getElementById('studyHub').classList.add('hidden');
-        document.getElementById('subjectSelection').classList.remove('hidden');
-        state.currentSubject = null;
-        state.currentMode = '';
-        state.contentAvailability = {
-            has_learning_content: false,
-            has_modules: false,
-            has_cases: false,
-            has_practice: false,
-            has_notes: true,
-            first_learning_content_id: null,
-            first_case_id: null,
-            first_practice_id: null,
-            learn_count: 0,
-            modules_count: 0,
-            cases_count: 0,
-            practice_count: 0
-        };
-    }
-
-    function goBackToDashboard() {
-        window.location.href = 'dashboard-student.html';
-    }
-
-    function openMode(mode) {
-        const subject = state.currentSubject;
-        if (!subject) return;
+    function updateStudyModeCards() {
+        const modes = ['concepts', 'cases', 'practice', 'notes'];
+        const cards = document.querySelectorAll('.mode-card');
         
-        if (mode === 'concepts') {
-            window.location.href = `modules.html?subject_id=${subject.id}`;
-            return;
-        }
-        
-        if (mode === 'cases') {
-            if (state.contentAvailability.has_cases) {
-                window.location.href = `cases.html?subject_id=${subject.id}`;
+        cards.forEach((card, i) => {
+            const mode = modes[i];
+            const isAvail = mode === 'notes' || 
+                           (mode === 'concepts' && state.contentAvailability.has_modules) ||
+                           (mode === 'cases' && state.contentAvailability.has_cases) ||
+                           (mode === 'practice' && state.contentAvailability.has_practice);
+
+            card.classList.toggle('mode-card-disabled', !isAvail);
+            
+            const existingBadge = card.querySelector('.mode-availability-badge');
+            if (existingBadge) existingBadge.remove();
+
+            const badge = document.createElement('div');
+            badge.className = `mode-availability-badge ${isAvail ? 'mode-available' : 'mode-unavailable'}`;
+            
+            if (mode === 'concepts') {
+                badge.textContent = isAvail ? `${state.contentAvailability.modules_count} modules available` : 'Coming soon';
+            } else if (mode === 'cases') {
+                badge.textContent = isAvail ? `${state.contentAvailability.cases_count} cases available` : 'Coming soon';
+            } else if (mode === 'practice') {
+                badge.textContent = isAvail ? `${state.contentAvailability.practice_count} questions available` : 'Coming soon';
+            } else {
+                badge.textContent = 'Ready to use';
             }
-            return;
-        }
-        
-        if (mode === 'practice') {
-            if (state.contentAvailability.has_practice) {
-                window.location.href = `practice.html?subject_id=${subject.id}`;
-            }
-            return;
-        }
-        
-        if (mode === 'notes') {
-            window.location.href = `notes.html?subject_id=${subject.id}`;
-            return;
-        }
+            card.appendChild(badge);
+        });
     }
 
-    function backToModes() {
-        document.getElementById('contentArea').classList.add('hidden');
-        state.currentMode = '';
+    function openMode(mode, subjectId = null) {
+        const id = subjectId || (state.currentSubject ? state.currentSubject.id : null);
+        if (!id) return;
+
+        if (mode === 'concepts') window.location.href = `modules.html?subject_id=${id}`;
+        else if (mode === 'cases') window.location.href = `cases.html?subject_id=${id}`;
+        else if (mode === 'practice') window.location.href = `practice.html?subject_id=${id}`;
+        else if (mode === 'notes') window.location.href = `notes.html?subject_id=${id}`;
     }
 
     async function init() {
-        if (window.JurisSessionManager && !window.JurisSessionManager.checkAuth()) {
-            window.JurisSessionManager.requireAuth();
-            return;
-        }
-
-        showLoading();
-
-        const subjectSelection = document.getElementById('subjectSelection');
-        if (subjectSelection) subjectSelection.classList.remove('hidden');
-
-        const studyHub = document.getElementById('studyHub');
-        if (studyHub) studyHub.classList.add('hidden');
-
         try {
-            // Step 1: Fetch Academic Profile
-            console.log('Fetching academic profile...');
             const profile = await fetchJson(`${API_BASE}/api/student/academic-profile`);
-            console.log('Profile loaded:', profile);
-            
-            state.courseName = profile.course_name || null;
-            state.currentSemester = profile.current_semester || null;
+            state.courseName = profile.course_name;
+            state.currentSemester = profile.current_semester;
 
-            let subjectsData;
-            
-            // Step 2: Determine which API to use
-            const isBALLB = state.courseName && (
-                state.courseName.toUpperCase().includes('BA LLB') || 
-                state.courseName.toUpperCase().includes('BA.LLB') ||
-                state.courseName.toUpperCase().includes('BACHELOR OF ARTS')
-            );
-            
-            if (isBALLB && state.currentSemester) {
-                console.log(`BA LLB detected (${state.courseName}). Fetching subjects for Semester ${state.currentSemester} via BA LLB API...`);
-                const baLlbData = await fetchJson(`${API_BASE}/api/ba-llb/semesters/${state.currentSemester}/subjects`);
-                console.log('BA LLB API Response:', baLlbData);
-                
-                subjectsData = {
-                    subjects: (baLlbData.subjects || []).map(s => {
-                        console.log(`Mapping subject: ${s.name}, module_count: ${s.module_count}, is_foundation: ${s.is_foundation}`);
-                            return {
-                                id: s.id,
-                                title: s.name, 
-                                description: s.description || '',
-                                unit_count: s.unit_count || s.module_count || 0,
-                                modules_count: s.module_count || 0,
-                                is_foundation: s.is_foundation || false,
-                                completion_percentage: 0,
-                                category: s.subject_type || 'core'
-                            };
-                    }),
-                    course_name: state.courseName,
-                    current_semester: state.currentSemester
-                };
-            } else {
-                console.log('Using generic student subjects API...');
-                const genericData = await fetchJson(`${API_BASE}/api/student/subjects`);
-                console.log('Generic API Response:', genericData);
-                
-                subjectsData = {
-                    subjects: (genericData.subjects || []).map(s => ({
-                        id: s.id,
-                        title: s.title,
-                        description: s.description || '',
-                        unit_count: s.unit_count || 0,
-                        modules_count: s.module_count || 0,
-                        completion_percentage: 0,
-                        category: s.category || 'core'
-                    })),
-                    course_name: genericData.course_name,
-                    current_semester: genericData.current_semester
-                };
-            }
+            const data = await fetchJson(`${API_BASE}/api/student/subjects`);
+            state.subjects = (data.subjects || []).map(s => ({
+                id: s.id,
+                title: s.title,
+                semester: s.semester,
+                category: s.category || 'core',
+                modules_count: s.module_count || 0
+            }));
 
-            state.subjects = subjectsData.subjects || [];
-            state.isLoading = false;
-
-            console.log(`Final subjects list:`, state.subjects);
             renderSubjects();
-
-            // Step 3: Fetch additional availability info if needed (for generic subjects)
-            if (!isBALLB) {
-                const availabilityPromises = state.subjects.map(async (subject) => {
-                    try {
-                        const availability = await fetchJson(`${API_BASE}/api/student/subject/${subject.id}/availability`);
-                        subject.modules_count = availability.modules_count || 0;
-                        subject.has_modules = availability.has_modules || false;
-                    } catch (err) {
-                        console.warn(`Failed to fetch availability for subject ${subject.id}:`, err);
-                    }
-                });
-
-                await Promise.all(availabilityPromises);
-                renderSubjects();
-            }
-
-            // Step 4: Handle deep-linking via URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const subjectId = urlParams.get('subject');
-            if (subjectId) {
-                const validId = window.JurisNavigationGuard 
-                    ? window.JurisNavigationGuard.validateId(subjectId)
-                    : parseInt(subjectId, 10);
-                    
-                if (validId) {
-                    const isAllowed = state.subjects.some(s => s.id === validId);
-                    if (isAllowed) {
-                        selectSubject(validId);
-                    } else {
-                        if (window.JurisErrorHandler) {
-                            window.JurisErrorHandler.showToast('Subject not available in your current semester.', 'warning');
-                        }
-                    }
-                }
-            }
-
         } catch (err) {
-            console.error('Failed to load subjects:', err);
-            state.isLoading = false;
-            state.error = err.message;
-
-            const displayError = "We're having trouble loading study content. Please try again.";
-
-            if (window.JurisErrorHandler) {
-                window.JurisErrorHandler.showToast(displayError, 'error');
-            }
-            
-            showError(displayError);
+            console.error('Init failed:', err);
+            const strip = document.getElementById('subjectFocusStrip');
+            if (strip) strip.innerHTML = `<p style="color: #64748b; padding: 2rem;">Error: ${escapeHtml(err.message)}</p>`;
         }
     }
 
     window.studyApp = {
         selectSubject,
-        backToSubjects,
-        goBackToDashboard,
         openMode,
-        backToModes,
-        getContentAvailability: () => state.contentAvailability
+        backToSubjects: () => {
+            document.getElementById('studyHub').classList.add('hidden');
+            document.getElementById('subjectSelection').classList.remove('hidden');
+            state.currentSubject = null;
+        }
     };
 
-    window.selectSubject = selectSubject;
-    window.backToSubjects = backToSubjects;
-    window.goBackToDashboard = goBackToDashboard;
-    window.openMode = openMode;
-    window.backToModes = backToModes;
+    window.backToSubjects = window.studyApp.backToSubjects;
+    window.goBackToDashboard = () => window.location.href = 'dashboard-student.html';
+    window.backToModes = () => document.getElementById('contentArea').classList.add('hidden');
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    init();
 })();
