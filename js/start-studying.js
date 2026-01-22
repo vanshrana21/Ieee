@@ -459,16 +459,16 @@
                 subjectsData = {
                     subjects: (baLlbData.subjects || []).map(s => {
                         console.log(`Mapping subject: ${s.name}, module_count: ${s.module_count}, is_foundation: ${s.is_foundation}`);
-                        return {
-                            id: s.id,
-                            title: s.name, 
-                            description: s.description || '',
-                            unit_count: s.module_count || 0,
-                            modules_count: s.module_count || 0,
-                            is_foundation: s.is_foundation || false,
-                            completion_percentage: 0,
-                            category: s.subject_type || 'core'
-                        };
+                            return {
+                                id: s.id,
+                                title: s.name, 
+                                description: s.description || '',
+                                unit_count: s.unit_count || s.module_count || 0,
+                                modules_count: s.module_count || 0,
+                                is_foundation: s.is_foundation || false,
+                                completion_percentage: 0,
+                                category: s.subject_type || 'core'
+                            };
                     }),
                     course_name: state.courseName,
                     current_semester: state.currentSemester

@@ -166,11 +166,24 @@ async def get_subjects_by_semester(
     
     subject_list = []
     for subj in subjects:
-        mod_count_stmt = select(func.count(BALLBModule.id)).where(
-            BALLBModule.subject_id == subj.id
+        # Load units for each subject
+        unit_stmt = (
+            select(BALLBModule)
+            .where(BALLBModule.subject_id == subj.id)
+            .order_by(BALLBModule.sequence_order)
         )
-        mod_result = await db.execute(mod_count_stmt)
-        module_count = mod_result.scalar() or 0
+        unit_result = await db.execute(unit_stmt)
+        units = unit_result.scalars().all()
+        
+        unit_list = [
+            {
+                "id": unit.id,
+                "title": unit.title,
+                "sequence_order": unit.sequence_order,
+                "description": unit.description
+            }
+            for unit in units
+        ]
         
         subject_list.append({
             "id": subj.id,
@@ -183,7 +196,9 @@ async def get_subjects_by_semester(
             "option_group": subj.option_group,
             "is_variable": subj.is_variable,
             "display_order": subj.display_order,
-            "module_count": module_count
+            "module_count": len(unit_list),
+            "unit_count": len(unit_list),
+            "units": unit_list
         })
     
     logger.info(f"Returning {len(subject_list)} subjects for semester {semester_number}")
@@ -276,7 +291,9 @@ async def get_modules_by_subject(
             "option_group": subject.option_group
         },
         "modules": module_list,
-        "module_count": len(module_list)
+        "module_count": len(module_list),
+        "units": module_list,
+        "unit_count": len(module_list)
     }
 
 

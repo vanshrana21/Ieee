@@ -320,6 +320,8 @@
             const strengthLabel = masteryInfo?.strength_label || 'Weak';
             const color = colors[idx % colors.length];
             const semester = subject.semester ? `Sem ${subject.semester}` : '';
+            const unitCount = subject.unit_count ?? subject.units?.length ?? 0;
+            const unitLabel = unitCount === 1 ? 'Unit' : 'Units';
 
             return `
                 <div class="subject-card" data-subject-id="${subject.id}">
@@ -337,7 +339,7 @@
                         <div class="subject-progress-fill" style="width: ${progress}%"></div>
                     </div>
                     <div class="subject-meta">
-                        <span>${progress}% mastery</span>
+                        <span>${progress}% mastery • ${unitCount} ${unitLabel}</span>
                         <span class="strength-label strength-${strengthLabel.toLowerCase()}">${strengthLabel}</span>
                     </div>
                     <div class="subject-actions">
@@ -805,7 +807,9 @@
                     semester: state.currentSemester,
                     completion_percentage: 0, // In production, this would come from a progress API
                     progress: 0,
-                    category: s.subject_type || 'core'
+                    category: s.subject_type || 'core',
+                    unit_count: s.unit_count,
+                    units: s.units
                 }));
             } else {
                 console.log('Using generic subjects API...');
