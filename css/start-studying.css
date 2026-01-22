@@ -504,6 +504,20 @@ body {
 }
 
 /* Category Headers */
+.foundation-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    z-index: 1;
+}
+
 .category-header {
     grid-column: 1 / -1;
     margin-top: 1.5rem;
