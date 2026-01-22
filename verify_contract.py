@@ -1,35 +1,54 @@
 
+import requests
 import json
-from typing import List, Dict, Optional
+import sys
 
-# Mocking the data contract as defined in the task
-def verify_subject_json(subject: Dict):
-    required_keys = ["id", "title", "unit_count", "units"]
-    for key in required_keys:
-        if key not in subject:
-            raise AssertionError(f"Missing required key: {key}")
-    
-    if not isinstance(subject["units"], list):
-        raise AssertionError("units must be a list")
-    
-    if not isinstance(subject["unit_count"], int):
-        raise AssertionError("unit_count must be an integer")
-    
-    print(f"Verified subject: {subject['title']} ({subject['unit_count']} units)")
+def verify_contract(case_identifier):
+    url = f"http://127.0.0.1:8000/api/case-simplifier/{case_identifier}"
+    print(f"Testing URL: {url}")
+    try:
+        response = requests.get(url, timeout=60)
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"Error: {response.text}")
+            return False
+            
+        data = response.json()
+        
+        # Mandatory top-level keys
+        required_keys = ["raw_case", "ai_structured_summary"]
+        actual_keys = list(data.keys())
+        
+        print(f"Keys found: {actual_keys}")
+        
+        # Check for unexpected top-level keys
+        extra_keys = set(actual_keys) - set(required_keys)
+        if extra_keys:
+            print(f"FAILED: Found unexpected keys: {extra_keys}")
+            return False
+            
+        # Check for missing required keys
+        missing_keys = set(required_keys) - set(actual_keys)
+        if missing_keys:
+            print(f"FAILED: Missing mandatory keys: {missing_keys}")
+            return False
+            
+        # Verify raw_case is present
+        if not data["raw_case"]:
+            print("FAILED: raw_case is null/empty")
+            return False
+            
+        print("CONTRACT VERIFIED: Response structure matches Phase 5 requirements.")
+        return True
+        
+    except Exception as e:
+        print(f"Exception during verification: {e}")
+        return False
 
-# Sample data based on our implementation
-sample_subject = {
-    "id": 101,
-    "title": "General and Legal English",
-    "unit_count": 2,
-    "units": [
-        {"id": 1, "title": "Unit I", "sequence_order": 1, "description": "Desc 1"},
-        {"id": 2, "title": "Unit II", "sequence_order": 2, "description": "Desc 2"}
-    ]
-}
-
-try:
-    verify_subject_json(sample_subject)
-    print("Data contract verification passed!")
-except Exception as e:
-    print(f"Data contract verification failed: {e}")
+if __name__ == "__main__":
+    case = "Maneka Gandhi"
+    if len(sys.argv) > 1:
+        case = sys.argv[1]
+    success = verify_contract(case)
+    sys.exit(0 if success else 1)
