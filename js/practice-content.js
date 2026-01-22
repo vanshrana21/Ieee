@@ -3,7 +3,9 @@
  * Semester 1 ONLY - Demo Standard
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+if (!window.API_BASE_URL) {
+    window.API_BASE_URL = 'http://127.0.0.1:8000';
+}
 
 // Semester 1 Fixed Curriculum Data
 const SEM1_CURRICULUM = [

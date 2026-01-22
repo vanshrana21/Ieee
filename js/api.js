@@ -3,7 +3,9 @@
  * Global API wrapper for JurisAI
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+if (!window.API_BASE_URL) {
+    window.API_BASE_URL = 'http://127.0.0.1:8000';
+}
 
 const api = {
     /**
