@@ -44,6 +44,25 @@ function resetForm() {
 }
 
 /**
+ * Normalizes case identifier for backend resolution
+ * 1. Lowercase
+ * 2. vs -> v
+ * 3. Remove (year)
+ * 4. Strip punctuation
+ * 5. Spaces -> hyphens
+ */
+function normalizeCaseIdentifier(input) {
+    if (!input) return '';
+    return input
+        .toLowerCase()
+        .replace(/\bvs\.?\b/g, 'v')
+        .replace(/\(\d{4}\)/g, '')
+        .replace(/[^\w\s]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+}
+
+/**
  * Main Simplify Case function
  * Directly calls the unified Case Simplifier API
  */
@@ -55,12 +74,15 @@ async function simplifyCase() {
         return;
     }
 
+    const normalizedIdentifier = normalizeCaseIdentifier(caseName);
+    console.log('Normalized identifier:', normalizedIdentifier);
+
     // Show loading state
     setLoadingState(true);
 
     try {
         // Direct call to the unified Case Simplifier API
-        const data = await api.get(`/api/case-simplifier/${encodeURIComponent(caseName)}`);
+        const data = await api.get(`/api/case-simplifier/${encodeURIComponent(normalizedIdentifier)}`);
         
         if (!data || !data.raw_case) {
             throw new Error('Case data not available');
