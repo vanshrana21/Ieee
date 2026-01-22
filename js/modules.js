@@ -45,7 +45,9 @@
             if (isBALLB) {
                 console.log('BA LLB detected in modules. Fetching units...');
                 response = await api.get(`/api/ba-llb/subjects/${state.subjectId}/modules`);
-                state.modules = response.modules.map(m => ({
+                // Use units array if modules is not present, or fallback
+                const unitsArray = response.units || response.modules || [];
+                state.modules = unitsArray.map(m => ({
                     ...m,
                     is_unit: true,
                     total_contents: 0 // BA LLB currently uses direct module content or placeholder

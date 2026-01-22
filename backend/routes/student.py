@@ -316,6 +316,35 @@ async def get_subject_availability(
             detail="Subject not available in your current semester"
         )
 
+    # BA LLB check
+    is_ba_llb = False
+    if current_user.course_id:
+        course_stmt = select(Course).where(Course.id == current_user.course_id)
+        course_result = await db.execute(course_stmt)
+        course = course_result.scalar_one_or_none()
+        if course and ("BA LLB" in course.name.upper() or "BA.LLB" in course.name.upper()):
+            is_ba_llb = True
+
+    if is_ba_llb:
+        from backend.orm.ba_llb_curriculum import BALLBModule
+        unit_stmt = select(func.count(BALLBModule.id)).where(BALLBModule.subject_id == subject_id)
+        unit_result = await db.execute(unit_stmt)
+        units_count = unit_result.scalar() or 0
+        
+        return ContentAvailabilityResponse(
+            subject_id=subject_id,
+            has_learning_content=units_count > 0,
+            has_modules=units_count > 0,
+            has_cases=False, # Add logic if BA LLB cases are implemented
+            has_practice=False, # Add logic if BA LLB practice is implemented
+            has_notes=True,
+            learn_count=units_count,
+            modules_count=units_count,
+            cases_count=0,
+            practice_count=0,
+            notes_count=0 # You can add actual notes count here
+        )
+
     learn_module_stmt = select(ContentModule).where(
         and_(
             ContentModule.subject_id == subject_id,
