@@ -129,6 +129,38 @@ F. Why This Case Matters for Exams
 STRICT INSTRUCTION: Output MUST be valid JSON only with these keys: case_name, citation, court, year, facts, issues, arguments, judgment, ratio_decidendi, exam_importance.
 """
 
+MANEKA_GANDHI_DETERMINISTIC_DATA = {
+    "ai_summary_full": """
+The case of Maneka Gandhi v. Union of India (1978) is one of the most significant constitutional law decisions delivered by the Supreme Court of India. It fundamentally transformed the interpretation of Article 21 (Right to Life and Personal Liberty) and reshaped the relationship between Articles 14, 19, and 21, thereby laying the foundation of substantive due process in Indian constitutional jurisprudence.
+
+The petitioner, Maneka Gandhi, was issued a passport under the Passports Act, 1967. In July 1977, the Government of India, acting under Section 10(3)(c) of the Act, impounded her passport on the ground that it was “in the interest of the general public.” No reasons were initially supplied to her, nor was she given an opportunity to be heard prior to the impounding. When she sought reasons, the government declined to disclose them, citing public interest.
+
+Aggrieved by this action, Maneka Gandhi filed a writ petition under Article 32 of the Constitution, challenging the constitutional validity of the impounding order and the statutory provision under which it was passed. The petition raised serious constitutional questions concerning the scope of personal liberty, procedural fairness, and the interdependence of fundamental rights.
+
+The Supreme Court, in a historic judgment, held that the right to life and personal liberty under Article 21 is not limited to mere animal existence, but includes the right to live with dignity and freedom. The Court ruled that any law interfering with personal liberty must be just, fair, and reasonable, and not arbitrary, oppressive, or fanciful.
+
+The Court further held that Articles 14, 19, and 21 are not mutually exclusive but form a golden triangle, and that a law depriving a person of personal liberty must satisfy the requirements of all three articles. This judgment expressly departed from the narrow interpretation adopted in A.K. Gopalan v. State of Madras, thereby importing substantive due process into Indian constitutional law.
+
+On the issue of natural justice, the Court ruled that the principle of audi alteram partem (right to be heard) is implicit in Article 21 unless expressly excluded by law. Even where prior hearing is not feasible due to urgency, a post-decisional hearing must be afforded.
+
+Ultimately, the Supreme Court quashed the impounding order, directed the return of the passport, and affirmed that executive discretion affecting fundamental rights is subject to judicial scrutiny.
+
+This case stands as a constitutional milestone, ensuring that state power is exercised within the bounds of fairness, reasonableness, and dignity, and remains a cornerstone for understanding fundamental rights in India.
+    """,
+    "ai_structured_summary": {
+        "case_name": "Maneka Gandhi v. Union of India",
+        "citation": "1978 AIR 597, 1978 SCR (2) 621",
+        "court": "Supreme Court of India (Seven-Judge Bench)",
+        "year": "1978",
+        "facts": "- Maneka Gandhi was issued a passport under the Passports Act, 1967\n- Government impounded her passport under Section 10(3)(c) 'in public interest'\n- No reasons were initially provided; hearing was denied\n- Government cited “public interest” to justify secrecy\n- Petition filed under Article 32 before Supreme Court",
+        "issues": "- Whether the right to travel abroad is part of personal liberty under Article 21\n- Whether Section 10(3)(c) of the Passports Act is constitutionally valid\n- Whether denial of hearing violates principles of natural justice\n- Whether Articles 14, 19, and 21 are interrelated",
+        "arguments": "Petitioner:\n- Right to travel abroad is part of personal liberty\n- Arbitrary executive action violates Articles 14 and 21\n- Absence of hearing violates natural justice\n\nRespondent (Union of India):\n- Passport is a statutory right, not a fundamental right\n- National interest justified non-disclosure\n- Executive discretion under Passports Act is valid",
+        "judgment": "- Passport impounding order was effectively quashed\n- Court held procedure must be fair, just, and reasonable\n- Executive action is subject to judicial review\n- Post-decisional hearing is mandatory where prior hearing is not possible",
+        "ratio_decidendi": "- Article 21 includes substantive due process\n- “Procedure established by law” must be just, fair, and reasonable\n- Articles 14, 19, and 21 form an inseparable 'Golden Triangle'\n- A.K. Gopalan doctrine was effectively overruled",
+        "exam_importance": "- Landmark case on Article 21 expansion\n- Introduced substantive due process in India\n- Frequently cited in constitutional law answers\n- Foundation case for human dignity and liberty jurisprudence"
+    }
+}
+
 def is_maneka_gandhi_1978(identifier: str) -> bool:
     """Detects if the query refers to the landmark Maneka Gandhi 1978 case."""
     if not identifier:
@@ -228,34 +260,33 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
 
     # 1. Check for Landmark Bypass (Maneka Gandhi 1978)
     if is_maneka_gandhi_1978(case_identifier):
-        logger.info(f"Landmark Case Detected: Maneka Gandhi 1978. Using local authoritative source.")
-        full_detail = {
-            "case_name": "Maneka Gandhi v. Union of India",
-            "citation": "1978 AIR 597, 1978 SCR (2) 621",
-            "court": "Supreme Court of India",
-            "year": "1978",
-            "facts": "Special handling for landmark PDF source.",
-            "issues": "Special handling for landmark PDF source.",
-            "arguments": "Special handling for landmark PDF source.",
-            "judgment": "PDF_CONTENT_REPLACE", # Placeholder for frontend logic
-            "ratio": "Special handling for landmark PDF source.",
-            "pdf_url": "/assets/Maneka Gandhi v. Union of India (1978).pdf"
+        logger.info(f"Landmark Case Detected: Maneka Gandhi 1978. Using hard-coded deterministic data.")
+        return {
+            "raw_case": {
+                "case_name": "Maneka Gandhi v. Union of India",
+                "citation": "1978 AIR 597, 1978 SCR (2) 621",
+                "court": "Supreme Court of India",
+                "year": "1978",
+                "pdf_url": "/assets/Maneka Gandhi v. Union of India (1978).pdf"
+            },
+            "ai_summary_full": MANEKA_GANDHI_DETERMINISTIC_DATA["ai_summary_full"],
+            "ai_structured_summary": MANEKA_GANDHI_DETERMINISTIC_DATA["ai_structured_summary"]
         }
-    else:
-        # 1. Fetch
-        normalized_id = normalize_case_identifier(case_identifier)
-        try:
-            raw_data = fetch_case_from_kannon(normalized_id)
-        except Exception:
-            try:
-                raw_data = fetch_case_from_kannon(case_identifier)
-            except Exception:
-                # Create a minimal skeleton if fetch fails entirely
-                raw_data = {"case_name": case_identifier, "title": case_identifier}
 
-        # 2. Extract
-        inner_data = raw_data.get("data", raw_data)
-        full_detail = extract_full_case_details(inner_data)
+    # 1. Fetch
+    normalized_id = normalize_case_identifier(case_identifier)
+    try:
+        raw_data = fetch_case_from_kannon(normalized_id)
+    except Exception:
+        try:
+            raw_data = fetch_case_from_kannon(case_identifier)
+        except Exception:
+            # Create a minimal skeleton if fetch fails entirely
+            raw_data = {"case_name": case_identifier, "title": case_identifier}
+
+    # 2. Extract
+    inner_data = raw_data.get("data", raw_data)
+    full_detail = extract_full_case_details(inner_data)
     
     # 3. Prepare
     canonical_input = prepare_ai_input(full_detail)

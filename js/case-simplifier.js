@@ -166,13 +166,44 @@ function displayCaseOutput(data) {
     const summarySections = document.querySelectorAll('.summary-section');
     summarySections.forEach(s => s.classList.add('active')); // Expand all by default
 
+    const summaryContent = document.getElementById('summaryContent');
+    
+    // Check for Deterministic Academic Summary (Part A)
+    if (data.ai_summary_full) {
+        // Clear previous custom summaries if any
+        const existingFullSummary = document.getElementById('academicSummaryFull');
+        if (existingFullSummary) existingFullSummary.remove();
+
+        const academicSummaryDiv = document.createElement('div');
+        academicSummaryDiv.id = 'academicSummaryFull';
+        academicSummaryDiv.className = 'summary-section active';
+        academicSummaryDiv.style.border = '2px solid #3b82f6';
+        academicSummaryDiv.style.backgroundColor = '#f0f9ff';
+        academicSummaryDiv.innerHTML = `
+            <div class="section-header" style="background: #3b82f6; color: white;">
+                <h4 style="color: white;">✅ PART A — AI-Generated Academic Summary</h4>
+            </div>
+            <div class="section-content" style="padding: 15px; line-height: 1.6;">
+                <p style="font-weight: bold; color: #1e3a8a; margin-bottom: 10px;">(Based on official Supreme Court judgment in Maneka Gandhi v. Union of India, 1978)</p>
+                ${formatLegalText(data.ai_summary_full)}
+            </div>
+            <div style="padding: 10px; border-top: 2px solid #3b82f6; margin-top: 20px;">
+                <h4 style="color: #1e3a8a; margin-top: 0;">✅ PART B — Exam-Ready Breakdown</h4>
+            </div>
+        `;
+        summaryContent.insertBefore(academicSummaryDiv, summaryContent.firstChild);
+    } else {
+        const existingFullSummary = document.getElementById('academicSummaryFull');
+        if (existingFullSummary) existingFullSummary.remove();
+    }
+
     if (ai_structured_summary) {
         renderSummarySection('factsText', ai_structured_summary.facts);
         renderSummarySection('issuesText', ai_structured_summary.issues);
         renderSummarySection('argumentsText', ai_structured_summary.arguments);
         renderSummarySection('judgmentText', ai_structured_summary.judgment);
         renderSummarySection('ratioText', ai_structured_summary.ratio_decidendi);
-        renderSummarySection('significanceText', "Focus on the ratio decidendi for exam preparation.");
+        renderSummarySection('significanceText', ai_structured_summary.exam_importance || "Focus on the ratio decidendi for exam preparation.");
     } else {
         // Graceful degradation for AI failure
         const summaryFields = ['factsText', 'issuesText', 'argumentsText', 'judgmentText', 'ratioText', 'significanceText'];
