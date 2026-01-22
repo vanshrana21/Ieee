@@ -237,12 +237,44 @@
         else if (mode === 'notes') window.location.href = `notes.html?subject_id=${id}`;
     }
 
+    function renderFallbackUI() {
+        const strip = document.getElementById('subjectFocusStrip');
+        if (!strip) return;
+
+        strip.innerHTML = `
+            <div class="fallback-state" style="
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                justify-content: center; 
+                padding: 4rem 2rem; 
+                width: 100%; 
+                text-align: center;
+                background: rgba(255, 255, 255, 0.02);
+                border-radius: 20px;
+                border: 1px dashed rgba(100, 116, 139, 0.2);
+            ">
+                <p style="color: #64748b; font-size: 1.1rem; font-weight: 500; margin-bottom: 0.5rem;">Subjects are loading. Please ensure the server is running.</p>
+                <p style="color: #94a3b8; font-size: 0.9rem;">If this persists, return to dashboard and try again.</p>
+            </div>
+        `;
+        
+        const guidance = document.getElementById('focusGuidance');
+        if (guidance) guidance.classList.add('hidden');
+    }
+
     async function init() {
         try {
-            const profile = await fetchJson(`${API_BASE}/api/student/academic-profile`);
-            state.courseName = profile.course_name;
-            state.currentSemester = profile.current_semester;
+            // Defensive fetch for profile
+            try {
+                const profile = await fetchJson(`${API_BASE}/api/student/academic-profile`);
+                state.courseName = profile.course_name;
+                state.currentSemester = profile.current_semester;
+            } catch (e) {
+                // Non-blocking failure for profile
+            }
 
+            // Defensive fetch for subjects
             const data = await fetchJson(`${API_BASE}/api/student/subjects`);
             state.subjects = (data.subjects || []).map(s => ({
                 id: s.id,
@@ -252,11 +284,14 @@
                 modules_count: s.module_count || 0
             }));
 
-            renderSubjects();
+            if (state.subjects.length > 0) {
+                renderSubjects();
+            } else {
+                renderFallbackUI();
+            }
         } catch (err) {
-            console.error('Init failed:', err);
-            const strip = document.getElementById('subjectFocusStrip');
-            if (strip) strip.innerHTML = `<p style="color: #64748b; padding: 2rem;">Error: ${escapeHtml(err.message)}</p>`;
+            console.warn("Start Studying: subjects API unavailable");
+            renderFallbackUI();
         }
     }
 

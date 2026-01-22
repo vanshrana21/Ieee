@@ -17,10 +17,10 @@ class SubjectCategory(str, Enum):
     - PROCEDURAL: Court procedures (e.g., CPC, CrPC, Evidence)
     - ELECTIVE: Optional specialization subjects
     """
-    FOUNDATION = "foundation"
-    CORE = "core"
-    PROCEDURAL = "procedural"
-    ELECTIVE = "elective"
+    FOUNDATION = "FOUNDATION"
+    CORE = "CORE"
+    PROCEDURAL = "PROCEDURAL"
+    ELECTIVE = "ELECTIVE"
 
 
 class Subject(BaseModel):
