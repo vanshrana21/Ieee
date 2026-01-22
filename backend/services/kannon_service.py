@@ -15,24 +15,29 @@ KANOON_API_KEY = os.getenv("KANOON_API_KEY")
 
 def search_case_in_kannon(query_text: str) -> Optional[Dict]:
     """
-    Search for a case by text and return the first match result.
-    Uses fuzzy matching on names/parties.
+    Search for a case by text and return the best matching result.
+    Uses smart scoring based on title, year, and court match.
     """
     if not KANOON_API_KEY:
         logger.error("KANOON_API_KEY not set for search")
         return None
         
-    # Kannon search works best with the query parameter for free-text search.
-    # We use the token parameter for authentication as verified.
+    # Kannon API 'text' param is for free-text search (petitioners, respondents, snippets).
+    # 'query' param is for structured filters like court_id:SC.
+    # We use both for maximum precision.
     params = {
-        "query": query_text,
+        "text": query_text,
         "token": KANOON_API_KEY,
-        "limit": 5
+        "limit": 10  # Get more results to perform smart selection
     }
+    
+    # Try to extract court filter if present in query
+    if "supreme court" in query_text.lower() or " sc " in query_text.lower():
+        params["query"] = "court_id:SC"
     
     try:
         url = f"{KANOON_API_BASE}/search/cases"
-        logger.info(f"Searching Kannon for: {query_text}")
+        logger.info(f"Searching Kannon for: {query_text} (Params: {params})")
         response = requests.get(url, params=params, timeout=30)
         
         if response.status_code != 200:
@@ -42,13 +47,58 @@ def search_case_in_kannon(query_text: str) -> Optional[Dict]:
         data = response.json()
         results = data.get("data", [])
         
-        if results and len(results) > 0:
-            # We take the first result as the most relevant
-            result = results[0]
-            logger.info(f"Found case via search: {result.get('id')}")
-            return result
+        if not results:
+            logger.warning(f"No results found for query: {query_text}")
+            return None
+
+        # --- Smart Resolution Logic ---
+        # Instead of taking results[0], we score them against the original query
+        scored_results = []
+        q_tokens = set(query_text.lower().split())
+        
+        for res in results:
+            score = 0
+            res_id = res.get("id", "").lower()
+            res_title = (res.get("title") or "").lower()
+            res_court = (res.get("court_id") or "").lower()
+            res_year = (res.get("filed_at") or "")[:4]
             
-        return None
+            # 1. Title Match (Fuzzy)
+            if res_title:
+                t_tokens = set(res_title.split())
+                overlap = len(q_tokens.intersection(t_tokens))
+                score += (overlap / len(q_tokens)) * 50
+            
+            # 2. Year Match
+            if res_year and res_year in query_text:
+                score += 30
+                
+            # 3. Court Match
+            if res_court and res_court in query_text.lower():
+                score += 20
+            elif "supreme court" in query_text.lower() and res_court == "sc":
+                score += 20
+            
+            # 4. ID direct match (if user entered ID)
+            if res_id in query_text.lower():
+                score += 100
+
+            scored_results.append((score, res))
+        
+        # Sort by score descending
+        scored_results.sort(key=lambda x: x[0], reverse=True)
+        
+        best_score, best_result = scored_results[0]
+        
+        # If the best score is too low and we have a specific name, reject it
+        # This prevents the "Default PHHC" bug when no match is found
+        if best_score < 10 and len(q_tokens) > 2:
+            logger.warning(f"Best match score {best_score} too low for '{query_text}'. Rejecting results.")
+            return None
+
+        logger.info(f"Resolved case: {best_result.get('id')} with score {best_score}")
+        return best_result
+        
     except Exception as e:
         logger.error(f"Search failed in Kannon for '{query_text}': {str(e)}")
         return None

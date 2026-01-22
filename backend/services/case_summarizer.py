@@ -63,17 +63,29 @@ MODE: DOCTRINAL ANALYSIS (METADATA-ONLY)
 """
 
 def normalize_case_identifier(identifier: str) -> str:
-    """Normalizes case identifier for better resolution."""
+    """
+    Normalizes case identifier for better resolution.
+    Preserves year and basic court context while cleaning noise.
+    """
     if not identifier:
         return ""
+    
+    # 1. Lowercase and basic party cleanup
     normalized = identifier.lower()
-    normalized = re.sub(r'\bvs\.?\b', 'v', normalized)
-    normalized = re.sub(r'\bv\.\b', 'v', normalized)
-    normalized = re.sub(r'[\(\[\{]\d{4}[\)\]\}]', ' ', normalized)
-    normalized = re.sub(r'\b\d{4}\b', ' ', normalized)
-    normalized = re.sub(r'[\[\]\(\),]', ' ', normalized)
-    normalized = re.sub(r'[^a-z0-9\s\-]', '', normalized)
+    normalized = re.sub(r'\bvs\.?\b', ' v ', normalized)
+    normalized = re.sub(r'\bv\.\b', ' v ', normalized)
+    
+    # 2. Handle Year preservation (strip only non-essential brackets)
+    # Instead of removing years, we just clean up the formatting
+    normalized = re.sub(r'[\[\{\(\]]', ' ', normalized)
+    normalized = re.sub(r'[\}\)\]]', ' ', normalized)
+    
+    # 3. Clean special characters but keep hyphens (for IDs) and spaces
+    normalized = re.sub(r'[^a-z0-9\s\-]', ' ', normalized)
+    
+    # 4. Collapse whitespace
     normalized = " ".join(normalized.split())
+    
     return normalized
 
 async def summarize_case(canonical_input: Dict[str, Any], retry: bool = True) -> Optional[Dict[str, Any]]:
