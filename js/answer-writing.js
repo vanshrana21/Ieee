@@ -3,7 +3,9 @@
  * Long-form exam answer practice for Indian law students
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+if (!window.API_BASE_URL) {
+    window.API_BASE_URL = 'http://127.0.0.1:8000';
+}
 
 let state = {
     moduleId: null,
