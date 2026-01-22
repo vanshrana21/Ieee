@@ -164,7 +164,14 @@ function displayCaseOutput(data) {
 
     // Render AI Summary Sections (Right Panel - Assistive)
     const summarySections = document.querySelectorAll('.summary-section');
-    summarySections.forEach(s => s.classList.add('active')); // Expand all by default
+    summarySections.forEach(s => {
+        s.classList.add('active'); // Expand all by default
+        // Remove the bullet from the header for a cleaner look
+        const h4 = s.querySelector('h4');
+        if (h4) {
+            h4.textContent = h4.textContent.replace('• ', '').trim();
+        }
+    });
 
     const summaryContent = document.getElementById('summaryContent');
     
@@ -173,28 +180,57 @@ function displayCaseOutput(data) {
         // Clear previous custom summaries if any
         const existingFullSummary = document.getElementById('academicSummaryFull');
         if (existingFullSummary) existingFullSummary.remove();
+        const existingPartBLabel = document.getElementById('partBLabel');
+        if (existingPartBLabel) existingPartBLabel.remove();
 
         const academicSummaryDiv = document.createElement('div');
         academicSummaryDiv.id = 'academicSummaryFull';
-        academicSummaryDiv.className = 'summary-section active';
-        academicSummaryDiv.style.border = '2px solid #3b82f6';
-        academicSummaryDiv.style.backgroundColor = '#f0f9ff';
+        academicSummaryDiv.className = 'summary-section-academic';
+        academicSummaryDiv.style.border = '2px solid #2563eb';
+        academicSummaryDiv.style.backgroundColor = '#ffffff';
+        academicSummaryDiv.style.borderRadius = '12px';
+        academicSummaryDiv.style.marginBottom = '24px';
+        academicSummaryDiv.style.overflow = 'visible'; // Ensure no scroll lock
+        academicSummaryDiv.style.boxShadow = '0 4px 6px -1px rgb(0 0 0 / 0.1)';
+        academicSummaryDiv.style.maxHeight = 'none'; // Explicitly remove max-height
+        
         academicSummaryDiv.innerHTML = `
-            <div class="section-header" style="background: #3b82f6; color: white;">
-                <h4 style="color: white;">✅ PART A — AI-Generated Academic Summary</h4>
+            <div class="section-header-academic" style="background: #2563eb; color: white; padding: 20px; border-radius: 10px 10px 0 0;">
+                <h3 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.025em;">AI-Generated Academic Summary</h3>
             </div>
-            <div class="section-content" style="padding: 15px; line-height: 1.6;">
-                <p style="font-weight: bold; color: #1e3a8a; margin-bottom: 10px;">(Based on official Supreme Court judgment in Maneka Gandhi v. Union of India, 1978)</p>
-                ${formatLegalText(data.ai_summary_full)}
-            </div>
-            <div style="padding: 10px; border-top: 2px solid #3b82f6; margin-top: 20px;">
-                <h4 style="color: #1e3a8a; margin-top: 0;">✅ PART B — Exam-Ready Breakdown</h4>
+            <div class="section-content-academic" style="padding: 32px; line-height: 1.8; font-size: 17px; color: #0f172a; background: #f8fafc; border-radius: 0 0 10px 10px;">
+                <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                    <span style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Authoritative Reconstruct
+                    </span>
+                    <span style="margin-left: 12px; color: #64748b; font-size: 0.9rem; font-style: italic;">
+                        Source: Supreme Court of India Official Judgment
+                    </span>
+                </div>
+                <div style="font-family: 'Inter', sans-serif;">
+                    ${formatLegalText(data.ai_summary_full)}
+                </div>
             </div>
         `;
+        
+        // Label for Part B
+        const partBLabel = document.createElement('div');
+        partBLabel.id = 'partBLabel';
+        partBLabel.innerHTML = `
+            <div style="margin: 40px 0 24px 0; display: flex; align-items: center; gap: 12px;">
+                <div style="height: 2px; flex: 1; background: #e2e8f0;"></div>
+                <h3 style="color: #1e293b; font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Exam-Ready Breakdown</h3>
+                <div style="height: 2px; flex: 1; background: #e2e8f0;"></div>
+            </div>
+        `;
+        
+        summaryContent.insertBefore(partBLabel, summaryContent.firstChild);
         summaryContent.insertBefore(academicSummaryDiv, summaryContent.firstChild);
     } else {
         const existingFullSummary = document.getElementById('academicSummaryFull');
         if (existingFullSummary) existingFullSummary.remove();
+        const existingPartBLabel = document.getElementById('partBLabel');
+        if (existingPartBLabel) existingPartBLabel.remove();
     }
 
     if (ai_structured_summary) {
