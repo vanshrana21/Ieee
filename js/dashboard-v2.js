@@ -312,35 +312,29 @@
             });
         }
 
-        grid.innerHTML = subjects.slice(0, 6).map((subject, idx) => {
+        grid.innerHTML = subjects.slice(0, 8).map((subject, idx) => {
             const masteryInfo = masteryMap[subject.id];
             const progress = masteryInfo 
                 ? Math.round(masteryInfo.mastery_percent || 0)
                 : Math.round(subject.completion_percentage || 0);
-            const strengthLabel = masteryInfo?.strength_label || 'Weak';
             const color = colors[idx % colors.length];
-            const semester = subject.semester ? `Sem ${subject.semester}` : '';
-            const unitCount = subject.unit_count ?? subject.units?.length ?? 0;
-            const unitLabel = unitCount === 1 ? 'Unit' : 'Units';
 
             return `
                 <div class="subject-card" data-subject-id="${subject.id}">
                     <div class="subject-card-header">
                         <div class="subject-icon subject-icon-${color}">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                             </svg>
                         </div>
-                        <span class="subject-semester">${escapeHtml(semester)}</span>
                     </div>
-                    <h3 class="subject-name">${escapeHtml(subject.title)}</h3>
-                    <div class="subject-progress">
-                        <div class="subject-progress-fill" style="width: ${progress}%"></div>
-                    </div>
-                    <div class="subject-meta">
-                        <span>${progress}% mastery • ${unitCount} ${unitLabel}</span>
-                        <span class="strength-label strength-${strengthLabel.toLowerCase()}">${strengthLabel}</span>
+                    <div class="subject-card-body">
+                        <h3 class="subject-name">${escapeHtml(subject.title)}</h3>
+                        <p class="subject-subtitle">Semester 1</p>
+                        <div class="subject-progress">
+                            <div class="subject-progress-fill" style="width: ${progress}%"></div>
+                        </div>
                     </div>
                     <div class="subject-actions">
                         <button class="subject-btn subject-btn-primary" onclick="window.jurisDashboard.openSubject(${subject.id}, 'learn')">Learn</button>
