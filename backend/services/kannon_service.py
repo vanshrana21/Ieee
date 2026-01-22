@@ -10,12 +10,12 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-KANNON_API_BASE = "https://api.kanoon.dev/v1"
-KANNON_API_KEY = os.getenv("KANNON_API_KEY")
+KANOON_API_BASE = "https://api.kanoon.dev/v1"
+KANOON_API_KEY = os.getenv("KANOON_API_KEY")
 
 def fetch_case_from_kannon(case_identifier: str) -> Dict:
     """
-    Fetch raw case data from Kannon API.
+    Fetch raw case data from Kanoon (Kannon) API.
     
     Args:
         case_identifier: The identifier for the case (e.g., 'JKHC01-003375-2023')
@@ -23,9 +23,9 @@ def fetch_case_from_kannon(case_identifier: str) -> Dict:
     Returns:
         Raw Python dictionary containing the API response.
     """
-    if not KANNON_API_KEY:
-        logger.error("KANNON_API_KEY not set in environment")
-        raise ValueError("Kannon API key not configured")
+    if not KANOON_API_KEY:
+        logger.error("KANOON_API_KEY not set in environment")
+        raise ValueError("Kanoon API key not configured")
 
     # Extract court_id from case_identifier if possible
     # Kanoon.dev IDs often prefix the court ID (e.g., JKHC01-...)
@@ -36,14 +36,14 @@ def fetch_case_from_kannon(case_identifier: str) -> Dict:
         raise ValueError(f"Invalid case identifier format: {case_identifier}")
 
     headers = {
-        "Authorization": f"Bearer {KANNON_API_KEY}",
+        "Authorization": f"Bearer {KANOON_API_KEY}",
         "Content-Type": "application/json"
     }
 
-    url = f"{KANNON_API_BASE}/courts/{court_id}/cases/{case_identifier}"
+    url = f"{KANOON_API_BASE}/courts/{court_id}/cases/{case_identifier}"
     
     try:
-        logger.info(f"Fetching case from Kannon: {case_identifier} (Court: {court_id})")
+        logger.info(f"Fetching case from Kanoon: {case_identifier} (Court: {court_id})")
         
         response = requests.get(
             url,
