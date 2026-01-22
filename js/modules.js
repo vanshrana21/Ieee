@@ -45,17 +45,23 @@
             if (isBALLB) {
                 console.log('BA LLB detected in modules. Fetching units...');
                 response = await api.get(`/api/ba-llb/subjects/${state.subjectId}/modules`);
-                // Use units array if modules is not present, or fallback
+                // Priority: response.units, then response.modules, then fallback empty
                 const unitsArray = response.units || response.modules || [];
                 state.modules = unitsArray.map(m => ({
                     ...m,
                     is_unit: true,
-                    total_contents: 0 // BA LLB currently uses direct module content or placeholder
+                    total_contents: 0
                 }));
-                state.subjectName = response.subject.name;
+                state.subjectName = response.subject?.name || response.subject_name;
             } else {
                 response = await api.getSubjectModules(state.subjectId);
-                state.modules = response.modules;
+                // Priority: response.units (newly added), then response.modules, then fallback
+                const unitsArray = response.units || response.modules || [];
+                state.modules = unitsArray.map(m => ({
+                    ...m,
+                    is_unit: false,
+                    total_contents: m.total_contents || 0
+                }));
                 state.subjectName = response.subject_name;
             }
 

@@ -475,18 +475,22 @@
                 };
             } else {
                 console.log('Using generic student subjects API...');
-                subjectsData = await fetchJson(`${API_BASE}/api/student/subjects`);
-                console.log('Generic API Response:', subjectsData);
+                const genericData = await fetchJson(`${API_BASE}/api/student/subjects`);
+                console.log('Generic API Response:', genericData);
                 
-                subjectsData.subjects = (subjectsData.subjects || []).map(s => ({
-                    id: s.id,
-                    title: s.title,
-                    description: '',
-                    unit_count: 0,
-                    modules_count: 0,
-                    completion_percentage: 0,
-                    category: s.category || 'core'
-                }));
+                subjectsData = {
+                    subjects: (genericData.subjects || []).map(s => ({
+                        id: s.id,
+                        title: s.title,
+                        description: s.description || '',
+                        unit_count: s.unit_count || 0,
+                        modules_count: s.module_count || 0,
+                        completion_percentage: 0,
+                        category: s.category || 'core'
+                    })),
+                    course_name: genericData.course_name,
+                    current_semester: genericData.current_semester
+                };
             }
 
             state.subjects = subjectsData.subjects || [];
