@@ -233,10 +233,10 @@ function saveCase() {
     
     const saved = JSON.parse(localStorage.getItem('savedCases') || '[]');
     const newSave = {
-        id: currentCase.case.id || Date.now(),
-        name: currentCase.case.title,
-        court: currentCase.case.court,
-        year: currentCase.case.year,
+        id: currentCase.raw_case.id || Date.now(),
+        name: currentCase.raw_case.case_name,
+        court: currentCase.raw_case.court,
+        year: currentCase.raw_case.year,
         date: new Date().toISOString()
     };
     
@@ -293,13 +293,13 @@ function setLoadingState(isLoading) {
  * Add current case to notes - Phase 3.4 integration
  */
 function addToNotes() {
-    if (!currentCase || !currentCase.case) {
+    if (!currentCase || !currentCase.raw_case) {
         showToast('⚠️ No case loaded to add notes to');
         return;
     }
 
-    const caseId = currentCase.case.id;
-    const subjectId = currentCase.case.subject_id || '';
+    const caseId = currentCase.raw_case.id;
+    const subjectId = currentCase.raw_case.subject_id || '';
     
     const notesUrl = `./my-notes.html?action=new&case_id=${caseId}${subjectId ? `&subject_id=${subjectId}` : ''}`;
     window.location.href = notesUrl;
