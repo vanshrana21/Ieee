@@ -295,54 +295,84 @@
     }
 
     function renderSubjects(subjects, analyticsData = null) {
-        const grid = q('#subjectsGrid');
-        if (!grid) return;
+        const track = q('#focusStripTrack');
+        if (!track) return;
 
         if (!subjects || subjects.length === 0) {
             renderSubjectsEmpty();
             return;
         }
 
-        const colors = ['blue', 'green', 'orange', 'purple'];
-        
-        const masteryMap = {};
-        if (analyticsData?.data?.subjects_by_mastery) {
-            analyticsData.data.subjects_by_mastery.forEach(s => {
-                masteryMap[s.subject_id] = s;
-            });
-        }
+        const recommendations = [
+            "Recommended today",
+            "2 modules left for mid-sem",
+            "Last studied 3 days ago",
+            "High weightage in exams",
+            "Pick up where you left off",
+            "New material available"
+        ];
 
-        grid.innerHTML = subjects.slice(0, 8).map((subject, idx) => {
-            const masteryInfo = masteryMap[subject.id];
-            const progress = masteryInfo 
-                ? Math.round(masteryInfo.mastery_percent || 0)
-                : Math.round(subject.completion_percentage || 0);
-            const color = colors[idx % colors.length];
+        track.innerHTML = subjects.slice(0, 8).map((subject, idx) => {
+            const progress = Math.round(subject.completion_percentage || subject.progress || 0);
+            const recommendation = recommendations[idx % recommendations.length];
 
             return `
-                <div class="subject-card" data-subject-id="${subject.id}">
+                <div class="subject-card ${idx === 0 ? 'active-focus' : ''}" data-subject-id="${subject.id}">
                     <div class="subject-card-header">
-                        <div class="subject-icon subject-icon-${color}">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                            </svg>
+                        <div class="subject-info-main">
+                            <h3 class="subject-name">${escapeHtml(subject.title)}</h3>
+                            <p class="subject-subtitle">Semester 1</p>
                         </div>
                     </div>
-                    <div class="subject-card-body">
-                        <h3 class="subject-name">${escapeHtml(subject.title)}</h3>
-                        <p class="subject-subtitle">Semester 1</p>
-                        <div class="subject-progress">
-                            <div class="subject-progress-fill" style="width: ${progress}%"></div>
-                        </div>
+                    
+                    <div class="subject-progress-minimal">
+                        <div class="progress-fill-minimal" style="width: ${progress}%"></div>
                     </div>
-                    <div class="subject-actions">
-                        <button class="subject-btn subject-btn-primary" onclick="window.jurisDashboard.openSubject(${subject.id}, 'learn')">Learn</button>
-                        <button class="subject-btn subject-btn-secondary" onclick="window.jurisDashboard.openSubject(${subject.id}, 'practice')">Practice</button>
+
+                    <div class="contextual-reveal">
+                        <div class="contextual-hint">${recommendation}</div>
+                        <div class="subject-actions">
+                            <button class="subject-btn subject-btn-primary" onclick="window.jurisDashboard.openSubject(${subject.id}, 'learn')">Learn</button>
+                            <button class="subject-btn subject-btn-secondary" onclick="window.jurisDashboard.openSubject(${subject.id}, 'practice')">Practice</button>
+                        </div>
                     </div>
                 </div>
             `;
         }).join('');
+
+        setupFocusStrip();
+    }
+
+    function setupFocusStrip() {
+        const container = q('#focusStripContainer');
+        const cards = qa('.subject-card');
+        if (!container || cards.length === 0) return;
+
+        // Use Intersection Observer to detect the centered card
+        const observerOptions = {
+            root: container,
+            threshold: 0.8 // Card must be mostly visible to be "active"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    cards.forEach(c => c.classList.remove('active-focus'));
+                    entry.target.classList.add('active-focus');
+                }
+            });
+        }, observerOptions);
+
+        cards.forEach(card => observer.observe(card));
+
+        // Center first card initially
+        const firstCard = cards[0];
+        if (firstCard) {
+            const containerWidth = container.offsetWidth;
+            const cardWidth = firstCard.offsetWidth;
+            const scrollPos = firstCard.offsetLeft - (containerWidth / 2) + (cardWidth / 2);
+            container.scrollTo({ left: scrollPos, behavior: 'smooth' });
+        }
     }
 
     function updateResumeSection() {

@@ -272,12 +272,19 @@
                     <h2 class="section-title">Your Subjects</h2>
                     <a href="./start-studying.html" class="view-all-link">View All</a>
                 </div>
-                <div class="subjects-grid" id="subjectsGrid">
-                    <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-                        <div style="width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
-                        <p style="color: #64748b; font-size: 15px;">Loading subjects...</p>
-                        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+                
+                <div class="focus-strip-container" id="focusStripContainer">
+                    <div class="focus-strip-track" id="focusStripTrack">
+                        <!-- Populated by JS -->
+                        <div class="empty-state" style="text-align: center; padding: 3rem; width: 100%;">
+                            <div style="width: 40px; height: 40px; border: 3px solid #E2E8F0; border-top-color: #0066FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                            <p style="color: #64748b; font-size: 15px;">Curating your subjects...</p>
+                        </div>
                     </div>
+                </div>
+
+                <div class="subjects-grid" id="subjectsGrid" style="display: none;">
+                    <!-- Fallback/Old grid hidden -->
                 </div>
             </section>
 
