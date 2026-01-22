@@ -244,15 +244,22 @@ async def get_student_subjects(
             if is_ba_llb:
                 from backend.orm.unit import Unit
                 unit_stmt = (
-                    select(Unit)
+                    select(
+                        Unit.id,
+                        Unit.subject_id,
+                        Unit.title,
+                        Unit.description,
+                        Unit.sequence_order
+                    )
                     .where(Unit.subject_id == subject.id)
                     .order_by(Unit.sequence_order)
                 )
                 unit_result = await db.execute(unit_stmt)
-                units = unit_result.scalars().all()
+                units = unit_result.all()
                 unit_list = [
                     {
                         "id": u.id,
+                        "subject_id": u.subject_id,
                         "title": u.title,
                         "sequence_order": u.sequence_order,
                         "description": u.description
