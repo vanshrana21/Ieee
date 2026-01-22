@@ -5,7 +5,9 @@
  * Phase 2: Added enrollment functionality
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+if (!window.API_BASE_URL) {
+    window.API_BASE_URL = 'http://127.0.0.1:8000';
+}
 const TOKEN_KEY = 'access_token';
 const ROLE_KEY = 'user_role';
 const USER_NAME_KEY = 'legalai_user_name';
