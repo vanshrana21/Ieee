@@ -134,14 +134,16 @@
         const progress = Math.round(subject.completion_percentage || 0);
         const icon = getCategoryIcon(subject.category);
         const moduleCount = subject.modules_count || 0;
+        const isFoundation = subject.is_foundation || (subject.title && subject.title.toLowerCase().includes('universal human values'));
 
         return `
             <div class="subject-card" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
                 <div class="subject-icon">${icon}</div>
+                ${isFoundation ? '<div class="foundation-badge">Foundation Course</div>' : ''}
                 <h3>${escapeHtml(subject.title)}</h3>
                 <p>${escapeHtml(subject.description || 'Explore this subject')}</p>
                 <div class="card-footer">
-                    <span class="topic-count">${moduleCount} Module${moduleCount !== 1 ? 's' : ''}</span>
+                    <span class="topic-count">${moduleCount} Unit${moduleCount !== 1 ? 's' : ''}</span>
                     <span class="progress-badge">${progress}%</span>
                 </div>
                 ${subject.semester ? `<div class="semester-badge">Semester ${subject.semester}</div>` : ''}
@@ -153,10 +155,12 @@
     }
 
     function renderSubjects() {
+        console.log('Rendering subjects. Count:', state.subjects.length);
         const grid = document.querySelector('.subject-grid');
         if (!grid) return;
 
         if (state.subjects.length === 0) {
+            console.warn('No subjects found to render.');
             showEmptyState(state.courseName, state.currentSemester);
             return;
         }
@@ -177,6 +181,7 @@
         });
 
         grid.innerHTML = html;
+        console.log('Subjects rendered successfully.');
     }
 
     async function fetchContentAvailability(subjectId) {
@@ -429,35 +434,74 @@
         if (studyHub) studyHub.classList.add('hidden');
 
         try {
-            const subjectsData = await fetchJson(`${API_BASE}/api/student/subjects`);
+            // Step 1: Fetch Academic Profile
+            console.log('Fetching academic profile...');
+            const profile = await fetchJson(`${API_BASE}/api/student/academic-profile`);
+            console.log('Profile loaded:', profile);
             
-            state.subjects = (subjectsData.subjects || []).map(s => ({
-                id: s.id,
-                title: s.title,
-                description: '',
-                modules_count: 0,
-                completion_percentage: 0
-            }));
-            state.courseName = subjectsData.course_name || null;
-            state.currentSemester = subjectsData.current_semester || null;
+            state.courseName = profile.course_name || null;
+            state.currentSemester = profile.current_semester || null;
 
+            let subjectsData;
+            
+            // Step 2: Determine which API to use
+            const isBALLB = state.courseName && state.courseName.toUpperCase().includes('BA LLB');
+            
+            if (isBALLB && state.currentSemester) {
+                console.log(`BA LLB detected. Fetching subjects for Semester ${state.currentSemester} via BA LLB API...`);
+                const baLlbData = await fetchJson(`${API_BASE}/api/ba-llb/semesters/${state.currentSemester}/subjects`);
+                console.log('BA LLB subjects data:', baLlbData);
+                
+                subjectsData = {
+                    subjects: (baLlbData.subjects || []).map(s => ({
+                        id: s.id,
+                        title: s.name, // Map name to title
+                        description: s.description || '',
+                        modules_count: s.module_count || 0, // Map module_count to modules_count
+                        is_foundation: s.is_foundation || false,
+                        completion_percentage: 0,
+                        category: s.subject_type || 'core'
+                    })),
+                    course_name: state.courseName,
+                    current_semester: state.currentSemester
+                };
+            } else {
+                console.log('Using generic student subjects API...');
+                subjectsData = await fetchJson(`${API_BASE}/api/student/subjects`);
+                
+                subjectsData.subjects = (subjectsData.subjects || []).map(s => ({
+                    id: s.id,
+                    title: s.title,
+                    description: '',
+                    modules_count: 0,
+                    completion_percentage: 0,
+                    category: s.category || 'core'
+                }));
+            }
+
+            state.subjects = subjectsData.subjects || [];
             state.isLoading = false;
 
+            console.log(`Final subjects list:`, state.subjects);
             renderSubjects();
 
-            const availabilityPromises = state.subjects.map(async (subject) => {
-                try {
-                    const availability = await fetchJson(`${API_BASE}/api/student/subject/${subject.id}/availability`);
-                    subject.modules_count = availability.modules_count || 0;
-                    subject.has_modules = availability.has_modules || false;
-                } catch (err) {
-                    console.warn(`Failed to fetch availability for subject ${subject.id}:`, err);
-                }
-            });
+            // Step 3: Fetch additional availability info if needed (for generic subjects)
+            if (!isBALLB) {
+                const availabilityPromises = state.subjects.map(async (subject) => {
+                    try {
+                        const availability = await fetchJson(`${API_BASE}/api/student/subject/${subject.id}/availability`);
+                        subject.modules_count = availability.modules_count || 0;
+                        subject.has_modules = availability.has_modules || false;
+                    } catch (err) {
+                        console.warn(`Failed to fetch availability for subject ${subject.id}:`, err);
+                    }
+                });
 
-            await Promise.all(availabilityPromises);
-            renderSubjects();
+                await Promise.all(availabilityPromises);
+                renderSubjects();
+            }
 
+            // Step 4: Handle deep-linking via URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const subjectId = urlParams.get('subject');
             if (subjectId) {
@@ -473,10 +517,6 @@
                         if (window.JurisErrorHandler) {
                             window.JurisErrorHandler.showToast('Subject not available in your current semester.', 'warning');
                         }
-                    }
-                } else {
-                    if (window.JurisErrorHandler) {
-                        window.JurisErrorHandler.showToast('Invalid subject ID. Please select a subject.', 'warning');
                     }
                 }
             }
