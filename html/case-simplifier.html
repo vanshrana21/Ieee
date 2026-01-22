@@ -126,57 +126,73 @@
                 <!-- Right Panel: Exam-Ready Breakdown -->
                 <div class="summary-panel">
                     <div class="panel-header">
-                        <h3>🎯 Exam-Ready Breakdown</h3>
+                        <h3>🎯 Case Analysis & Breakdown</h3>
                     </div>
                     
-                    <div id="summaryContent" class="summary-scrollable">
-                        <!-- Summary Sections -->
-                        <div class="summary-section" data-section="facts">
-                            <div class="section-header" onclick="toggleSummarySection(this)">
-                                <h4>• Facts</h4>
-                                <span class="toggle-icon">▼</span>
-                            </div>
-                            <div id="factsText" class="section-content"></div>
-                        </div>
+                    <div class="summary-scrollable-container">
+                        <!-- PART A: AI-Generated Academic Summary (Injectable) -->
+                        <div id="academicSummaryContainer" class="academic-summary-container"></div>
 
-                        <div class="summary-section" data-section="issues">
-                            <div class="section-header" onclick="toggleSummarySection(this)">
-                                <h4>• Issues</h4>
-                                <span class="toggle-icon">▼</span>
+                        <!-- PART B: Exam-Ready Breakdown -->
+                        <div id="examBreakdownContainer" class="exam-breakdown-container">
+                            <div id="partBLabel" class="part-b-label hidden">
+                                <div style="margin: 20px 0; display: flex; align-items: center; gap: 12px;">
+                                    <div style="height: 2px; flex: 1; background: #e2e8f0;"></div>
+                                    <h3 style="color: #1e293b; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Exam-Ready Breakdown</h3>
+                                    <div style="height: 2px; flex: 1; background: #e2e8f0;"></div>
+                                </div>
                             </div>
-                            <div id="issuesText" class="section-content"></div>
-                        </div>
 
-                        <div class="summary-section" data-section="arguments">
-                            <div class="section-header" onclick="toggleSummarySection(this)">
-                                <h4>• Arguments</h4>
-                                <span class="toggle-icon">▼</span>
-                            </div>
-                            <div id="argumentsText" class="section-content"></div>
-                        </div>
+                            <div id="summaryContent" class="summary-content">
+                                <!-- Summary Sections -->
+                                <div class="summary-section" data-section="facts">
+                                    <div class="section-header" onclick="toggleSummarySection(this)">
+                                        <h4>• Facts</h4>
+                                        <span class="toggle-icon">▼</span>
+                                    </div>
+                                    <div id="factsText" class="section-content"></div>
+                                </div>
 
-                        <div class="summary-section" data-section="judgment">
-                            <div class="section-header" onclick="toggleSummarySection(this)">
-                                <h4>• Judgment</h4>
-                                <span class="toggle-icon">▼</span>
-                            </div>
-                            <div id="judgmentText" class="section-content"></div>
-                        </div>
+                                <div class="summary-section" data-section="issues">
+                                    <div class="section-header" onclick="toggleSummarySection(this)">
+                                        <h4>• Issues</h4>
+                                        <span class="toggle-icon">▼</span>
+                                    </div>
+                                    <div id="issuesText" class="section-content"></div>
+                                </div>
 
-                        <div class="summary-section highlight" data-section="ratio">
-                            <div class="section-header" onclick="toggleSummarySection(this)">
-                                <h4>• Ratio Decidendi</h4>
-                                <span class="toggle-icon">▼</span>
-                            </div>
-                            <div id="ratioText" class="section-content"></div>
-                        </div>
+                                <div class="summary-section" data-section="arguments">
+                                    <div class="section-header" onclick="toggleSummarySection(this)">
+                                        <h4>• Arguments</h4>
+                                        <span class="toggle-icon">▼</span>
+                                    </div>
+                                    <div id="argumentsText" class="section-content"></div>
+                                </div>
 
-                        <div class="summary-section exam" data-section="significance">
-                            <div class="section-header" onclick="toggleSummarySection(this)">
-                                <h4>• Why This Case Matters for Exams</h4>
-                                <span class="toggle-icon">▼</span>
+                                <div class="summary-section" data-section="judgment">
+                                    <div class="section-header" onclick="toggleSummarySection(this)">
+                                        <h4>• Judgment</h4>
+                                        <span class="toggle-icon">▼</span>
+                                    </div>
+                                    <div id="judgmentText" class="section-content"></div>
+                                </div>
+
+                                <div class="summary-section highlight" data-section="ratio">
+                                    <div class="section-header" onclick="toggleSummarySection(this)">
+                                        <h4>• Ratio Decidendi</h4>
+                                        <span class="toggle-icon">▼</span>
+                                    </div>
+                                    <div id="ratioText" class="section-content"></div>
+                                </div>
+
+                                <div class="summary-section exam" data-section="significance">
+                                    <div class="section-header" onclick="toggleSummarySection(this)">
+                                        <h4>• Why This Case Matters for Exams</h4>
+                                        <span class="toggle-icon">▼</span>
+                                    </div>
+                                    <div id="significanceText" class="section-content"></div>
+                                </div>
                             </div>
-                            <div id="significanceText" class="section-content"></div>
                         </div>
                     </div>
                 </div>

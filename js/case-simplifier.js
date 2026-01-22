@@ -129,108 +129,85 @@ function displayCaseOutput(data) {
 
     // Render Full Judgment (Left Panel - Authoritative)
     const judgmentContainer = document.getElementById('fullJudgmentText');
+    const panelHeader = document.querySelector('.judgment-panel .panel-header');
+    
+    // Add Fullscreen toggle button if not exists
+    if (!document.getElementById('fullscreenPdfBtn')) {
+        const headerActions = document.createElement('div');
+        headerActions.className = 'panel-header-actions';
+        headerActions.innerHTML = `
+            <button id="fullscreenPdfBtn" class="fullscreen-btn" onclick="toggleFullscreenPdf()">
+                <span>⛶</span> Fullscreen PDF
+            </button>
+        `;
+        panelHeader.appendChild(headerActions);
+    }
     
     // Check for Local PDF Override (Landmark Case)
     if (raw_case.pdf_url) {
+        judgmentContainer.style.padding = '0'; // PDF needs no padding
         judgmentContainer.innerHTML = `
-            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                <h4 style="margin: 0; color: #1e293b;">Full Judgment — Supreme Court of India (Official PDF)</h4>
-                <span class="meta-badge" style="background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;">✓ Authoritative Local Source</span>
-            </div>
-            <div style="height: 800px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f8fafc;">
+            <div style="height: 100%; border: none; background: #f8fafc;">
                 <iframe 
                     src="${raw_case.pdf_url}#toolbar=1&view=FitH" 
                     width="100%" 
                     height="100%" 
-                    style="border: none;"
+                    style="border: none; display: block;"
                 ></iframe>
             </div>
-            <div style="margin-top: 10px; font-size: 0.85rem; color: #64748b; font-style: italic;">
-                Source: Supreme Court of India | judis.nic.in (Public Domain)
-            </div>
         `;
+        // Update header for PDF
+        const h3 = panelHeader.querySelector('h3');
+        if (h3) h3.textContent = '⚖️ Official Supreme Court PDF';
     } else if (raw_case.judgment && raw_case.judgment.trim()) {
+        judgmentContainer.style.padding = '2.5rem';
         judgmentContainer.innerHTML = `<h4>Full Judgment</h4><div>${formatLegalText(raw_case.judgment)}</div>`;
+        const h3 = panelHeader.querySelector('h3');
+        if (h3) h3.textContent = '⚖️ Full Judgment';
     } else {
+        judgmentContainer.style.padding = '2.5rem';
         judgmentContainer.innerHTML = `
             <div style="background: rgba(234, 179, 8, 0.1); border-left: 4px solid #eab308; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
                 <p style="color: #854d0e; margin: 0; font-weight: 500;">
-                    ⚠️ Full judgment text not available from authoritative source (Kannon). Metadata-only case.
+                    ⚠️ Full judgment text not available from authoritative source. Metadata-only case.
                 </p>
             </div>
             <p class="text-muted">Authoritative text unavailable for this specific citation.</p>
         `;
     }
 
-    // Render AI Summary Sections (Right Panel - Assistive)
-    const summarySections = document.querySelectorAll('.summary-section');
-    summarySections.forEach(s => {
-        s.classList.add('active'); // Expand all by default
-        // Remove the bullet from the header for a cleaner look
-        const h4 = s.querySelector('h4');
-        if (h4) {
-            h4.textContent = h4.textContent.replace('• ', '').trim();
-        }
-    });
-
-    const summaryContent = document.getElementById('summaryContent');
+    // Render AI Summary Sections (Right Panel)
+    const academicContainer = document.getElementById('academicSummaryContainer');
+    const partBLabel = document.getElementById('partBLabel');
     
     // Check for Deterministic Academic Summary (Part A)
     if (data.ai_summary_full) {
-        // Clear previous custom summaries if any
-        const existingFullSummary = document.getElementById('academicSummaryFull');
-        if (existingFullSummary) existingFullSummary.remove();
-        const existingPartBLabel = document.getElementById('partBLabel');
-        if (existingPartBLabel) existingPartBLabel.remove();
-
-        const academicSummaryDiv = document.createElement('div');
-        academicSummaryDiv.id = 'academicSummaryFull';
-        academicSummaryDiv.className = 'summary-section-academic';
-        academicSummaryDiv.style.border = '2px solid #2563eb';
-        academicSummaryDiv.style.backgroundColor = '#ffffff';
-        academicSummaryDiv.style.borderRadius = '12px';
-        academicSummaryDiv.style.marginBottom = '24px';
-        academicSummaryDiv.style.overflow = 'visible'; // Ensure no scroll lock
-        academicSummaryDiv.style.boxShadow = '0 4px 6px -1px rgb(0 0 0 / 0.1)';
-        academicSummaryDiv.style.maxHeight = 'none'; // Explicitly remove max-height
-        
-        academicSummaryDiv.innerHTML = `
-            <div class="section-header-academic" style="background: #2563eb; color: white; padding: 20px; border-radius: 10px 10px 0 0;">
-                <h3 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.025em;">AI-Generated Academic Summary</h3>
-            </div>
-            <div class="section-content-academic" style="padding: 32px; line-height: 1.8; font-size: 17px; color: #0f172a; background: #f8fafc; border-radius: 0 0 10px 10px;">
-                <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
-                    <span style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                        Authoritative Reconstruct
-                    </span>
-                    <span style="margin-left: 12px; color: #64748b; font-size: 0.9rem; font-style: italic;">
-                        Source: Supreme Court of India Official Judgment
-                    </span>
+        academicContainer.innerHTML = `
+            <div class="summary-section-academic" style="border: 2px solid #2563eb; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                <div class="section-header-academic" style="background: #2563eb; color: white; padding: 16px 20px;">
+                    <h3 style="color: white; margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.025em;">AI-Generated Academic Summary</h3>
                 </div>
-                <div style="font-family: 'Inter', sans-serif;">
-                    ${formatLegalText(data.ai_summary_full)}
+                <div class="academic-summary-scroll">
+                    <div style="padding: 24px; line-height: 1.8; font-size: 16px; color: #0f172a;">
+                        <div style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+                            <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                                Authoritative Reconstruct
+                            </span>
+                            <span style="color: #64748b; font-size: 0.85rem; font-style: italic;">
+                                Source: Supreme Court of India Official Judgment
+                            </span>
+                        </div>
+                        <div style="font-family: 'Inter', sans-serif;">
+                            ${formatLegalText(data.ai_summary_full)}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
-        
-        // Label for Part B
-        const partBLabel = document.createElement('div');
-        partBLabel.id = 'partBLabel';
-        partBLabel.innerHTML = `
-            <div style="margin: 40px 0 24px 0; display: flex; align-items: center; gap: 12px;">
-                <div style="height: 2px; flex: 1; background: #e2e8f0;"></div>
-                <h3 style="color: #1e293b; font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Exam-Ready Breakdown</h3>
-                <div style="height: 2px; flex: 1; background: #e2e8f0;"></div>
-            </div>
-        `;
-        
-        summaryContent.insertBefore(partBLabel, summaryContent.firstChild);
-        summaryContent.insertBefore(academicSummaryDiv, summaryContent.firstChild);
+        partBLabel.classList.remove('hidden');
     } else {
-        const existingFullSummary = document.getElementById('academicSummaryFull');
-        if (existingFullSummary) existingFullSummary.remove();
-        const existingPartBLabel = document.getElementById('partBLabel');
-        if (existingPartBLabel) existingPartBLabel.remove();
+        academicContainer.innerHTML = '';
+        partBLabel.classList.add('hidden');
     }
 
     if (ai_structured_summary) {
@@ -240,19 +217,51 @@ function displayCaseOutput(data) {
         renderSummarySection('judgmentText', ai_structured_summary.judgment);
         renderSummarySection('ratioText', ai_structured_summary.ratio_decidendi);
         renderSummarySection('significanceText', ai_structured_summary.exam_importance || "Focus on the ratio decidendi for exam preparation.");
+        
+        // Ensure all sections are expanded for the demo
+        document.querySelectorAll('.summary-section').forEach(s => s.classList.add('active'));
     } else {
-        // Graceful degradation for AI failure
         const summaryFields = ['factsText', 'issuesText', 'argumentsText', 'judgmentText', 'ratioText', 'significanceText'];
         summaryFields.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = '<p class="text-muted">AI summary unavailable due to missing source text.</p>';
+            if (el) el.innerHTML = '<p class="text-muted">AI summary unavailable.</p>';
         });
-        showToast('ℹ️ AI Summary unavailable');
     }
 
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll to top of output
+    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
 }
+
+/**
+ * Fullscreen PDF Toggle
+ */
+function toggleFullscreenPdf() {
+    const panel = document.querySelector('.judgment-panel');
+    const btn = document.getElementById('fullscreenPdfBtn');
+    
+    if (!document.fullscreenElement) {
+        panel.classList.add('fullscreen');
+        btn.innerHTML = '<span>✕</span> Close Fullscreen';
+        // Optional: Use browser Fullscreen API if available
+        if (panel.requestFullscreen) {
+            panel.requestFullscreen().catch(err => console.log(err));
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+}
+
+// Handle browser fullscreen change
+document.addEventListener('fullscreenchange', () => {
+    const panel = document.querySelector('.judgment-panel');
+    const btn = document.getElementById('fullscreenPdfBtn');
+    if (!document.fullscreenElement) {
+        panel.classList.remove('fullscreen');
+        btn.innerHTML = '<span>⛶</span> Fullscreen PDF';
+    }
+});
 
 /**
  * Helper to render summary sections with fallback
