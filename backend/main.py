@@ -30,6 +30,7 @@ from backend.routes import adaptive
 from backend.routes import memory
 from backend.routes import student
 from backend.routes import ba_llb
+from backend.routes import test_kanoon
 
 
 # ============================================
@@ -272,6 +273,7 @@ app.include_router(adaptive.router)
 app.include_router(memory.router)
 app.include_router(student.router, prefix="/api")
 app.include_router(ba_llb.router, prefix="/api")
+app.include_router(test_kanoon.router)
 
 
 if __name__ == "__main__":
