@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    const API_BASE = window.__API_BASE__ || 'http://127.0.0.1:8000';
+    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `${window.location.protocol}//${window.location.hostname}:8000` : '');
 
     const state = {
         subjects: [],
@@ -133,8 +133,8 @@
     function createSubjectCard(subject) {
         const progress = Math.round(subject.completion_percentage || 0);
         const icon = getCategoryIcon(subject.category);
-        const moduleCount = subject.modules_count || 0;
-        const isFoundation = subject.is_foundation || (subject.title && subject.title.toLowerCase().includes('universal human values'));
+        const moduleCount = subject.unit_count || subject.modules_count || 0;
+        const isFoundation = subject.is_foundation === true || (subject.title && subject.title.toLowerCase().includes('universal human values'));
 
         return `
             <div class="subject-card" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
@@ -445,34 +445,44 @@
             let subjectsData;
             
             // Step 2: Determine which API to use
-            const isBALLB = state.courseName && state.courseName.toUpperCase().includes('BA LLB');
+            const isBALLB = state.courseName && (
+                state.courseName.toUpperCase().includes('BA LLB') || 
+                state.courseName.toUpperCase().includes('BA.LLB') ||
+                state.courseName.toUpperCase().includes('BACHELOR OF ARTS')
+            );
             
             if (isBALLB && state.currentSemester) {
-                console.log(`BA LLB detected. Fetching subjects for Semester ${state.currentSemester} via BA LLB API...`);
+                console.log(`BA LLB detected (${state.courseName}). Fetching subjects for Semester ${state.currentSemester} via BA LLB API...`);
                 const baLlbData = await fetchJson(`${API_BASE}/api/ba-llb/semesters/${state.currentSemester}/subjects`);
-                console.log('BA LLB subjects data:', baLlbData);
+                console.log('BA LLB API Response:', baLlbData);
                 
                 subjectsData = {
-                    subjects: (baLlbData.subjects || []).map(s => ({
-                        id: s.id,
-                        title: s.name, // Map name to title
-                        description: s.description || '',
-                        modules_count: s.module_count || 0, // Map module_count to modules_count
-                        is_foundation: s.is_foundation || false,
-                        completion_percentage: 0,
-                        category: s.subject_type || 'core'
-                    })),
+                    subjects: (baLlbData.subjects || []).map(s => {
+                        console.log(`Mapping subject: ${s.name}, module_count: ${s.module_count}, is_foundation: ${s.is_foundation}`);
+                        return {
+                            id: s.id,
+                            title: s.name, 
+                            description: s.description || '',
+                            unit_count: s.module_count || 0,
+                            modules_count: s.module_count || 0,
+                            is_foundation: s.is_foundation || false,
+                            completion_percentage: 0,
+                            category: s.subject_type || 'core'
+                        };
+                    }),
                     course_name: state.courseName,
                     current_semester: state.currentSemester
                 };
             } else {
                 console.log('Using generic student subjects API...');
                 subjectsData = await fetchJson(`${API_BASE}/api/student/subjects`);
+                console.log('Generic API Response:', subjectsData);
                 
                 subjectsData.subjects = (subjectsData.subjects || []).map(s => ({
                     id: s.id,
                     title: s.title,
                     description: '',
+                    unit_count: 0,
                     modules_count: 0,
                     completion_percentage: 0,
                     category: s.category || 'core'
