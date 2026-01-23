@@ -754,37 +754,150 @@
         });
     }
 
-    function setupContinueLearning() {
-        const btn = q('#continueLearningBtn');
+    const studyFocusState = {
+        targetSubject: null,
+        targetMode: 'learn',
+        targetUrl: null
+    };
+
+    function determineNextAction(subject) {
+        const progress = subject.completion_percentage || subject.progress || 0;
+        
+        if (progress === 0) {
+            return {
+                action: 'Learn',
+                guidance: 'Start with the fundamentals and build a solid foundation.'
+            };
+        } else if (progress < 30) {
+            return {
+                action: 'Learn',
+                guidance: 'Continue building your understanding of core concepts.'
+            };
+        } else if (progress < 60) {
+            return {
+                action: 'Practice',
+                guidance: 'Test your knowledge with practice questions.'
+            };
+        } else if (progress < 85) {
+            return {
+                action: 'Practice',
+                guidance: 'Strengthen weak areas through focused practice.'
+            };
+        } else {
+            return {
+                action: 'Revise',
+                guidance: 'Review and consolidate what you have learned.'
+            };
+        }
+    }
+
+    function openStudyFocus(subject = null) {
+        const overlay = q('#studyFocusOverlay');
+        if (!overlay) return;
+
+        let targetSubject = subject;
+        
+        if (!targetSubject && state.subjects?.length > 0) {
+            const inProgress = state.subjects.find(s => 
+                (s.completion_percentage || s.progress || 0) > 0 && 
+                (s.completion_percentage || s.progress || 0) < 100
+            );
+            targetSubject = inProgress || state.subjects[0];
+        }
+
+        if (!targetSubject) {
+            showToast('No subjects available', 'error');
+            return;
+        }
+
+        studyFocusState.targetSubject = targetSubject;
+
+        const { action, guidance } = determineNextAction(targetSubject);
+        const semester = targetSubject.semester || state.currentSemester || 1;
+
+        q('#studyFocusSubject').textContent = targetSubject.title || 'Your Subject';
+        q('#studyFocusSemester').textContent = `Semester ${semester}`;
+        q('#studyFocusAction').textContent = action;
+        q('#studyFocusGuidance').textContent = guidance;
+
+        if (action === 'Learn') {
+            studyFocusState.targetMode = 'learn';
+            studyFocusState.targetUrl = `modules.html?subject_id=${targetSubject.id}`;
+        } else if (action === 'Practice') {
+            studyFocusState.targetMode = 'practice';
+            studyFocusState.targetUrl = `practice-content.html?subject=${targetSubject.id}`;
+        } else {
+            studyFocusState.targetMode = 'revise';
+            studyFocusState.targetUrl = `modules.html?subject_id=${targetSubject.id}&view=revision`;
+        }
+
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeStudyFocus() {
+        const overlay = q('#studyFocusOverlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function proceedStudyFocus() {
+        if (studyFocusState.targetUrl) {
+            window.location.href = studyFocusState.targetUrl;
+        }
+    }
+
+    function setupStudyFocus() {
+        const overlay = q('#studyFocusOverlay');
+        const backdrop = q('#studyFocusBackdrop');
+        const closeBtn = q('#studyFocusClose');
+        const ctaBtn = q('#studyFocusCta');
+        const continueLearningBtn = q('#continueLearningBtn');
         const resumeBtn = q('#resumeBtn');
 
-        const navigate = () => {
-            if (state.lastActivity?.subject_id) {
-                window.location.href = `start-studying.html?subject=${state.lastActivity.subject_id}`;
-            } else if (state.lastActivity?.id) {
-                window.location.href = `start-studying.html?subject=${state.lastActivity.id}`;
-            } else if (state.subjects?.length > 0) {
-                const subjectWithContent = state.subjects.find(s => (s.modules?.length > 0) || (s.completion_percentage > 0));
-                if (subjectWithContent) {
-                    window.location.href = `start-studying.html?subject=${subjectWithContent.id}`;
-                } else {
-                    window.location.href = 'start-studying.html';
-                }
-            } else {
-                window.location.href = 'start-studying.html';
-            }
-        };
+        backdrop?.addEventListener('click', closeStudyFocus);
+        closeBtn?.addEventListener('click', closeStudyFocus);
+        ctaBtn?.addEventListener('click', proceedStudyFocus);
 
-        btn?.addEventListener('click', navigate);
-        resumeBtn?.addEventListener('click', navigate);
+        if (continueLearningBtn) {
+            continueLearningBtn.onclick = (e) => {
+                e.preventDefault();
+                openStudyFocus();
+            };
+        }
+
+        if (resumeBtn) {
+            resumeBtn.onclick = (e) => {
+                e.preventDefault();
+                if (state.lastActivity?.subject_id) {
+                    const subject = state.subjects?.find(s => s.id === state.lastActivity.subject_id);
+                    openStudyFocus(subject);
+                } else {
+                    openStudyFocus();
+                }
+            };
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay?.classList.contains('active')) {
+                closeStudyFocus();
+            }
+        });
     }
 
     window.jurisDashboard = {
         openSubject(id, mode = 'learn') {
-            const url = mode === 'practice' 
-                ? `practice-content.html?subject=${id}` 
-                : `start-studying.html?subject=${id}`;
-            window.location.href = url;
+            const subject = state.subjects?.find(s => s.id === id);
+            if (subject) {
+                openStudyFocus(subject);
+            } else {
+                const url = mode === 'practice' 
+                    ? `practice-content.html?subject=${id}` 
+                    : `modules.html?subject_id=${id}`;
+                window.location.href = url;
+            }
         },
 
         openActivity(type, id) {
@@ -793,28 +906,31 @@
                     case: `case-detail.html?id=${id}`,
                     note: `my-notes.html?id=${id}`,
                     practice: `practice-content.html?id=${id}`,
-                    learn: `start-studying.html?subject=${id}`
+                    learn: `learn-content.html?id=${id}`
                 };
-                window.location.href = routes[type] || 'start-studying.html';
+                window.location.href = routes[type] || 'modules.html';
             } else {
                 const routes = {
                     case: 'case-simplifier.html',
                     note: 'my-notes.html',
                     practice: 'practice-content.html'
                 };
-                window.location.href = routes[type] || 'start-studying.html';
+                window.location.href = routes[type] || 'modules.html';
             }
         },
 
         openSearchResult(type, id) {
             const routes = {
-                subject: `start-studying.html?subject=${id}`,
+                subject: `modules.html?subject_id=${id}`,
                 learn: `learn-content.html?id=${id}`,
                 case: `case-detail.html?id=${id}`,
                 practice: `practice-content.html?id=${id}`
             };
-            window.location.href = routes[type] || `start-studying.html`;
-        }
+            window.location.href = routes[type] || `modules.html`;
+        },
+
+        openStudyFocus,
+        closeStudyFocus
     };
 
     async function init() {
@@ -828,7 +944,7 @@
         setupSearch();
         setupAIModal();
         setupLogout();
-        setupContinueLearning();
+        setupStudyFocus();
 
         showLoadingState('subjects');
         showLoadingState('stats');
