@@ -13,119 +13,61 @@
     <nav class="navbar">
         <div class="navbar-content">
             <div class="logo">Juris AI</div>
-            <div class="nav-center">
-                <span class="page-title">Your Study Dashboard</span>
-            </div>
             <div class="nav-right">
-                <div class="search-bar">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    <input type="text" id="subjectSearch" placeholder="Search subjects...">
-                </div>
                 <button class="back-btn" onclick="goBackToDashboard()">Back to Dashboard</button>
             </div>
         </div>
     </nav>
 
+    <div class="metrics-bg">
+        <div class="metric-float" style="--x: 8%; --y: 15%;">
+            <span class="metric-float-value" id="totalSubjects">0</span>
+            <span class="metric-float-label">Subjects</span>
+        </div>
+        <div class="metric-float" style="--x: 85%; --y: 12%;">
+            <span class="metric-float-value" id="hoursStudied">0h</span>
+            <span class="metric-float-label">Hours</span>
+        </div>
+        <div class="metric-float" style="--x: 6%; --y: 75%;">
+            <span class="metric-float-value" id="practiceAccuracy">0%</span>
+            <span class="metric-float-label">Accuracy</span>
+        </div>
+        <div class="metric-float" style="--x: 88%; --y: 78%;">
+            <span class="metric-float-value" id="studyStreak">0</span>
+            <span class="metric-float-label">Streak</span>
+        </div>
+        <div class="metric-float goal-float" style="--x: 92%; --y: 45%;">
+            <span class="metric-float-value" id="dailyGoalProgress">0/3</span>
+            <span class="metric-float-label">Today</span>
+        </div>
+    </div>
+
     <div class="container">
         <div id="subjectSelection" class="subject-selection">
-            <div class="dashboard-layout">
-                <div class="main-column">
-                    <div class="metrics-row">
-                        <div class="metric-orb" data-progress="100">
-                            <svg class="orb-ring" viewBox="0 0 100 100">
-                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
-                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="0"/>
-                            </svg>
-                            <div class="orb-content">
-                                <span class="orb-value" id="totalSubjects">0</span>
-                                <span class="orb-label">Subjects</span>
+            <div class="focus-viewport">
+                <div class="focus-card-wrapper" id="focusCardWrapper">
+                    <div class="focus-card" id="focusCard">
+                        <div class="focus-card-inner">
+                            <h2 class="focus-subject-name" id="focusSubjectName">Loading...</h2>
+                            <p class="focus-semester" id="focusSemester">Semester 1</p>
+                            <p class="focus-description" id="focusDescription">Preparing your study materials...</p>
+                            <div class="focus-progress">
+                                <div class="focus-progress-bar">
+                                    <div class="focus-progress-fill" id="focusProgressFill" style="width: 0%"></div>
+                                </div>
+                                <span class="focus-progress-text" id="focusProgressText">0% complete</span>
                             </div>
+                            <button class="focus-cta" id="focusCta" onclick="window.studyApp.startFocusedSubject()">
+                                Start Studying
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </button>
                         </div>
-                        <div class="metric-orb" data-progress="45">
-                            <svg class="orb-ring" viewBox="0 0 100 100">
-                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
-                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="159"/>
-                            </svg>
-                            <div class="orb-content">
-                                <span class="orb-value" id="hoursStudied">0h</span>
-                                <span class="orb-label">Hours</span>
-                            </div>
-                        </div>
-                        <div class="metric-orb" data-progress="72">
-                            <svg class="orb-ring" viewBox="0 0 100 100">
-                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
-                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="81"/>
-                            </svg>
-                            <div class="orb-content">
-                                <span class="orb-value" id="practiceAccuracy">0%</span>
-                                <span class="orb-label">Accuracy</span>
-                            </div>
-                        </div>
-                        <div class="metric-orb" data-progress="60">
-                            <svg class="orb-ring" viewBox="0 0 100 100">
-                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
-                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="116"/>
-                            </svg>
-                            <div class="orb-content">
-                                <span class="orb-value" id="studyStreak">0</span>
-                                <span class="orb-label">Streak</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="progress-section">
-                        <div class="progress-row">
-                            <span class="progress-label">Overall Progress</span>
-                            <span class="progress-value" id="overallProgressPct">0%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="overallProgressFill" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <div class="focus-stack-container">
-                        <div class="focus-stack-header">
-                            <h3>Your Subjects</h3>
-                            <div class="filter-group">
-                                <select id="progressFilter">
-                                    <option value="all">All</option>
-                                    <option value="not-started">Not Started</option>
-                                    <option value="in-progress">In Progress</option>
-                                    <option value="completed">Completed</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="focus-stack" id="focusStack"></div>
                     </div>
                 </div>
-
-                <aside class="side-column">
-                    <div class="goal-orb-card">
-                        <div class="goal-orb" data-progress="0">
-                            <svg class="goal-ring" viewBox="0 0 120 120">
-                                <circle class="ring-bg" cx="60" cy="60" r="54"/>
-                                <circle class="ring-fill" cx="60" cy="60" r="54" stroke-dasharray="339" stroke-dashoffset="339" id="goalRingFill"/>
-                            </svg>
-                            <div class="goal-orb-content">
-                                <span class="goal-orb-value" id="dailyGoalProgress">0 / 3</span>
-                                <span class="goal-orb-label">Today's Goal</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="side-card">
-                        <h4>Recommended</h4>
-                        <ul class="rec-list" id="recommendationsList">
-                            <li>Review Contract Law</li>
-                            <li>Practice Torts</li>
-                        </ul>
-                    </div>
-
-                    <div class="side-card">
-                        <h4>Progress</h4>
-                        <p class="level-text">Level 3 - 450 / 600 XP</p>
-                    </div>
-                </aside>
+                <div class="scroll-hint" id="scrollHint">
+                    <span>Scroll to change subject</span>
+                    <div class="scroll-dots" id="scrollDots"></div>
+                </div>
             </div>
         </div>
 
