@@ -112,7 +112,7 @@ async function loadFullCaseData(caseId) {
  * Render Case Output to UI
  */
 function displayCaseOutput(data) {
-    const { raw_case, ai_structured_summary, has_full_text, full_text_reason, source } = data;
+    const { raw_case, ai_structured_summary, has_full_text, full_text_reason, source, summary_source, disclaimer } = data;
     
     // Switch views
     document.getElementById('inputSection').classList.add('hidden');
@@ -124,8 +124,15 @@ function displayCaseOutput(data) {
     document.getElementById('outputCourt').textContent = raw_case.court || 'Court';
     document.getElementById('outputYear').textContent = raw_case.citation || '';
     
-    // Importance badge (static for now)
-    document.getElementById('outputImportance').textContent = 'Authoritative Source';
+    // Importance badge - show metadata-only indicator if no full text
+    const importanceBadge = document.getElementById('outputImportance');
+    if (has_full_text) {
+        importanceBadge.textContent = 'Full Text Available';
+        importanceBadge.style.background = '#10b981';
+    } else {
+        importanceBadge.textContent = 'Metadata-Only';
+        importanceBadge.style.background = '#f59e0b';
+    }
 
     // Render Full Judgment (Left Panel - Authoritative)
     const judgmentContainer = document.getElementById('fullJudgmentText');
@@ -167,17 +174,34 @@ function displayCaseOutput(data) {
     } else {
         judgmentContainer.style.padding = '2.5rem';
         const reasonText = full_text_reason || 'metadata-only case';
+        const disclaimerText = disclaimer || 'Full judgment text unavailable due to publisher restrictions. Summary generated from case metadata and established legal principles.';
+        const summarySourceText = summary_source || 'Authoritative metadata + AI legal reasoning';
         judgmentContainer.innerHTML = `
-            <div style="background: rgba(234, 179, 8, 0.1); border-left: 4px solid #eab308; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                <p style="color: #854d0e; margin: 0; font-weight: 500;">
-                    ⚠️ Full judgment text not available from authoritative source.
+            <div style="background: rgba(234, 179, 8, 0.1); border-left: 4px solid #eab308; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <h4 style="color: #854d0e; margin: 0; font-weight: 600;">Metadata-Only Case</h4>
+                </div>
+                <p style="color: #854d0e; margin: 0 0 12px 0; font-size: 0.95em;">
+                    ${disclaimerText}
                 </p>
-                <p style="color: #854d0e; margin: 8px 0 0 0; font-size: 0.9em;">
-                    Reason: ${reasonText}
+                <div style="background: rgba(255,255,255,0.5); padding: 12px; border-radius: 6px; margin-top: 12px;">
+                    <p style="color: #78350f; margin: 0; font-size: 0.85em;">
+                        <strong>Reason:</strong> ${reasonText}
+                    </p>
+                    <p style="color: #78350f; margin: 8px 0 0 0; font-size: 0.85em;">
+                        <strong>Summary Source:</strong> ${summarySourceText}
+                    </p>
+                    <p style="color: #78350f; margin: 8px 0 0 0; font-size: 0.85em;">
+                        <strong>Data Provider:</strong> ${source || 'Kanoon'}
+                    </p>
+                </div>
+            </div>
+            <div style="background: #f0f9ff; border: 1px solid #0ea5e9; padding: 16px; border-radius: 8px;">
+                <p style="color: #0369a1; margin: 0; font-size: 0.9em;">
+                    <strong>Note:</strong> The AI-generated summary on the right panel uses authoritative case metadata combined with established legal principles to provide educational insights.
                 </p>
             </div>
-            <p class="text-muted">The AI summary below is generated from available metadata and legal knowledge.</p>
-            <p class="text-muted" style="font-size: 0.85em; margin-top: 10px;">Source: ${source || 'Kanoon'}</p>
         `;
     }
 
