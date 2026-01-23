@@ -71,12 +71,44 @@
         aiArguments: [],
         prepTimerId: null,
         debateTimerId: null,
-        responseSetIndex: 0
+        responseSetIndex: 0,
+        currentStep: 1
     };
 
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
         document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function updateProgressSteps(step) {
+        state.currentStep = step;
+        document.querySelectorAll('.step').forEach((s, i) => {
+            const stepNum = i + 1;
+            s.classList.remove('active', 'completed');
+            if (stepNum === step) s.classList.add('active');
+            else if (stepNum < step) s.classList.add('completed');
+        });
+    }
+
+    function updateContextPanel() {
+        const panel = document.getElementById('contextPanel');
+        const topicEl = document.getElementById('contextTopic');
+        const sideEl = document.getElementById('contextSide');
+
+        if (state.currentTopic) {
+            panel.classList.remove('hidden');
+            topicEl.textContent = state.currentTopic.length > 35 
+                ? state.currentTopic.substring(0, 35) + '…' 
+                : state.currentTopic;
+            topicEl.title = state.currentTopic;
+            
+            if (state.userSide) {
+                sideEl.textContent = state.userSide === 'for' ? 'FOR' : 'AGAINST';
+                sideEl.className = `context-value context-side ${state.userSide}`;
+            }
+        } else {
+            panel.classList.add('hidden');
+        }
     }
 
     function getRandomItem(arr) {
@@ -94,13 +126,17 @@
         sideEl.textContent = state.userSide === 'for' ? 'FOR the motion' : 'AGAINST the motion';
         sideEl.className = `side-badge ${state.userSide}`;
 
+        updateProgressSteps(2);
+        updateContextPanel();
         showScreen('topicScreen');
     }
 
     function beginPrepTime() {
         document.getElementById('prepTopicText').textContent = state.currentTopic;
         document.getElementById('prepSideText').textContent = state.userSide === 'for' ? 'FOR' : 'AGAINST';
+        document.getElementById('prepNotes').value = '';
         
+        updateProgressSteps(3);
         showScreen('prepScreen');
 
         let seconds = 60;
@@ -119,14 +155,17 @@
         }, 1000);
     }
 
+    function skipPrep() {
+        if (state.prepTimerId) clearInterval(state.prepTimerId);
+        startDebateRound();
+    }
+
     function startDebateRound() {
         state.currentRound = 1;
         state.isUserTurn = true;
         state.userArguments = [];
         state.aiArguments = [];
 
-        document.getElementById('debateTopicBar').textContent = state.currentTopic;
-        
         const userBadge = document.getElementById('userSideBadge');
         userBadge.textContent = state.userSide === 'for' ? 'FOR' : 'AGAINST';
         userBadge.className = `mini-badge ${state.userSide}`;
@@ -138,6 +177,7 @@
         document.getElementById('userArguments').innerHTML = '';
         document.getElementById('aiArguments').innerHTML = '';
 
+        updateProgressSteps(4);
         showScreen('debateScreen');
         updateDebateUI();
         startTurnTimer();
@@ -240,6 +280,7 @@
 
         document.getElementById('examTipText').textContent = getRandomItem(FEEDBACK_DATA.tips);
 
+        updateProgressSteps(5);
         showScreen('feedbackScreen');
     }
 
@@ -254,6 +295,8 @@
         if (state.prepTimerId) clearInterval(state.prepTimerId);
         if (state.debateTimerId) clearInterval(state.debateTimerId);
 
+        updateProgressSteps(1);
+        updateContextPanel();
         showScreen('entryScreen');
     }
 
@@ -269,6 +312,7 @@
     window.debateApp = {
         startDebate,
         beginPrepTime,
+        skipPrep,
         submitArgument: () => submitArgument(false),
         restart
     };
