@@ -1,8 +1,8 @@
 :root {
-    --glass-bg: rgba(255, 255, 255, 0.12);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --glass-input-bg: rgba(255, 255, 255, 0.18);
-    --glass-input-border: rgba(255, 255, 255, 0.28);
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-input-bg: rgba(255, 255, 255, 0.12);
+    --glass-input-border: rgba(255, 255, 255, 0.2);
     --navy-dark: #0b1c2d;
     --navy-primary: #1e3a5f;
     --gold-accent: #c5a572;
@@ -89,13 +89,13 @@ body {
 .login-card {
     width: 100%;
     max-width: 420px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 18px;
     padding: 40px;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -155,8 +155,8 @@ body {
     width: 100%;
     padding: 14px 16px;
     font-size: 15px;
-    background: var(--glass-input-bg);
-    border: 1px solid var(--glass-input-border);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     color: #ffffff;
     outline: none;
@@ -169,8 +169,8 @@ body {
 
 .form-input:focus {
     border-color: var(--gold-accent);
-    box-shadow: 0 0 0 3px rgba(197, 165, 114, 0.2);
-    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 0 0 3px rgba(197, 165, 114, 0.15);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .login-options {
