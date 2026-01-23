@@ -29,7 +29,7 @@ router = APIRouter(prefix="/student", tags=["Student"])
 async def get_allowed_subject_ids(user: User, db: AsyncSession) -> List[int]:
     """
     Get subject IDs the user is allowed to access based on course + semester.
-    Returns only subjects for user's current semester.
+    Returns subjects for user's current semester AND all previous semesters.
     """
     if not user.course_id or not user.current_semester:
         return []
@@ -37,7 +37,7 @@ async def get_allowed_subject_ids(user: User, db: AsyncSession) -> List[int]:
     stmt = select(CourseCurriculum.subject_id).where(
         and_(
             CourseCurriculum.course_id == user.course_id,
-            CourseCurriculum.semester_number == user.current_semester,
+            CourseCurriculum.semester_number <= user.current_semester,
             CourseCurriculum.is_active == True
         )
     )
@@ -561,35 +561,36 @@ async def get_subject_modules(
         result = await db.execute(stmt)
         units = result.scalars().all()
         
-        unit_list = [
-            {
-                "id": unit.id,
-                "title": unit.title,
-                "sequence_order": unit.sequence_order,
-                "description": unit.description
-            }
-            for unit in units
-        ]
-        
-        module_list = [
-            ModuleListItem(
-                module_id=unit.id,
-                title=unit.title,
-                sequence_order=unit.sequence_order,
-                total_contents=0,
-                completed_contents=0,
-                is_completed=False
+        if units:
+            unit_list = [
+                {
+                    "id": unit.id,
+                    "title": unit.title,
+                    "sequence_order": unit.sequence_order,
+                    "description": unit.description
+                }
+                for unit in units
+            ]
+            
+            module_list = [
+                ModuleListItem(
+                    module_id=unit.id,
+                    title=unit.title,
+                    sequence_order=unit.sequence_order,
+                    total_contents=0,
+                    completed_contents=0,
+                    is_completed=False
+                )
+                for unit in units
+            ]
+            
+            return SubjectModulesResponse(
+                subject_id=subject_id,
+                subject_name=subject_name,
+                modules=module_list,
+                units=unit_list,
+                unit_count=len(unit_list)
             )
-            for unit in units
-        ]
-        
-        return SubjectModulesResponse(
-            subject_id=subject_id,
-            subject_name=subject_name,
-            modules=module_list,
-            units=unit_list,
-            unit_count=len(unit_list)
-        )
 
     modules_stmt = select(ContentModule).where(
         and_(

@@ -107,7 +107,7 @@
         }
 
         modulesList.innerHTML = state.modules.map((module, index) => {
-            const moduleNumber = module.order_index || (index + 1);
+            const moduleNumber = module.sequence_order || module.order_index || (index + 1);
             const moduleId = module.module_id || module.id;
             const totalContents = module.total_contents || 0;
             const subtitle = totalContents > 0 
