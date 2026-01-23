@@ -118,6 +118,13 @@
         `;
     }
 
+    function getFeaturedSubjectId() {
+        if (state.subjects.length === 0) return null;
+        const lastStudied = state.subjects.find(s => s.last_studied);
+        if (lastStudied) return lastStudied.id;
+        return state.subjects[0].id;
+    }
+
     function createSubjectCard(subject, index) {
         const icon = getCategoryIcon(subject.category);
         const isExpanded = state.expandedSubjectId === subject.id;
@@ -125,12 +132,15 @@
         const progress = subject.progress || Math.floor(Math.random() * 100);
         const circumference = 2 * Math.PI * 18;
         const dashOffset = circumference - (progress / 100) * circumference;
+        const isFeatured = subject.id === getFeaturedSubjectId();
+        const featuredLabel = subject.last_studied ? 'Continue' : 'Recommended';
 
         return `
-            <div class="subject-card ${isExpanded ? 'expanded' : ''}" 
+            <div class="subject-card ${isExpanded ? 'expanded' : ''} ${isFeatured ? 'featured' : ''}" 
                  data-subject-id="${subject.id}" 
                  data-index="${index}"
                  onclick="window.studyApp.toggleExpand(${subject.id})">
+                ${isFeatured ? `<span class="featured-label">⭐ ${featuredLabel}</span>` : ''}
                 <div class="subject-card-header">
                     <div class="subject-icon-wrap">
                         <svg class="progress-ring" viewBox="0 0 44 44">
@@ -149,11 +159,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="last-studied">${subject.last_studied ? `Last studied: ${subject.last_studied}` : 'Not yet started'}</div>
                 <div class="subject-stats">
                     <span>📚 ${subject.modules_count || 0} modules</span>
-                    <span>📊 ${progress}% complete</span>
+                    <span class="progress-stat">📊 ${progress}%</span>
                 </div>
-                <div class="last-studied">Last studied: ${subject.last_studied || '2 days ago'}</div>
                 ${createModeSelector(subject.id)}
                 <p class="ai-hint">${aiHint}</p>
                 <button class="card-start-btn" onclick="event.stopPropagation(); window.studyApp.startStudying(${subject.id})">
