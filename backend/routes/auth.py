@@ -47,6 +47,12 @@ class UserRegister(BaseModel):
     role: UserRole  # NEW: Required role field
 
 
+class UserLogin(BaseModel):
+    """JSON login schema"""
+    email: EmailStr
+    password: str
+
+
 class Token(BaseModel):
     """
     Token response schema with role information.
@@ -204,14 +210,52 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 async def login(
+    credentials: UserLogin,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Login user with JSON body and return token with role.
+    """
+    logger.info(f"Login attempt for email: {credentials.email}")
+    
+    result = await db.execute(select(User).where(User.email == credentials.email))
+    user = result.scalar_one_or_none()
+
+    if not user or not verify_password(credentials.password, user.password_hash):
+        logger.warning(f"Invalid credentials for email: {credentials.email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "success": False,
+                "error": "Unauthorized",
+                "message": "Invalid email or password",
+                "code": ErrorCode.AUTH_INVALID
+            }
+        )
+
+    token = create_access_token(
+        {"sub": user.email, "role": user.role.value},
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+
+    logger.info(f"User logged in successfully: {credentials.email} as {user.role}")
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user.role.value
+    }
+
+
+@router.post("/login/form", response_model=Token)
+async def login_form(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Login user and return token with role.
-    Phase 11.1: Consistent error responses
+    Login user with form data (for OAuth2 compatibility).
     """
-    logger.info(f"Login attempt for username: {form_data.username}")
+    logger.info(f"Form login attempt for username: {form_data.username}")
     
     result = await db.execute(select(User).where(User.email == form_data.username))
     user = result.scalar_one_or_none()
