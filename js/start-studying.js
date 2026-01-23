@@ -8,7 +8,7 @@
         courseName: null,
         currentSemester: null,
         currentSubject: null,
-        activeSubjectId: null,
+        activeSubjectIndex: 0,
         isLoading: true,
         error: null,
         contentAvailability: {
@@ -70,36 +70,32 @@
         return icons[(category || '').toLowerCase()] || '📚';
     }
 
-    function getMicroHint(subject) {
+    function getContextualHint(subject, index) {
         const hints = [
-            "Recommended based on your curriculum",
-            "Good subject to start today",
             "A foundational subject for your law career",
-            "Great time to dive into legal principles",
-            "Perfect for a focused study session"
+            "Great for building legal reasoning skills",
+            "Essential for understanding Indian jurisprudence",
+            "Perfect for a focused study session",
+            "You studied this last session",
+            "Recommended based on your curriculum",
+            "Good subject to start today"
         ];
-        return hints[subject.id % hints.length];
+        return hints[index % hints.length];
     }
 
     function createSubjectCard(subject, index) {
         const icon = getCategoryIcon(subject.category);
-        const moduleCount = subject.modules_count || 0;
-        const hint = getMicroHint(subject);
+        const hint = getContextualHint(subject, index);
         const isFirst = index === 0;
 
         return `
             <div class="subject-card ${isFirst ? 'active' : ''}" data-subject-id="${subject.id}" data-index="${index}">
-                <div class="subject-card-header">
-                    <div class="subject-icon">${icon}</div>
-                    <div class="subject-info">
-                        <h3>${escapeHtml(subject.title)}</h3>
-                        <span class="semester-text">Semester ${subject.semester || state.currentSemester || 'N/A'}</span>
-                    </div>
-                </div>
-                
-                <div class="reveal-panel">
-                    <p class="reveal-hint">${hint}</p>
-                    <div class="reveal-actions">
+                <div class="card-inner">
+                    <span class="subject-icon">${icon}</span>
+                    <h3>${escapeHtml(subject.title)}</h3>
+                    <span class="semester-text">Semester ${subject.semester || state.currentSemester || 'N/A'}</span>
+                    <p class="contextual-hint">${hint}</p>
+                    <div class="card-actions">
                         <button class="btn-primary" onclick="event.stopPropagation(); window.studyApp.selectSubject(${subject.id})">Start Studying</button>
                         <button class="btn-secondary" onclick="event.stopPropagation(); window.studyApp.openMode('practice', ${subject.id})">Practice</button>
                     </div>
@@ -114,33 +110,71 @@
 
         if (state.subjects.length === 0) {
             strip.innerHTML = '<div class="fallback-state"><p>No subjects found.</p><p>Please check your enrollment.</p></div>';
+            hideScrollUI();
             return;
         }
 
         strip.innerHTML = state.subjects.map((s, i) => createSubjectCard(s, i)).join('');
         
-        if (state.subjects.length > 0) {
-            state.activeSubjectId = state.subjects[0].id;
-        }
-
-        setupScrollObserver();
-        setupClickHandlers();
+        state.activeSubjectIndex = 0;
+        updateStickyCta();
+        renderScrollDots();
+        setupScrollSnap();
+        
+        setTimeout(() => {
+            document.getElementById('stickyCta')?.classList.add('visible');
+        }, 500);
     }
 
-    function setupScrollObserver() {
+    function renderScrollDots() {
+        const dotsContainer = document.getElementById('scrollDots');
+        if (!dotsContainer || state.subjects.length <= 1) {
+            document.getElementById('scrollIndicator')?.classList.add('hidden');
+            return;
+        }
+
+        dotsContainer.innerHTML = state.subjects.map((_, i) => 
+            `<div class="scroll-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>`
+        ).join('');
+    }
+
+    function updateScrollDots(activeIndex) {
+        const dots = document.querySelectorAll('.scroll-dot');
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === activeIndex);
+        });
+    }
+
+    function hideScrollUI() {
+        document.getElementById('scrollIndicator')?.classList.add('hidden');
+        document.getElementById('stickyCta')?.classList.remove('visible');
+    }
+
+    function setupScrollSnap() {
+        const wrapper = document.getElementById('focusStripWrapper');
         const cards = document.querySelectorAll('.subject-card');
-        if (!cards.length) return;
+        if (!wrapper || !cards.length) return;
+
+        let scrollTimeout;
+        
+        wrapper.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                detectActiveCard();
+            }, 50);
+        }, { passive: true });
 
         const observerOptions = {
-            root: null,
-            rootMargin: '-30% 0px -30% 0px',
-            threshold: 0.5
+            root: wrapper,
+            rootMargin: '-45% 0px -45% 0px',
+            threshold: 0
         };
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    setActiveCard(entry.target);
+                    const index = parseInt(entry.target.dataset.index);
+                    setActiveCard(index);
                 }
             });
         }, observerOptions);
@@ -148,23 +182,53 @@
         cards.forEach(card => observer.observe(card));
     }
 
-    function setupClickHandlers() {
+    function detectActiveCard() {
+        const wrapper = document.getElementById('focusStripWrapper');
         const cards = document.querySelectorAll('.subject-card');
-        cards.forEach(card => {
-            card.addEventListener('click', () => {
-                setActiveCard(card);
-            });
+        if (!wrapper || !cards.length) return;
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const wrapperCenter = wrapperRect.top + wrapperRect.height / 2;
+
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+
+        cards.forEach((card, index) => {
+            const cardRect = card.getBoundingClientRect();
+            const cardCenter = cardRect.top + cardRect.height / 2;
+            const distance = Math.abs(cardCenter - wrapperCenter);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = index;
+            }
         });
+
+        setActiveCard(closestIndex);
     }
 
-    function setActiveCard(cardElement) {
-        const id = parseInt(cardElement.dataset.subjectId);
-        if (state.activeSubjectId === id) return;
+    function setActiveCard(index) {
+        if (state.activeSubjectIndex === index) return;
         
-        state.activeSubjectId = id;
+        state.activeSubjectIndex = index;
 
-        document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('active'));
-        cardElement.classList.add('active');
+        document.querySelectorAll('.subject-card').forEach((c, i) => {
+            c.classList.toggle('active', i === index);
+        });
+
+        updateScrollDots(index);
+        updateStickyCta();
+    }
+
+    function updateStickyCta() {
+        const subject = state.subjects[state.activeSubjectIndex];
+        if (!subject) return;
+
+        const btn = document.getElementById('stickyCtaBtn');
+        if (btn) {
+            btn.textContent = `Continue with ${subject.title} →`;
+            btn.onclick = () => selectSubject(subject.id);
+        }
     }
 
     async function selectSubject(subjectId) {
@@ -181,7 +245,6 @@
             const avail = await fetchJson(`${API_BASE}/api/student/subject/${subjectId}/availability`);
             state.contentAvailability = avail;
         } catch (e) {
-            // Keep defaults
         }
         updateStudyModeCards();
     }
@@ -238,6 +301,7 @@
                 <p>If this persists, return to dashboard and try again.</p>
             </div>
         `;
+        hideScrollUI();
     }
 
     async function init() {
@@ -247,7 +311,6 @@
                 state.courseName = profile.course_name;
                 state.currentSemester = profile.current_semester;
             } catch (e) {
-                // Non-blocking
             }
 
             const data = await fetchJson(`${API_BASE}/api/student/subjects`);
