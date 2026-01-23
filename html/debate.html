@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debate Practice | Juris AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/debate.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">Juris AI</div>
+            <button class="back-btn" onclick="window.location.href='dashboard-student.html'">← Dashboard</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="entryScreen" class="screen entry-screen">
+            <div class="entry-content">
+                <div class="entry-icon">🗣️</div>
+                <h1>Debate Practice</h1>
+                <p class="entry-subtitle">Practice legal arguments in a timed, exam-style format</p>
+                <button class="btn-primary-large" onclick="debateApp.startDebate()">Start a Debate →</button>
+                <p class="entry-hint">You'll receive a random topic and argue one side against an AI opponent.</p>
+            </div>
+        </section>
+
+        <section id="topicScreen" class="screen hidden">
+            <div class="topic-content">
+                <span class="screen-label">Your Topic</span>
+                <h2 id="debateTopic" class="topic-text"></h2>
+                
+                <div class="side-assignment">
+                    <span class="side-label">Your Position</span>
+                    <div id="assignedSide" class="side-badge"></div>
+                    <p class="side-hint">You will argue this side during the debate.</p>
+                </div>
+
+                <button class="btn-primary" onclick="debateApp.beginPrepTime()">Continue →</button>
+            </div>
+        </section>
+
+        <section id="prepScreen" class="screen hidden">
+            <div class="prep-content">
+                <span class="screen-label">Preparation Time</span>
+                <div class="prep-timer">
+                    <span id="prepCountdown">01:00</span>
+                </div>
+                <p class="prep-hint">Use this time to structure your arguments</p>
+                
+                <div class="prep-topic-reminder">
+                    <p class="prep-topic-label">Topic</p>
+                    <p id="prepTopicText" class="prep-topic-text"></p>
+                    <p class="prep-side-text">Your side: <strong id="prepSideText"></strong></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="debateScreen" class="screen hidden">
+            <div class="debate-header">
+                <div class="debate-meta">
+                    <span id="roundIndicator" class="round-badge">Round 1 of 3</span>
+                    <span id="turnIndicator" class="turn-badge">Your Turn</span>
+                </div>
+                <div class="debate-timer">
+                    <span id="debateCountdown">00:45</span>
+                </div>
+            </div>
+
+            <div class="debate-topic-bar">
+                <span id="debateTopicBar"></span>
+            </div>
+
+            <div class="debate-arena">
+                <div class="speaker-column user-column">
+                    <div class="speaker-header">
+                        <span class="speaker-icon">👤</span>
+                        <span class="speaker-name">You</span>
+                        <span id="userSideBadge" class="mini-badge"></span>
+                    </div>
+                    <div id="userArguments" class="arguments-list"></div>
+                </div>
+
+                <div class="arena-divider"></div>
+
+                <div class="speaker-column ai-column">
+                    <div class="speaker-header">
+                        <span class="speaker-icon">🤖</span>
+                        <span class="speaker-name">Juris AI</span>
+                        <span id="aiSideBadge" class="mini-badge"></span>
+                    </div>
+                    <div id="aiArguments" class="arguments-list"></div>
+                </div>
+            </div>
+
+            <div id="inputArea" class="input-area">
+                <textarea id="argumentInput" placeholder="Type your argument clearly and concisely…" rows="3"></textarea>
+                <button id="submitArgument" class="btn-submit" onclick="debateApp.submitArgument()">Submit Argument</button>
+            </div>
+
+            <div id="waitingArea" class="waiting-area hidden">
+                <p>Waiting for opponent's response...</p>
+            </div>
+        </section>
+
+        <section id="feedbackScreen" class="screen hidden">
+            <div class="feedback-content">
+                <span class="screen-label">Debate Complete</span>
+                <h2>Performance Summary</h2>
+
+                <div class="score-display">
+                    <span class="score-value" id="overallScore">7.5</span>
+                    <span class="score-label">/ 10</span>
+                </div>
+
+                <div class="feedback-grid">
+                    <div class="feedback-card strengths">
+                        <h3>Your Strengths</h3>
+                        <ul id="strengthsList"></ul>
+                    </div>
+
+                    <div class="feedback-card improvements">
+                        <h3>Areas to Improve</h3>
+                        <ul id="improvementsList"></ul>
+                    </div>
+                </div>
+
+                <div class="exam-tip">
+                    <span class="tip-label">Exam Tip</span>
+                    <p id="examTipText"></p>
+                </div>
+
+                <div class="feedback-actions">
+                    <button class="btn-primary" onclick="debateApp.restart()">Practice Again</button>
+                    <button class="btn-secondary" onclick="window.location.href='dashboard-student.html'">Back to Dashboard</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="../js/debate.js"></script>
+</body>
+</html>
