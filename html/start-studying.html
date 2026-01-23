@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Study Dashboard - Juris AI</title>
+    <title>Study Spotlight - Juris AI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,56 +19,28 @@
         </div>
     </nav>
 
-    <div class="metrics-bg">
-        <div class="metric-float" style="--x: 8%; --y: 15%;">
-            <span class="metric-float-value" id="totalSubjects">0</span>
-            <span class="metric-float-label">Subjects</span>
+    <div class="metrics-whisper">
+        <div class="metric-whisper-item">
+            <span class="metric-whisper-value" id="totalSubjects">0</span>
+            <span class="metric-whisper-label">Subjects</span>
         </div>
-        <div class="metric-float" style="--x: 85%; --y: 12%;">
-            <span class="metric-float-value" id="hoursStudied">0h</span>
-            <span class="metric-float-label">Hours</span>
+        <div class="metric-whisper-item">
+            <span class="metric-whisper-value" id="hoursStudied">0h</span>
+            <span class="metric-whisper-label">Hours</span>
         </div>
-        <div class="metric-float" style="--x: 6%; --y: 75%;">
-            <span class="metric-float-value" id="practiceAccuracy">0%</span>
-            <span class="metric-float-label">Accuracy</span>
+        <div class="metric-whisper-item">
+            <span class="metric-whisper-value" id="practiceAccuracy">0%</span>
+            <span class="metric-whisper-label">Accuracy</span>
         </div>
-        <div class="metric-float" style="--x: 88%; --y: 78%;">
-            <span class="metric-float-value" id="studyStreak">0</span>
-            <span class="metric-float-label">Streak</span>
-        </div>
-        <div class="metric-float goal-float" style="--x: 92%; --y: 45%;">
-            <span class="metric-float-value" id="dailyGoalProgress">0/3</span>
-            <span class="metric-float-label">Today</span>
+        <div class="metric-whisper-item">
+            <span class="metric-whisper-value" id="studyStreak">0</span>
+            <span class="metric-whisper-label">Streak</span>
         </div>
     </div>
 
     <div class="container">
         <div id="subjectSelection" class="subject-selection">
-            <div class="focus-viewport">
-                <div class="focus-card-wrapper" id="focusCardWrapper">
-                    <div class="focus-card" id="focusCard">
-                        <div class="focus-card-inner">
-                            <h2 class="focus-subject-name" id="focusSubjectName">Loading...</h2>
-                            <p class="focus-semester" id="focusSemester">Semester 1</p>
-                            <p class="focus-description" id="focusDescription">Preparing your study materials...</p>
-                            <div class="focus-progress">
-                                <div class="focus-progress-bar">
-                                    <div class="focus-progress-fill" id="focusProgressFill" style="width: 0%"></div>
-                                </div>
-                                <span class="focus-progress-text" id="focusProgressText">0% complete</span>
-                            </div>
-                            <button class="focus-cta" id="focusCta" onclick="window.studyApp.startFocusedSubject()">
-                                Start Studying
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="scroll-hint" id="scrollHint">
-                    <span>Scroll to change subject</span>
-                    <div class="scroll-dots" id="scrollDots"></div>
-                </div>
-            </div>
+            <div class="spotlight-track" id="spotlightTrack"></div>
         </div>
 
         <div id="studyHub" class="study-hub hidden">
