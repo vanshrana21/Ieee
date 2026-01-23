@@ -6,109 +6,77 @@
     <title>Your Study Dashboard - Juris AI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/start-studying.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-content">
             <div class="logo">Juris AI</div>
+            <div class="nav-center">
+                <span class="page-title">Your Study Dashboard</span>
+            </div>
             <div class="nav-right">
                 <div class="search-bar">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                     <input type="text" id="subjectSearch" placeholder="Search subjects...">
                 </div>
-                <button class="back-btn" onclick="goBackToDashboard()">← Dashboard</button>
+                <button class="back-btn" onclick="goBackToDashboard()">Back to Dashboard</button>
             </div>
         </div>
     </nav>
 
     <div class="container">
         <div id="subjectSelection" class="subject-selection">
-            <div class="dashboard-grid">
+            <div class="dashboard-layout">
                 <div class="main-column">
-                    <div class="page-header">
-                        <div class="header-left">
-                            <h1>Your Study Dashboard</h1>
-                            <p>Everything you need to plan and continue your studies today</p>
-                        </div>
-                        <div class="header-actions">
-                            <button class="btn-outline" onclick="window.studyApp.showStudyPlan()">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                                Study Plan
-                            </button>
-                        </div>
-                    </div>
-
                     <div class="stats-row">
-                        <div class="stats-group stats-group-learning">
-                            <div class="stat-card">
-                                <div class="stat-icon">📚</div>
-                                <div class="stat-info">
-                                    <span class="stat-value" id="totalSubjects">0</span>
-                                    <span class="stat-label">Subjects</span>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">⏱️</div>
-                                <div class="stat-info">
-                                    <span class="stat-value" id="hoursStudied">0h</span>
-                                    <span class="stat-label">This Week</span>
-                                </div>
-                            </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="totalSubjects">0</span>
+                            <span class="stat-label">Subjects</span>
                         </div>
-                        <div class="stats-group stats-group-performance">
-                            <div class="stat-card">
-                                <div class="stat-icon">🎯</div>
-                                <div class="stat-info">
-                                    <span class="stat-value" id="practiceAccuracy">0%</span>
-                                    <span class="stat-label">Accuracy</span>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">🔥</div>
-                                <div class="stat-info">
-                                    <span class="stat-value" id="studyStreak">0</span>
-                                    <span class="stat-label">Day Streak</span>
-                                </div>
-                            </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="hoursStudied">0h</span>
+                            <span class="stat-label">Hours This Week</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="practiceAccuracy">0%</span>
+                            <span class="stat-label">Accuracy</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="studyStreak">0</span>
+                            <span class="stat-label">Day Streak</span>
                         </div>
                     </div>
 
-                    <div class="progress-overview">
-                        <div class="progress-header">
-                            <h3>Overall Progress</h3>
-                            <span class="progress-pct" id="overallProgressPct">0%</span>
+                    <div class="progress-section">
+                        <div class="progress-row">
+                            <span class="progress-label">Overall Progress</span>
+                            <span class="progress-value" id="overallProgressPct">0%</span>
                         </div>
-                        <div class="progress-bar-large">
+                        <div class="progress-bar">
                             <div class="progress-fill" id="overallProgressFill" style="width: 0%"></div>
                         </div>
-                        <div class="streak-calendar" id="streakCalendar"></div>
                     </div>
 
-                    <div class="semester-tabs" id="semesterTabs">
-                        <button class="semester-tab active" data-semester="all">All</button>
+                    <div class="focus-card" id="focusCard">
+                        <div class="focus-label">Recommended next</div>
+                        <h2 class="focus-title" id="focusTitle">Loading...</h2>
+                        <p class="focus-reason" id="focusReason">Based on your study pattern</p>
+                        <button class="focus-cta" id="focusCta" onclick="window.studyApp.startFocusSubject()">
+                            Continue Studying
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
                     </div>
 
-                    <div class="filter-row">
+                    <div class="section-header">
+                        <h3>All Subjects</h3>
                         <div class="filter-group">
                             <select id="progressFilter">
-                                <option value="all">All Progress</option>
+                                <option value="all">All</option>
                                 <option value="not-started">Not Started</option>
                                 <option value="in-progress">In Progress</option>
                                 <option value="completed">Completed</option>
-                            </select>
-                            <select id="difficultyFilter">
-                                <option value="all">All Difficulty</option>
-                                <option value="easy">Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard">Hard</option>
-                            </select>
-                            <select id="sortBy">
-                                <option value="default">Sort: Default</option>
-                                <option value="alpha">Alphabetical</option>
-                                <option value="progress">By Progress</option>
-                                <option value="recent">Recently Studied</option>
                             </select>
                         </div>
                     </div>
@@ -116,128 +84,72 @@
                     <div class="subjects-grid" id="subjectsGrid"></div>
                 </div>
 
-                <div class="side-column">
-                    <p class="sidebar-intro">Here's what you should focus on today 👇</p>
-                    <div class="side-card goals-card">
-                        <div class="side-card-header">
-                            <h4>Daily Goal</h4>
+                <aside class="side-column">
+                    <div class="side-card">
+                        <h4>Daily Goal</h4>
+                        <div class="goal-row">
+                            <span class="goal-text">Complete 3 topics</span>
                             <span class="goal-progress" id="dailyGoalProgress">0/3</span>
                         </div>
                         <div class="goal-bar">
                             <div class="goal-fill" id="dailyGoalFill" style="width: 0%"></div>
                         </div>
-                        <p class="goal-text">Complete 3 topics today</p>
-                        <div class="exam-countdown" id="examCountdown">
-                            <span class="countdown-label">Next Exam</span>
-                            <span class="countdown-value">15 days</span>
-                        </div>
                     </div>
 
-                    <div class="side-card recommendations-card">
-                        <h4>Recommended For You</h4>
-                        <div class="recommendations-list" id="recommendationsList">
-                            <div class="recommendation-item">
-                                <span class="rec-icon">🔄</span>
-                                <div class="rec-content">
-                                    <span class="rec-title">Review Contract Law</span>
-                                    <span class="rec-reason">Not studied in 5 days</span>
-                                </div>
-                            </div>
-                            <div class="recommendation-item">
-                                <span class="rec-icon">⚠️</span>
-                                <div class="rec-content">
-                                    <span class="rec-title">Practice Torts</span>
-                                    <span class="rec-reason">Weak area detected</span>
-                                </div>
-                            </div>
-                            <div class="recommendation-item">
-                                <span class="rec-icon">📅</span>
-                                <div class="rec-content">
-                                    <span class="rec-title">Constitutional Law</span>
-                                    <span class="rec-reason">Exam in 2 weeks</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="side-card">
+                        <h4>Recommended</h4>
+                        <ul class="rec-list" id="recommendationsList">
+                            <li>Review Contract Law</li>
+                            <li>Practice Torts</li>
+                        </ul>
                     </div>
 
-                    <div class="side-card recent-activity-card">
-                        <h4>Recent Activity</h4>
-                        <div class="activity-list" id="activityList">
-                            <div class="activity-empty">No recent activity</div>
-                        </div>
+                    <div class="side-card">
+                        <h4>Progress</h4>
+                        <p class="level-text">Level 3 — 450 / 600 XP</p>
                     </div>
-
-                    <div class="side-card achievements-card">
-                        <h4>Achievements</h4>
-                        <div class="achievements-row">
-                            <div class="achievement unlocked" title="First Steps - Completed first topic">🏅</div>
-                            <div class="achievement unlocked" title="Week Warrior - 7 day streak">🔥</div>
-                            <div class="achievement locked" title="Topic Master - Complete 50 topics">⭐</div>
-                            <div class="achievement locked" title="Perfect Score - 100% on practice">💎</div>
-                        </div>
-                        <div class="achievements-meta">
-                            <span class="achievement-time">2 earned this week</span>
-                            <span class="achievement-progress">2 in progress</span>
-                        </div>
-                        <div class="level-indicator">
-                            <span class="level-badge">Level 3</span>
-                            <span class="xp-text">450 / 600 XP</span>
-                        </div>
-                        <div class="xp-bar">
-                            <div class="xp-fill" style="width: 75%"></div>
-                        </div>
-                    </div>
-                </div>
+                </aside>
             </div>
         </div>
 
         <div id="studyHub" class="study-hub hidden">
             <div class="breadcrumb">
-                <span onclick="backToSubjects()">← All Subjects</span>
+                <span onclick="backToSubjects()">All Subjects</span>
                 <span class="separator">/</span>
                 <span id="currentSubject">Select a Subject</span>
             </div>
 
             <div class="study-header">
-                <div class="study-header-left">
-                    <h1 id="subjectTitle">Select a Subject</h1>
-                    <p class="subject-meta">
-                        <span id="subjectSemester">Semester 1</span>
-                        <span class="meta-dot">•</span>
-                        <span id="subjectProgress">0% complete</span>
-                    </p>
-                </div>
+                <h1 id="subjectTitle">Select a Subject</h1>
+                <p class="subject-meta">
+                    <span id="subjectSemester">Semester 1</span>
+                    <span class="meta-dot">·</span>
+                    <span id="subjectProgress">0% complete</span>
+                </p>
             </div>
 
             <div class="study-mode-selector">
                 <h3>Choose Study Mode</h3>
                 <div class="study-modes">
                     <div class="mode-card" onclick="openMode('concepts')" data-mode="concepts">
-                        <div class="mode-icon">📖</div>
                         <div class="mode-info">
                             <h4>Learn Mode</h4>
                             <p>Read structured content</p>
                         </div>
                     </div>
-
                     <div class="mode-card" onclick="openMode('practice')" data-mode="practice">
-                        <div class="mode-icon">🎯</div>
                         <div class="mode-info">
                             <h4>Practice Mode</h4>
                             <p>MCQs and exercises</p>
                         </div>
                     </div>
-
                     <div class="mode-card" onclick="openMode('cases')" data-mode="cases">
-                        <div class="mode-icon">⚖️</div>
                         <div class="mode-info">
                             <h4>Case Studies</h4>
                             <p>Landmark judgments</p>
                         </div>
                     </div>
-
                     <div class="mode-card" onclick="openMode('notes')" data-mode="notes">
-                        <div class="mode-icon">📝</div>
                         <div class="mode-info">
                             <h4>My Notes</h4>
                             <p>Personal study notes</p>
@@ -248,7 +160,7 @@
 
             <div id="contentArea" class="content-area hidden">
                 <div class="content-header">
-                    <button class="back-link" onclick="backToModes()">← Back to Study Modes</button>
+                    <button class="back-link" onclick="backToModes()">Back to Study Modes</button>
                     <h2 id="contentTitle">Learn Concepts</h2>
                 </div>
                 <div id="contentBody" class="content-body"></div>
@@ -256,23 +168,11 @@
         </div>
     </div>
 
-    <div class="quick-actions-bar">
-        <button class="quick-action" onclick="window.location.href='ai-assistant.html'">
-            <span>🤖</span>
-            <span>Ask AI</span>
-        </button>
-        <button class="quick-action" onclick="window.studyApp.showStudyPlan()">
-            <span>📚</span>
-            <span>Study Plan</span>
-        </button>
-        <button class="quick-action" onclick="window.location.href='analytics.html'">
-            <span>📊</span>
-            <span>Analytics</span>
-        </button>
-        <button class="quick-action" onclick="window.studyApp.quickPractice()">
-            <span>⚡</span>
-            <span>Quick Practice</span>
-        </button>
+    <div class="bottom-nav">
+        <button class="nav-item" onclick="window.location.href='ai-assistant.html'">Ask AI</button>
+        <button class="nav-item" onclick="window.studyApp.showStudyPlan()">Study Plan</button>
+        <button class="nav-item" onclick="window.location.href='analytics.html'">Analytics</button>
+        <button class="nav-item" onclick="window.studyApp.quickPractice()">Quick Practice</button>
     </div>
 
     <div id="studyPlanModal" class="modal hidden">

@@ -3,28 +3,12 @@
 
     const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `${window.location.protocol}//${window.location.hostname}:8000` : '');
 
-    const STUDY_MODES = [
-        { id: 'learn', label: 'Learn', emoji: '📖' },
-        { id: 'practice', label: 'Practice', emoji: '🎯' },
-        { id: 'revision', label: 'Revision', emoji: '📝' },
-        { id: 'exam-prep', label: 'Exam Prep', emoji: '🔥' }
-    ];
-
-    const AI_HINTS = [
-        "Recommended based on your recent activity",
-        "You haven't studied this in 3 days",
-        "Important for upcoming assessments",
-        "Great match for your learning goals",
-        "Suggested by your study pattern"
-    ];
-
     const state = {
         subjects: [],
         courseName: null,
         currentSemester: null,
         currentSubject: null,
-        expandedSubjectId: null,
-        selectedModes: {},
+        focusSubjectId: null,
         isLoading: true,
         error: null,
         contentAvailability: {
@@ -75,98 +59,43 @@
         return json;
     }
 
-    function getCategoryIcon(category) {
-        const icons = {
-            'foundation': '📘',
-            'core': '⚖️',
-            'procedural': '📋',
-            'elective': '🎯',
-            'practical': '✍️'
-        };
-        return icons[(category || '').toLowerCase()] || '📚';
-    }
-
-    function getAIHint(index) {
-        return AI_HINTS[index % AI_HINTS.length];
-    }
-
-    function getSelectedMode(subjectId) {
-        return state.selectedModes[subjectId] || 'learn';
-    }
-
-    function setSelectedMode(subjectId, modeId) {
-        state.selectedModes[subjectId] = modeId;
-    }
-
-    function createModeSelector(subjectId) {
-        const selectedMode = getSelectedMode(subjectId);
-        const pills = STUDY_MODES.map(mode => `
-            <button class="mode-pill ${mode.id === selectedMode ? 'selected' : ''}" 
-                    data-mode="${mode.id}" 
-                    data-subject="${subjectId}"
-                    onclick="event.stopPropagation(); window.studyApp.selectMode(${subjectId}, '${mode.id}')">
-                <span class="mode-emoji">${mode.emoji}</span>
-                <span>${mode.label}</span>
-            </button>
-        `).join('');
-
-        return `
-            <div class="inline-mode-selector">
-                <div class="mode-label">Study Mode</div>
-                <div class="mode-pills">${pills}</div>
-            </div>
-        `;
-    }
-
-    function getFeaturedSubjectId() {
+    function getFocusSubject() {
         if (state.subjects.length === 0) return null;
         const lastStudied = state.subjects.find(s => s.last_studied);
-        if (lastStudied) return lastStudied.id;
-        return state.subjects[0].id;
+        if (lastStudied) return lastStudied;
+        return state.subjects[0];
     }
 
-    function createSubjectCard(subject, index) {
-        const icon = getCategoryIcon(subject.category);
-        const isExpanded = state.expandedSubjectId === subject.id;
-        const aiHint = getAIHint(index);
-        const progress = subject.progress || Math.floor(Math.random() * 100);
-        const circumference = 2 * Math.PI * 18;
-        const dashOffset = circumference - (progress / 100) * circumference;
-        const isFeatured = subject.id === getFeaturedSubjectId();
-        const featuredLabel = subject.last_studied ? 'Continue' : 'Recommended';
+    function getFocusReason(subject) {
+        if (!subject) return 'Select a subject to begin';
+        if (subject.last_studied) return 'Continue where you left off';
+        if (subject.progress === 0) return 'Start your first lesson';
+        return 'Based on your study pattern';
+    }
+
+    function getStatusText(subject) {
+        if (!subject.progress || subject.progress === 0) return 'Not started';
+        if (subject.progress >= 100) return 'Completed';
+        return 'In progress';
+    }
+
+    function createSubjectCard(subject) {
+        const progress = subject.progress || 0;
+        const status = getStatusText(subject);
+        const showProgressBar = progress > 0 && progress < 100;
 
         return `
-            <div class="subject-card ${isExpanded ? 'expanded' : ''} ${isFeatured ? 'featured' : ''}" 
-                 data-subject-id="${subject.id}" 
-                 data-index="${index}"
-                 onclick="window.studyApp.toggleExpand(${subject.id})">
-                ${isFeatured ? `<span class="featured-label">⭐ ${featuredLabel}</span>` : ''}
-                <div class="subject-card-header">
-                    <div class="subject-icon-wrap">
-                        <svg class="progress-ring" viewBox="0 0 44 44">
-                            <circle class="progress-ring-bg" cx="22" cy="22" r="18"/>
-                            <circle class="progress-ring-fill" cx="22" cy="22" r="18" 
-                                    stroke-dasharray="${circumference}" 
-                                    stroke-dashoffset="${dashOffset}"/>
-                        </svg>
-                        <span class="subject-icon">${icon}</span>
+            <div class="subject-card" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
+                <div class="subject-name">${escapeHtml(subject.title)}</div>
+                <div class="subject-semester">Semester ${subject.semester || state.currentSemester || 1}</div>
+                ${showProgressBar ? `
+                    <div class="subject-progress-bar">
+                        <div class="subject-progress-fill" style="width: ${progress}%"></div>
                     </div>
-                    <div class="subject-info">
-                        <h3>${escapeHtml(subject.title)}</h3>
-                        <div class="subject-meta-row">
-                            <span class="semester-badge">Sem ${subject.semester || state.currentSemester || 1}</span>
-                            <span class="difficulty-badge ${(subject.difficulty || 'medium').toLowerCase()}">${subject.difficulty || 'Medium'}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="last-studied">${subject.last_studied ? `Last studied: ${subject.last_studied}` : 'Not yet started'}</div>
-                <div class="subject-stats">
-                    <span>📚 ${subject.modules_count || 0} modules</span>
-                    <span class="progress-stat">📊 ${progress}%</span>
-                </div>
-                ${createModeSelector(subject.id)}
-                <p class="ai-hint">${aiHint}</p>
-                <button class="card-start-btn" onclick="event.stopPropagation(); window.studyApp.startStudying(${subject.id})">
+                ` : `
+                    <div class="subject-status">${status}</div>
+                `}
+                <button class="card-cta" onclick="event.stopPropagation(); window.studyApp.selectSubject(${subject.id})">
                     Start Studying
                 </button>
             </div>
@@ -182,41 +111,35 @@
             return;
         }
 
-        grid.innerHTML = state.subjects.map((s, i) => createSubjectCard(s, i)).join('');
+        grid.innerHTML = state.subjects.map(s => createSubjectCard(s)).join('');
         
         const totalEl = document.getElementById('totalSubjects');
         if (totalEl) totalEl.textContent = state.subjects.length;
     }
 
-    function toggleExpand(subjectId) {
-        if (state.expandedSubjectId === subjectId) {
-            state.expandedSubjectId = null;
-        } else {
-            state.expandedSubjectId = subjectId;
+    function renderFocusCard() {
+        const focusSubject = getFocusSubject();
+        state.focusSubjectId = focusSubject?.id || null;
+
+        const titleEl = document.getElementById('focusTitle');
+        const reasonEl = document.getElementById('focusReason');
+        const ctaEl = document.getElementById('focusCta');
+        const cardEl = document.getElementById('focusCard');
+
+        if (!focusSubject) {
+            if (cardEl) cardEl.style.display = 'none';
+            return;
         }
-        renderSubjects();
+
+        if (titleEl) titleEl.textContent = focusSubject.title;
+        if (reasonEl) reasonEl.textContent = getFocusReason(focusSubject);
+        if (ctaEl) ctaEl.textContent = focusSubject.last_studied ? 'Continue Studying' : 'Start Studying';
     }
 
-    function selectMode(subjectId, modeId) {
-        setSelectedMode(subjectId, modeId);
-        
-        const card = document.querySelector(`[data-subject-id="${subjectId}"]`);
-        if (!card) return;
-        
-        card.querySelectorAll('.mode-pill').forEach(pill => {
-            pill.classList.toggle('selected', pill.dataset.mode === modeId);
-        });
-    }
-
-    function startStudying(subjectId) {
-        const subject = state.subjects.find(s => s.id === subjectId);
-        if (!subject) return;
-
-        const selectedMode = getSelectedMode(subjectId);
-        
-        console.log(`Starting study session: Subject=${subject.title}, Mode=${selectedMode}`);
-        
-        selectSubject(subjectId);
+    function startFocusSubject() {
+        if (state.focusSubjectId) {
+            selectSubject(state.focusSubjectId);
+        }
     }
 
     async function selectSubject(subjectId) {
@@ -228,45 +151,15 @@
         document.getElementById('studyHub').classList.remove('hidden');
         document.getElementById('currentSubject').textContent = subject.title;
         document.getElementById('subjectTitle').textContent = subject.title;
+        document.getElementById('subjectSemester').textContent = `Semester ${subject.semester || state.currentSemester || 1}`;
+        document.getElementById('subjectProgress').textContent = `${subject.progress || 0}% complete`;
 
         try {
             const avail = await fetchJson(`${API_BASE}/api/student/subject/${subjectId}/availability`);
             state.contentAvailability = avail;
         } catch (e) {
+            console.warn('Could not fetch content availability');
         }
-        updateStudyModeCards();
-    }
-
-    function updateStudyModeCards() {
-        const modes = ['concepts', 'cases', 'practice', 'notes'];
-        const cards = document.querySelectorAll('.mode-card');
-        
-        cards.forEach((card, i) => {
-            const mode = modes[i];
-            const isAvail = mode === 'notes' || 
-                           (mode === 'concepts' && state.contentAvailability.has_modules) ||
-                           (mode === 'cases' && state.contentAvailability.has_cases) ||
-                           (mode === 'practice' && state.contentAvailability.has_practice);
-
-            card.classList.toggle('mode-card-disabled', !isAvail);
-            
-            const existingBadge = card.querySelector('.mode-availability-badge');
-            if (existingBadge) existingBadge.remove();
-
-            const badge = document.createElement('div');
-            badge.className = `mode-availability-badge ${isAvail ? 'mode-available' : 'mode-unavailable'}`;
-            
-            if (mode === 'concepts') {
-                badge.textContent = isAvail ? `${state.contentAvailability.modules_count} modules available` : 'Coming soon';
-            } else if (mode === 'cases') {
-                badge.textContent = isAvail ? `${state.contentAvailability.cases_count} cases available` : 'Coming soon';
-            } else if (mode === 'practice') {
-                badge.textContent = isAvail ? `${state.contentAvailability.practice_count} questions available` : 'Coming soon';
-            } else {
-                badge.textContent = 'Ready to use';
-            }
-            card.appendChild(badge);
-        });
     }
 
     function openMode(mode, subjectId = null) {
@@ -320,6 +213,7 @@
                 state.courseName = profile.course_name;
                 state.currentSemester = profile.current_semester;
             } catch (e) {
+                console.warn('Could not fetch academic profile');
             }
 
             const data = await fetchJson(`${API_BASE}/api/student/subjects`);
@@ -334,11 +228,8 @@
                 last_studied: s.last_studied || null
             }));
 
-            state.subjects.forEach(s => {
-                state.selectedModes[s.id] = 'learn';
-            });
-
             if (state.subjects.length > 0) {
+                renderFocusCard();
                 renderSubjects();
             } else {
                 renderFallbackUI();
@@ -352,9 +243,7 @@
     window.studyApp = {
         selectSubject,
         openMode,
-        toggleExpand,
-        selectMode,
-        startStudying,
+        startFocusSubject,
         showStudyPlan,
         closeModal,
         generatePlan,
