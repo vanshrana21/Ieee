@@ -423,13 +423,12 @@
         if (!list) return;
 
         if (!activities || activities.length === 0) {
-            // Intelligent suggestion instead of empty list
             const suggestions = [
                 {
                     title: 'Resume Tort Law',
                     subtitle: 'Suggested: Pick up where you left off in Module 2',
                     cta: 'Resume Studying',
-                    action: () => window.location.href = 'start-studying.html'
+                    action: () => window.location.href = 'dashboard-student.html#subjects'
                 },
                 {
                     title: 'Revise Maneka Gandhi Case',
@@ -961,7 +960,7 @@
                 } else if (activity.content_type === 'practice') {
                     window.location.href = `practice-content.html?id=${activity.content_id}`;
                 } else if (activity.subject_id) {
-                    window.location.href = `start-studying.html?subject=${activity.subject_id}`;
+                    window.location.href = `modules.html?subject_id=${activity.subject_id}`;
                 }
             };
         }
