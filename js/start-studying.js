@@ -73,29 +73,32 @@
     function getMicroHint(subject) {
         const hints = [
             "Recommended based on your curriculum",
-            "Mid-semester exams approaching soon",
+            "Good subject to start today",
             "A foundational subject for your law career",
             "Great time to dive into legal principles",
-            "Perfect for a deep focus session today",
-            "You haven't studied this in 5 days",
-            "Recommended based on last session"
+            "Perfect for a focused study session"
         ];
-        // Semi-random but consistent hint for the subject
         return hints[subject.id % hints.length];
     }
 
-    function createSubjectCard(subject) {
+    function createSubjectCard(subject, index) {
         const icon = getCategoryIcon(subject.category);
         const moduleCount = subject.modules_count || 0;
+        const hint = getMicroHint(subject);
+        const isFirst = index === 0;
 
         return `
-            <div class="subject-card" data-subject-id="${subject.id}" id="card-${subject.id}">
-                <div class="subject-icon">${icon}</div>
-                <h3>${escapeHtml(subject.title)}</h3>
-                <span class="semester-text">Semester ${subject.semester || state.currentSemester || 'N/A'}</span>
+            <div class="subject-card ${isFirst ? 'active' : ''}" data-subject-id="${subject.id}" data-index="${index}">
+                <div class="subject-card-header">
+                    <div class="subject-icon">${icon}</div>
+                    <div class="subject-info">
+                        <h3>${escapeHtml(subject.title)}</h3>
+                        <span class="semester-text">Semester ${subject.semester || state.currentSemester || 'N/A'}</span>
+                    </div>
+                </div>
                 
                 <div class="reveal-panel">
-                    <p class="reveal-hint">${moduleCount} modules left for mid-sem</p>
+                    <p class="reveal-hint">${hint}</p>
                     <div class="reveal-actions">
                         <button class="btn-primary" onclick="event.stopPropagation(); window.studyApp.selectSubject(${subject.id})">Start Studying</button>
                         <button class="btn-secondary" onclick="event.stopPropagation(); window.studyApp.openMode('practice', ${subject.id})">Practice</button>
@@ -110,73 +113,58 @@
         if (!strip) return;
 
         if (state.subjects.length === 0) {
-            strip.innerHTML = '<div style="padding: 2rem; color: #64748b;">No subjects found.</div>';
+            strip.innerHTML = '<div class="fallback-state"><p>No subjects found.</p><p>Please check your enrollment.</p></div>';
             return;
         }
 
-        strip.innerHTML = state.subjects.map(s => createSubjectCard(s)).join('');
+        strip.innerHTML = state.subjects.map((s, i) => createSubjectCard(s, i)).join('');
         
-        // Add scroll event listener for focus detection
-        strip.addEventListener('scroll', handleScroll, { passive: true });
-        
-        // Initial update
-        setTimeout(() => {
-            handleScroll();
-            document.getElementById('focusGuidance').classList.remove('hidden');
-        }, 100);
+        if (state.subjects.length > 0) {
+            state.activeSubjectId = state.subjects[0].id;
+        }
+
+        setupScrollObserver();
+        setupClickHandlers();
     }
 
-    function handleScroll() {
-        const strip = document.getElementById('subjectFocusStrip');
-        const cards = strip.querySelectorAll('.subject-card');
-        const stripCenter = strip.scrollLeft + (strip.offsetWidth / 2);
-        
-        let closestCard = null;
-        let minDistance = Infinity;
+    function setupScrollObserver() {
+        const cards = document.querySelectorAll('.subject-card');
+        if (!cards.length) return;
 
+        const observerOptions = {
+            root: null,
+            rootMargin: '-30% 0px -30% 0px',
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setActiveCard(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        cards.forEach(card => observer.observe(card));
+    }
+
+    function setupClickHandlers() {
+        const cards = document.querySelectorAll('.subject-card');
         cards.forEach(card => {
-            const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
-            const distance = Math.abs(stripCenter - cardCenter);
-
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestCard = card;
-            }
+            card.addEventListener('click', () => {
+                setActiveCard(card);
+            });
         });
-
-        if (closestCard && state.activeSubjectId !== parseInt(closestCard.dataset.subjectId)) {
-            setActiveCard(closestCard);
-        }
     }
 
     function setActiveCard(cardElement) {
         const id = parseInt(cardElement.dataset.subjectId);
+        if (state.activeSubjectId === id) return;
+        
         state.activeSubjectId = id;
 
-        // Update UI states
         document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('active'));
         cardElement.classList.add('active');
-
-        // Update guidance content
-        const subject = state.subjects.find(s => s.id === id);
-        if (subject) {
-            const hintEl = document.getElementById('whyMicroHint');
-            const ctaEl = document.getElementById('smartCTA');
-            
-            hintEl.textContent = getMicroHint(subject);
-            ctaEl.textContent = `Continue with ${subject.title} →`;
-            ctaEl.onclick = () => selectSubject(id);
-            
-            // Subtle entrance animation for guidance
-            hintEl.style.opacity = '0';
-            ctaEl.style.opacity = '0';
-            setTimeout(() => {
-                hintEl.style.transition = 'opacity 0.4s ease';
-                ctaEl.style.transition = 'opacity 0.4s ease';
-                hintEl.style.opacity = '1';
-                ctaEl.style.opacity = '1';
-            }, 50);
-        }
     }
 
     async function selectSubject(subjectId) {
@@ -189,9 +177,12 @@
         document.getElementById('currentSubject').textContent = subject.title;
         document.getElementById('subjectTitle').textContent = subject.title;
 
-        // Fetch availability for mode enablement
-        const avail = await fetchJson(`${API_BASE}/api/student/subject/${subjectId}/availability`);
-        state.contentAvailability = avail;
+        try {
+            const avail = await fetchJson(`${API_BASE}/api/student/subject/${subjectId}/availability`);
+            state.contentAvailability = avail;
+        } catch (e) {
+            // Keep defaults
+        }
         updateStudyModeCards();
     }
 
@@ -242,39 +233,23 @@
         if (!strip) return;
 
         strip.innerHTML = `
-            <div class="fallback-state" style="
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                justify-content: center; 
-                padding: 4rem 2rem; 
-                width: 100%; 
-                text-align: center;
-                background: rgba(255, 255, 255, 0.02);
-                border-radius: 20px;
-                border: 1px dashed rgba(100, 116, 139, 0.2);
-            ">
-                <p style="color: #64748b; font-size: 1.1rem; font-weight: 500; margin-bottom: 0.5rem;">Subjects are loading. Please ensure the server is running.</p>
-                <p style="color: #94a3b8; font-size: 0.9rem;">If this persists, return to dashboard and try again.</p>
+            <div class="fallback-state">
+                <p>Subjects are loading. Please ensure the server is running.</p>
+                <p>If this persists, return to dashboard and try again.</p>
             </div>
         `;
-        
-        const guidance = document.getElementById('focusGuidance');
-        if (guidance) guidance.classList.add('hidden');
     }
 
     async function init() {
         try {
-            // Defensive fetch for profile
             try {
                 const profile = await fetchJson(`${API_BASE}/api/student/academic-profile`);
                 state.courseName = profile.course_name;
                 state.currentSemester = profile.current_semester;
             } catch (e) {
-                // Non-blocking failure for profile
+                // Non-blocking
             }
 
-            // Defensive fetch for subjects
             const data = await fetchJson(`${API_BASE}/api/student/subjects`);
             state.subjects = (data.subjects || []).map(s => ({
                 id: s.id,
