@@ -1,43 +1,51 @@
 # backend/routes/debug_super_kanoon.py
 """
-TEMPORARY DEBUG ENDPOINT for Super Kanoon API verification.
+TEMPORARY DEBUG ENDPOINT for SooperKanoon API verification.
 
 ⚠️  TEST ONLY - DO NOT use in production.
 """
 from fastapi import APIRouter, Query
-from backend.services.super_kanoon_service import fetch_full_judgment
+from backend.services.super_kanoon_service import fetch_case_from_sooperkanoon
 
 router = APIRouter(prefix="/debug", tags=["Debug"])
 
 
-@router.get("/super-kanoon-test")
-async def test_super_kanoon(
+@router.get("/sooperkanoon-test")
+async def test_sooperkanoon(
     query: str = Query(..., description="Case query (e.g. 'Maneka Gandhi v Union of India 1978')")
 ):
     """
-    Test Super Kanoon API to verify if it returns full judgment text.
+    Test SooperKanoon API to verify if it returns full judgment text.
     
-    Returns verification results including:
-    - length: Character count of judgment text
-    - has_full_text: Boolean indicating if text appears to be full judgment
-    - verdict: NOT_FULL_TEXT (<5k) | PARTIAL (5k-15k) | LIKELY_FULL (20k+)
-    - source: Court/citation metadata if available
+    Returns normalized response:
+    - case_name: Case title or UNKNOWN
+    - court: Court name or null
+    - year: Year or null
+    - has_full_text: true/false
+    - full_text_length: Character count
     - preview_start: First 500 characters
-    - preview_end: Last 500 characters
+    - source: "sooperkanoon"
+    - raw_keys: Top-level JSON keys from response
+    - error: Error message if any
     """
-    result = fetch_full_judgment(query)
+    result = fetch_case_from_sooperkanoon(query)
     
-    safe_result = {
-        "query": result["query"],
-        "api_called": result["api_called"],
-        "raw_response_keys": result["raw_response_keys"],
-        "length": result["length"],
+    return {
+        "case_name": result["case_name"],
+        "court": result["court"],
+        "year": result["year"],
         "has_full_text": result["has_full_text"],
-        "verdict": result["verdict"],
-        "source": result["source"],
+        "full_text_length": result["full_text_length"],
         "preview_start": result["preview_start"],
-        "preview_end": result["preview_end"],
-        "error": result["error"]
+        "source": result["source"],
+        "raw_keys": result["raw_keys"],
+        "error": result["error"],
+        "_debug": {
+            "search_url": result.get("search_url"),
+            "detail_url": result.get("detail_url"),
+            "search_status": result.get("search_status"),
+            "detail_status": result.get("detail_status"),
+            "search_content_type": result.get("search_content_type"),
+            "search_response_preview": result.get("search_response_preview")
+        }
     }
-    
-    return safe_result
