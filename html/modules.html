@@ -4,184 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modules | JurisAI</title>
-    <link rel="stylesheet" href="../css/global.css">
-    <style>
-        .modules-container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        .modules-header {
-            margin-bottom: 32px;
-        }
-        .modules-header h1 {
-            margin: 0 0 8px 0;
-            color: #0f172a;
-        }
-        .modules-header p {
-            color: #64748b;
-            margin: 0;
-        }
-        .modules-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .module-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-        }
-        .module-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-color: #0066ff;
-        }
-        .module-card.no-content {
-            opacity: 0.7;
-            cursor: default;
-        }
-        .module-card.no-content:hover {
-            transform: none;
-            border-color: #e2e8f0;
-        }
-        .module-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-        .module-info h3 {
-            margin: 0 0 4px 0;
-            color: #0f172a;
-            font-size: 18px;
-        }
-        .module-meta {
-            font-size: 14px;
-            color: #64748b;
-        }
-        .module-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .completion-badge {
-            background: #dcfce7;
-            color: #166534;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .module-action-btn {
-            background: #0066ff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .module-action-btn:hover {
-            background: #0052cc;
-        }
-        .module-action-btn.secondary {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .module-action-btn.secondary:hover {
-            background: #e2e8f0;
-        }
-        .progress-section {
-            margin-top: 12px;
-        }
-        .progress-bar {
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background: #0066ff;
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-        .progress-fill.completed {
-            background: #22c55e;
-        }
-        .progress-text {
-            font-size: 13px;
-            color: #64748b;
-            margin-top: 6px;
-        }
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #0066ff;
-            text-decoration: none;
-            font-weight: 500;
-            margin-bottom: 24px;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        .no-content-msg {
-            font-size: 13px;
-            color: #94a3b8;
-            font-style: italic;
-            margin-top: 8px;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/modules.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2 class="logo">JurisAI</h2>
+    <nav class="nav">
+        <div class="nav-content">
+            <a href="dashboard-student.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <span class="nav-title">JurisAI</span>
+        </div>
+    </nav>
+
+    <main class="main">
+        <header class="header">
+            <div class="header-meta">
+                <span class="semester-badge" id="semesterBadge">Semester 1</span>
             </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard-student.html" class="nav-item">
-                    <span class="nav-icon">📊</span>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-                <a href="start-studying.html" class="nav-item">
-                    <span class="nav-icon">📚</span>
-                    <span class="nav-text">Study Hub</span>
-                </a>
-                <a href="#" class="nav-item" id="logoutBtn">
-                    <span class="nav-icon">🚪</span>
-                    <span class="nav-text">Logout</span>
-                </a>
-            </nav>
-        </aside>
+            <h1 class="subject-title" id="subjectTitle">Loading...</h1>
+            <p class="header-subtitle" id="headerSubtitle">Select a module to begin learning</p>
+        </header>
 
-        <main class="main-content">
-            <div class="modules-container">
-                <a href="start-studying.html" id="backToSubject" class="back-link">
-                    ← Back to Subjects
-                </a>
-                
-                <div class="modules-header">
-                    <h1 id="subjectTitle">Loading...</h1>
-                    <p id="subjectSubtitle">Select a module to start learning</p>
-                </div>
-
-                <div id="modulesList" class="modules-list">
-                    <div style="text-align: center; padding: 40px;">
-                        <div class="loading-spinner"></div>
-                        <p>Loading modules...</p>
-                    </div>
+        <section class="modules-section">
+            <div class="modules-list" id="modulesList">
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading modules...</p>
                 </div>
             </div>
-        </main>
-    </div>
+        </section>
+    </main>
 
     <script src="../js/api.js"></script>
     <script src="../js/auth.js"></script>

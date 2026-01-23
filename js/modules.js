@@ -1,18 +1,25 @@
-/**
- * modules.js
- * Phase 4: Subject Modules List with Progress
- */
-
 (function() {
     'use strict';
+
+    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `${window.location.protocol}//${window.location.hostname}:8000` : '');
 
     const state = {
         subjectId: null,
         subjectName: '',
         courseName: '',
+        semester: 1,
         modules: [],
         isLoading: true
     };
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
 
     function toRoman(num) {
         const roman = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
@@ -26,14 +33,68 @@
         return str;
     }
 
+    async function fetchJson(url, opts = {}) {
+        const token = window.auth?.getToken?.() || localStorage.getItem('access_token');
+        
+        if (!token) {
+            window.location.href = 'login.html';
+            throw new Error('Not authenticated');
+        }
+        
+        const headers = { ...opts.headers };
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+
+        const resp = await fetch(url, { ...opts, headers });
+        
+        if (resp.status === 401) {
+            localStorage.removeItem('access_token');
+            window.location.href = 'login.html';
+            throw new Error('Session expired');
+        }
+        
+        const text = await resp.text();
+        let json;
+        try { json = text ? JSON.parse(text) : null; } catch { json = null; }
+        if (!resp.ok) throw new Error(json?.detail || json?.error || resp.statusText);
+        return json;
+    }
+
+    function getModuleStatus(module, isBALLB) {
+        if (isBALLB) return 'not-started';
+        
+        const totalContents = module.total_contents || 0;
+        const completedContents = module.completed_contents || 0;
+        
+        if (totalContents === 0) return 'not-started';
+        if (module.is_completed || completedContents >= totalContents) return 'completed';
+        if (completedContents > 0) return 'in-progress';
+        return 'not-started';
+    }
+
+    function getStatusLabel(status) {
+        const labels = {
+            'not-started': 'Not Started',
+            'in-progress': 'In Progress',
+            'completed': 'Completed'
+        };
+        return labels[status] || 'Not Started';
+    }
+
+    function getCtaText(status) {
+        if (status === 'completed') return 'Review';
+        if (status === 'in-progress') return 'Continue';
+        return 'Start';
+    }
+
     async function loadModules() {
         const modulesList = document.getElementById('modulesList');
         if (!modulesList) return;
 
         try {
-            // Step 1: Fetch academic profile to detect BA LLB
-            const profile = await api.get('/api/student/academic-profile').catch(() => ({}));
+            const profile = await fetchJson(`${API_BASE}/api/student/academic-profile`).catch(() => ({}));
             state.courseName = profile.course_name || '';
+            state.semester = profile.current_semester || 1;
 
             const isBALLB = state.courseName && (
                 state.courseName.toUpperCase().includes('BA LLB') || 
@@ -43,44 +104,44 @@
 
             let response;
             if (isBALLB) {
-                console.log('BA LLB detected in modules. Fetching units...');
-                response = await api.get(`/api/ba-llb/subjects/${state.subjectId}/modules`);
-                // Priority: response.units, then response.modules, then fallback empty
+                response = await fetchJson(`${API_BASE}/api/ba-llb/subjects/${state.subjectId}/modules`);
                 const unitsArray = response.units || response.modules || [];
                 state.modules = unitsArray.map(m => ({
                     ...m,
                     is_unit: true,
                     total_contents: 0
                 }));
-                state.subjectName = response.subject?.name || response.subject_name;
+                state.subjectName = response.subject?.name || response.subject_name || 'Subject';
             } else {
-                response = await api.getSubjectModules(state.subjectId);
-                // Priority: response.units (newly added), then response.modules, then fallback
+                response = await fetchJson(`${API_BASE}/api/student/subject/${state.subjectId}/modules`);
                 const unitsArray = response.units || response.modules || [];
                 state.modules = unitsArray.map(m => ({
                     ...m,
                     is_unit: false,
                     total_contents: m.total_contents || 0
                 }));
-                state.subjectName = response.subject_name;
+                state.subjectName = response.subject_name || 'Subject';
             }
 
             state.isLoading = false;
             
             document.getElementById('subjectTitle').textContent = state.subjectName;
+            document.getElementById('semesterBadge').textContent = `Semester ${state.semester}`;
             
-            const unitType = isBALLB ? 'Unit' : 'Module';
-            document.getElementById('subjectSubtitle').textContent = 
-                `${state.modules.length} ${unitType}${state.modules.length !== 1 ? 's' : ''} • Select a ${unitType.toLowerCase()} to start learning`;
+            const moduleCount = state.modules.length;
+            const unitType = isBALLB ? 'unit' : 'module';
+            document.getElementById('headerSubtitle').textContent = 
+                moduleCount > 0 
+                    ? `${moduleCount} ${unitType}${moduleCount !== 1 ? 's' : ''} available`
+                    : 'Select a module to begin learning';
             
             renderModules(isBALLB);
         } catch (error) {
             console.error('Failed to load modules:', error);
             modulesList.innerHTML = `
-                <div class="error-state" style="text-align: center; padding: 40px;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                    <p style="color: #ef4444; margin-bottom: 16px;">Failed to load modules. ${escapeHtml(error.message)}</p>
-                    <button onclick="window.location.reload()" style="background: #0066ff; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Retry</button>
+                <div class="error-state">
+                    <p>Failed to load modules. ${escapeHtml(error.message)}</p>
+                    <button class="retry-btn" onclick="window.location.reload()">Retry</button>
                 </div>
             `;
         }
@@ -91,12 +152,18 @@
         if (!modulesList) return;
 
         if (state.modules.length === 0) {
-            const unitType = isBALLB ? 'Units' : 'Modules';
             modulesList.innerHTML = `
-                <div class="empty-state" style="text-align: center; padding: 40px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-                    <h3 style="margin: 0 0 8px 0; color: #0f172a;">No ${unitType} Added Yet</h3>
-                    <p style="color: #64748b; margin: 0;">Learning materials for this subject are being prepared. Check back soon!</p>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                            <line x1="9" y1="7" x2="15" y2="7"/>
+                            <line x1="9" y1="11" x2="15" y2="11"/>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">Modules are being prepared</h3>
+                    <p class="empty-subtitle">Content for this subject is currently being developed. You will be notified once learning materials are available.</p>
                 </div>
             `;
             return;
@@ -105,63 +172,63 @@
         const unitType = isBALLB ? 'Unit' : 'Module';
 
         modulesList.innerHTML = state.modules.map((module, index) => {
+            const status = getModuleStatus(module, isBALLB);
+            const statusLabel = getStatusLabel(status);
+            const ctaText = getCtaText(status);
             const hasContent = isBALLB || module.total_contents > 0;
-            const progressPercent = module.total_contents > 0 
-                ? Math.round((module.completed_contents / module.total_contents) * 100) 
-                : 0;
             
             const rawOrder = module.sequence_order || module.order_index || (index + 1);
             const moduleNumber = isBALLB ? toRoman(rawOrder) : rawOrder;
             const moduleId = module.module_id || module.id;
             
-            const buttonText = isBALLB ? 'Learn' : (module.completed_contents === 0 ? 'Start' : 
-                                module.is_completed ? 'Review' : 'Continue');
-            const buttonClass = (!isBALLB && module.is_completed) ? 'secondary' : '';
-            
-            const metaInfo = isBALLB 
-                ? `${unitType} ${moduleNumber}`
-                : `${unitType} ${moduleNumber} • ${module.total_contents} lesson${module.total_contents !== 1 ? 's' : ''}`;
+            const progressPercent = module.total_contents > 0 
+                ? Math.round((module.completed_contents / module.total_contents) * 100) 
+                : 0;
+
+            const description = module.description || '';
+            const truncatedDesc = description.length > 120 
+                ? description.substring(0, 120) + '...' 
+                : description;
 
             return `
-                <div class="module-card ${!hasContent ? 'no-content' : ''}" onclick="navigateToModule(${moduleId}, ${isBALLB})">
-                    <div class="module-card-header">
+                <div class="module-card ${!hasContent ? 'no-content' : ''}" onclick="window.modulesPage.navigateToModule(${moduleId}, ${isBALLB})">
+                    <div class="module-header">
                         <div class="module-info">
-                            <h3>${escapeHtml(module.title)}</h3>
-                            <div class="module-meta">
-                                ${metaInfo}
-                            </div>
-                            ${isBALLB && module.description ? `<p style="margin-top: 8px; font-size: 14px; color: #64748b;">${escapeHtml(module.description)}</p>` : ''}
+                            <p class="module-number">${unitType} ${moduleNumber}</p>
+                            <h3 class="module-title">${escapeHtml(module.title)}</h3>
+                            ${truncatedDesc ? `<p class="module-description">${escapeHtml(truncatedDesc)}</p>` : ''}
                         </div>
-                        <div class="module-status">
-                            ${(!isBALLB && module.is_completed) ? '<span class="completion-badge">Completed</span>' : ''}
-                            ${hasContent ? `<button class="module-action-btn ${buttonClass}" onclick="event.stopPropagation(); navigateToModule(${moduleId}, ${isBALLB})">${buttonText}</button>` : ''}
+                        <div class="module-actions">
+                            <span class="status-badge ${status}">${statusLabel}</span>
+                            ${hasContent ? `
+                                <button class="module-cta ${status === 'completed' ? 'secondary' : ''}" 
+                                        onclick="event.stopPropagation(); window.modulesPage.navigateToModule(${moduleId}, ${isBALLB})">
+                                    ${ctaText}
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
-                    ${(!isBALLB && hasContent) ? `
-                        <div class="progress-section">
+                    ${(!isBALLB && hasContent && module.total_contents > 0) ? `
+                        <div class="module-progress">
                             <div class="progress-bar">
-                                <div class="progress-fill ${module.is_completed ? 'completed' : ''}" style="width: ${progressPercent}%"></div>
+                                <div class="progress-fill ${status === 'completed' ? 'completed' : ''}" style="width: ${progressPercent}%"></div>
                             </div>
-                            <div class="progress-text">${module.completed_contents} of ${module.total_contents} completed (${progressPercent}%)</div>
+                            <p class="progress-text">${module.completed_contents || 0} of ${module.total_contents} lessons completed</p>
                         </div>
-                    ` : (isBALLB ? '' : `
-                        <div class="no-content-msg">No learning content added yet</div>
-                    `)}
+                    ` : ''}
                 </div>
             `;
         }).join('');
     }
 
-    window.navigateToModule = async function(moduleId, isBALLB = false) {
+    async function navigateToModule(moduleId, isBALLB = false) {
         if (isBALLB) {
-            // For BA LLB, we might go to a different content view or show a "Coming Soon" if no lessons are linked
-            // For now, let's try the standard content list
             window.location.href = `module-content.html?module_id=${moduleId}&subject_id=${state.subjectId}&course=ba-llb`;
             return;
         }
 
         try {
-            const resumeData = await api.getModuleResume(moduleId);
+            const resumeData = await fetchJson(`${API_BASE}/api/student/modules/${moduleId}/resume`);
             
             if (resumeData.next_content_id) {
                 window.location.href = `learn-content.html?id=${resumeData.next_content_id}&module_id=${moduleId}&subject_id=${state.subjectId}`;
@@ -172,24 +239,27 @@
             console.error('Failed to get module resume:', error);
             window.location.href = `module-content.html?module_id=${moduleId}&subject_id=${state.subjectId}`;
         }
-    };
+    }
 
     function init() {
         const urlParams = new URLSearchParams(window.location.search);
         state.subjectId = urlParams.get('subject_id');
 
         if (!state.subjectId) {
-            window.location.href = 'start-studying.html';
+            window.location.href = 'dashboard-student.html';
             return;
-        }
-
-        const backLink = document.getElementById('backToSubject');
-        if (backLink) {
-            backLink.href = `start-studying.html?subject=${state.subjectId}`;
         }
 
         loadModules();
     }
 
-    document.addEventListener('DOMContentLoaded', init);
+    window.modulesPage = {
+        navigateToModule
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();

@@ -31,7 +31,7 @@
                 </svg>
                 <span>Dashboard</span>
             </a>
-            <a href="#" class="nav-item" onclick="event.preventDefault(); window.jurisDashboard?.openStudyFocus?.();">
+            <a href="./dashboard-student.html#subjects" class="nav-item">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
@@ -301,7 +301,7 @@
                             </div>
                             <p class="empty-title">Your study history will appear here.</p>
                             <p class="empty-subtitle">Start with a subject or case to begin tracking progress.</p>
-                            <a href="#" class="btn-secondary-sm" onclick="event.preventDefault(); window.jurisDashboard?.openStudyFocus?.();">Start Studying</a>
+                            <a href="#subjects" class="btn-secondary-sm">View Subjects</a>
                         </div>
                     </div>
                 </section>
@@ -347,26 +347,6 @@
             <circle cx="16.5" cy="14.5" r="1.5"/>
         </svg>
     </button>
-
-    <div class="study-focus-overlay" id="studyFocusOverlay">
-        <div class="study-focus-backdrop" id="studyFocusBackdrop"></div>
-        <div class="study-focus-panel" id="studyFocusPanel">
-            <button class="study-focus-close" id="studyFocusClose">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
-            <div class="study-focus-content">
-                <p class="study-focus-label" id="studyFocusLabel">Up next</p>
-                <h2 class="study-focus-subject" id="studyFocusSubject">Loading...</h2>
-                <p class="study-focus-semester" id="studyFocusSemester">Semester 1</p>
-                <p class="study-focus-action" id="studyFocusAction">Learn</p>
-                <p class="study-focus-guidance" id="studyFocusGuidance">Preparing your next step...</p>
-                <button class="study-focus-cta" id="studyFocusCta">Continue</button>
-            </div>
-        </div>
-    </div>
 
     <div class="modal" id="aiModal">
         <div class="modal-overlay" id="aiModalOverlay"></div>
