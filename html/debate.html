@@ -18,12 +18,45 @@
     </nav>
 
     <main class="container">
+        <div class="progress-steps" id="progressSteps">
+            <div class="step active" data-step="1">Topic</div>
+            <div class="step-divider"></div>
+            <div class="step" data-step="2">Position</div>
+            <div class="step-divider"></div>
+            <div class="step" data-step="3">Preparation</div>
+            <div class="step-divider"></div>
+            <div class="step" data-step="4">Debate</div>
+            <div class="step-divider"></div>
+            <div class="step" data-step="5">Feedback</div>
+        </div>
+
+        <div class="context-panel hidden" id="contextPanel">
+            <div class="context-item">
+                <span class="context-label">Topic</span>
+                <span class="context-value" id="contextTopic">—</span>
+            </div>
+            <div class="context-divider"></div>
+            <div class="context-item">
+                <span class="context-label">Your Side</span>
+                <span class="context-value context-side" id="contextSide">—</span>
+            </div>
+            <div class="context-divider"></div>
+            <div class="context-item">
+                <span class="context-label">Opponent</span>
+                <span class="context-value">AI Opponent</span>
+            </div>
+            <div class="context-divider"></div>
+            <div class="context-item">
+                <span class="context-label">Format</span>
+                <span class="context-value">Timed | Exam-style</span>
+            </div>
+        </div>
+
         <section id="entryScreen" class="screen entry-screen">
             <div class="entry-content">
-                <div class="entry-icon">🗣️</div>
                 <h1>Debate Practice</h1>
                 <p class="entry-subtitle">Practice legal arguments in a timed, exam-style format</p>
-                <button class="btn-primary-large" onclick="debateApp.startDebate()">Start a Debate →</button>
+                <button class="btn-primary" onclick="debateApp.startDebate()">Start a Debate</button>
                 <p class="entry-hint">You'll receive a random topic and argue one side against an AI opponent.</p>
             </div>
         </section>
@@ -39,22 +72,48 @@
                     <p class="side-hint">You will argue this side during the debate.</p>
                 </div>
 
-                <button class="btn-primary" onclick="debateApp.beginPrepTime()">Continue →</button>
+                <div class="topic-actions">
+                    <button class="btn-primary" onclick="debateApp.beginPrepTime()">Continue to Preparation</button>
+                    <button class="btn-text" onclick="debateApp.restart()">← Choose different topic</button>
+                </div>
             </div>
         </section>
 
         <section id="prepScreen" class="screen hidden">
             <div class="prep-content">
-                <span class="screen-label">Preparation Time</span>
-                <div class="prep-timer">
-                    <span id="prepCountdown">01:00</span>
+                <div class="prep-header">
+                    <span class="screen-label">Preparation Time</span>
+                    <div class="prep-timer">
+                        <span id="prepCountdown">01:00</span>
+                    </div>
+                    <p class="prep-hint">Structure your arguments before the debate begins</p>
                 </div>
-                <p class="prep-hint">Use this time to structure your arguments</p>
-                
+
+                <div class="prep-workspace">
+                    <div class="prep-checklist">
+                        <h4>Argument Structure</h4>
+                        <ul>
+                            <li>Opening statement</li>
+                            <li>Key argument #1</li>
+                            <li>Key argument #2</li>
+                            <li>Counter-argument</li>
+                            <li>Conclusion</li>
+                        </ul>
+                    </div>
+                    <div class="prep-notes">
+                        <h4>Quick Notes</h4>
+                        <textarea id="prepNotes" placeholder="Jot down key points, cases, or examples…"></textarea>
+                    </div>
+                </div>
+
                 <div class="prep-topic-reminder">
                     <p class="prep-topic-label">Topic</p>
                     <p id="prepTopicText" class="prep-topic-text"></p>
                     <p class="prep-side-text">Your side: <strong id="prepSideText"></strong></p>
+                </div>
+
+                <div class="prep-actions">
+                    <button class="btn-text" onclick="debateApp.skipPrep()">Skip preparation and start debate →</button>
                 </div>
             </div>
         </section>
@@ -68,10 +127,6 @@
                 <div class="debate-timer">
                     <span id="debateCountdown">00:45</span>
                 </div>
-            </div>
-
-            <div class="debate-topic-bar">
-                <span id="debateTopicBar"></span>
             </div>
 
             <div class="debate-arena">
@@ -98,7 +153,7 @@
 
             <div id="inputArea" class="input-area">
                 <textarea id="argumentInput" placeholder="Type your argument clearly and concisely…" rows="3"></textarea>
-                <button id="submitArgument" class="btn-submit" onclick="debateApp.submitArgument()">Submit Argument</button>
+                <button id="submitArgument" class="btn-submit" onclick="debateApp.submitArgument()">Submit</button>
             </div>
 
             <div id="waitingArea" class="waiting-area hidden">
