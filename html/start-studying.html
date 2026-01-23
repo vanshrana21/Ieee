@@ -30,22 +30,46 @@
         <div id="subjectSelection" class="subject-selection">
             <div class="dashboard-layout">
                 <div class="main-column">
-                    <div class="stats-row">
-                        <div class="stat-card">
-                            <span class="stat-value" id="totalSubjects">0</span>
-                            <span class="stat-label">Subjects</span>
+                    <div class="metrics-row">
+                        <div class="metric-orb" data-progress="100">
+                            <svg class="orb-ring" viewBox="0 0 100 100">
+                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
+                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="0"/>
+                            </svg>
+                            <div class="orb-content">
+                                <span class="orb-value" id="totalSubjects">0</span>
+                                <span class="orb-label">Subjects</span>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <span class="stat-value" id="hoursStudied">0h</span>
-                            <span class="stat-label">Hours This Week</span>
+                        <div class="metric-orb" data-progress="45">
+                            <svg class="orb-ring" viewBox="0 0 100 100">
+                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
+                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="159"/>
+                            </svg>
+                            <div class="orb-content">
+                                <span class="orb-value" id="hoursStudied">0h</span>
+                                <span class="orb-label">Hours</span>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <span class="stat-value" id="practiceAccuracy">0%</span>
-                            <span class="stat-label">Accuracy</span>
+                        <div class="metric-orb" data-progress="72">
+                            <svg class="orb-ring" viewBox="0 0 100 100">
+                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
+                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="81"/>
+                            </svg>
+                            <div class="orb-content">
+                                <span class="orb-value" id="practiceAccuracy">0%</span>
+                                <span class="orb-label">Accuracy</span>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <span class="stat-value" id="studyStreak">0</span>
-                            <span class="stat-label">Day Streak</span>
+                        <div class="metric-orb" data-progress="60">
+                            <svg class="orb-ring" viewBox="0 0 100 100">
+                                <circle class="ring-bg" cx="50" cy="50" r="46"/>
+                                <circle class="ring-fill" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="116"/>
+                            </svg>
+                            <div class="orb-content">
+                                <span class="orb-value" id="studyStreak">0</span>
+                                <span class="orb-label">Streak</span>
+                            </div>
                         </div>
                     </div>
 
@@ -76,14 +100,16 @@
                 </div>
 
                 <aside class="side-column">
-                    <div class="side-card">
-                        <h4>Daily Goal</h4>
-                        <div class="goal-row">
-                            <span class="goal-text">Complete 3 topics</span>
-                            <span class="goal-progress" id="dailyGoalProgress">0/3</span>
-                        </div>
-                        <div class="goal-bar">
-                            <div class="goal-fill" id="dailyGoalFill" style="width: 0%"></div>
+                    <div class="goal-orb-card">
+                        <div class="goal-orb" data-progress="0">
+                            <svg class="goal-ring" viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="54"/>
+                                <circle class="ring-fill" cx="60" cy="60" r="54" stroke-dasharray="339" stroke-dashoffset="339" id="goalRingFill"/>
+                            </svg>
+                            <div class="goal-orb-content">
+                                <span class="goal-orb-value" id="dailyGoalProgress">0 / 3</span>
+                                <span class="goal-orb-label">Today's Goal</span>
+                            </div>
                         </div>
                     </div>
 
