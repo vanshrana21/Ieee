@@ -8,7 +8,7 @@
         courseName: null,
         currentSemester: null,
         currentSubject: null,
-        focusSubjectId: null,
+        focusedIndex: 0,
         isLoading: true,
         error: null,
         contentAvailability: {
@@ -59,87 +59,135 @@
         return json;
     }
 
-    function getFocusSubject() {
-        if (state.subjects.length === 0) return null;
-        const lastStudied = state.subjects.find(s => s.last_studied);
-        if (lastStudied) return lastStudied;
-        return state.subjects[0];
-    }
-
-    function getFocusReason(subject) {
-        if (!subject) return 'Select a subject to begin';
-        if (subject.last_studied) return 'Continue where you left off';
-        if (subject.progress === 0) return 'Start your first lesson';
-        return 'Based on your study pattern';
-    }
-
     function getStatusText(subject) {
         if (!subject.progress || subject.progress === 0) return 'Not started';
         if (subject.progress >= 100) return 'Completed';
         return 'In progress';
     }
 
-    function createSubjectCard(subject) {
+    function getDescription(subject) {
+        const status = getStatusText(subject);
+        if (status === 'Not started') {
+            return 'Begin your journey with this subject. Learn foundational concepts and build your understanding step by step.';
+        }
+        if (status === 'Completed') {
+            return 'You have completed this subject. Review materials or practice to reinforce your knowledge.';
+        }
+        return 'Continue where you left off. Keep building on what you have learned so far.';
+    }
+
+    function createSubjectItem(subject, index) {
         const progress = subject.progress || 0;
         const status = getStatusText(subject);
-        const showProgressBar = progress > 0 && progress < 100;
+        const isFocused = index === state.focusedIndex;
+        const description = getDescription(subject);
 
         return `
-            <div class="subject-card" data-subject-id="${subject.id}" onclick="window.studyApp.selectSubject(${subject.id})">
-                <div class="subject-name">${escapeHtml(subject.title)}</div>
-                <div class="subject-semester">Semester ${subject.semester || state.currentSemester || 1}</div>
-                ${showProgressBar ? `
-                    <div class="subject-progress-bar">
-                        <div class="subject-progress-fill" style="width: ${progress}%"></div>
+            <div class="subject-item ${isFocused ? 'focused' : 'collapsed'}" 
+                 data-subject-id="${subject.id}" 
+                 data-index="${index}"
+                 onclick="window.studyApp.handleItemClick(${index})">
+                <div class="subject-item-row">
+                    <div class="subject-item-info">
+                        <div class="subject-item-name">${escapeHtml(subject.title)}</div>
+                        <div class="subject-item-meta">Semester ${subject.semester || state.currentSemester || 1}</div>
                     </div>
-                ` : `
-                    <div class="subject-status">${status}</div>
-                `}
-                <button class="card-cta" onclick="event.stopPropagation(); window.studyApp.selectSubject(${subject.id})">
-                    Start Studying
-                </button>
+                    <div class="subject-item-status">${status}</div>
+                </div>
+                <div class="subject-item-expanded">
+                    <p class="subject-item-description">${description}</p>
+                    <div class="subject-item-progress">
+                        <div class="subject-progress-row">
+                            <span class="subject-progress-label">Progress</span>
+                            <span class="subject-progress-value">${progress}%</span>
+                        </div>
+                        <div class="subject-progress-bar">
+                            <div class="subject-progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                    <button class="subject-item-cta" onclick="event.stopPropagation(); window.studyApp.selectSubject(${subject.id})">
+                        ${status === 'Not started' ? 'Start Studying' : 'Continue Studying'}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
             </div>
         `;
     }
 
-    function renderSubjects() {
-        const grid = document.getElementById('subjectsGrid');
-        if (!grid) return;
+    function renderFocusStack() {
+        const stack = document.getElementById('focusStack');
+        if (!stack) return;
 
         if (state.subjects.length === 0) {
-            grid.innerHTML = '<div class="fallback-state"><p>No subjects found.</p><p>Please check your enrollment.</p></div>';
+            stack.innerHTML = '<div class="fallback-state"><p>No subjects found.</p><p>Please check your enrollment.</p></div>';
             return;
         }
 
-        grid.innerHTML = state.subjects.map(s => createSubjectCard(s)).join('');
+        stack.innerHTML = state.subjects.map((s, i) => createSubjectItem(s, i)).join('');
         
         const totalEl = document.getElementById('totalSubjects');
         if (totalEl) totalEl.textContent = state.subjects.length;
     }
 
-    function renderFocusCard() {
-        const focusSubject = getFocusSubject();
-        state.focusSubjectId = focusSubject?.id || null;
-
-        const titleEl = document.getElementById('focusTitle');
-        const reasonEl = document.getElementById('focusReason');
-        const ctaEl = document.getElementById('focusCta');
-        const cardEl = document.getElementById('focusCard');
-
-        if (!focusSubject) {
-            if (cardEl) cardEl.style.display = 'none';
-            return;
-        }
-
-        if (titleEl) titleEl.textContent = focusSubject.title;
-        if (reasonEl) reasonEl.textContent = getFocusReason(focusSubject);
-        if (ctaEl) ctaEl.textContent = focusSubject.last_studied ? 'Continue Studying' : 'Start Studying';
+    function updateFocusState(newIndex) {
+        if (newIndex < 0 || newIndex >= state.subjects.length) return;
+        
+        state.focusedIndex = newIndex;
+        
+        const items = document.querySelectorAll('.subject-item');
+        items.forEach((item, i) => {
+            if (i === newIndex) {
+                item.classList.remove('collapsed');
+                item.classList.add('focused');
+            } else {
+                item.classList.remove('focused');
+                item.classList.add('collapsed');
+            }
+        });
     }
 
-    function startFocusSubject() {
-        if (state.focusSubjectId) {
-            selectSubject(state.focusSubjectId);
+    function handleItemClick(index) {
+        if (index !== state.focusedIndex) {
+            updateFocusState(index);
         }
+    }
+
+    function setupScrollFocus() {
+        const stack = document.getElementById('focusStack');
+        if (!stack) return;
+
+        let ticking = false;
+        
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    const items = document.querySelectorAll('.subject-item');
+                    if (items.length === 0) { ticking = false; return; }
+                    
+                    const viewportCenter = window.innerHeight / 2;
+                    let closestIndex = state.focusedIndex;
+                    let closestDistance = Infinity;
+                    
+                    items.forEach((item, index) => {
+                        const rect = item.getBoundingClientRect();
+                        const itemCenter = rect.top + rect.height / 2;
+                        const distance = Math.abs(itemCenter - viewportCenter);
+                        
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestIndex = index;
+                        }
+                    });
+                    
+                    if (closestIndex !== state.focusedIndex) {
+                        updateFocusState(closestIndex);
+                    }
+                    
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
     }
 
     async function selectSubject(subjectId) {
@@ -173,10 +221,10 @@
     }
 
     function renderFallbackUI() {
-        const grid = document.getElementById('subjectsGrid');
-        if (!grid) return;
+        const stack = document.getElementById('focusStack');
+        if (!stack) return;
 
-        grid.innerHTML = `
+        stack.innerHTML = `
             <div class="fallback-state">
                 <p>Subjects are loading. Please ensure the server is running.</p>
                 <p>If this persists, return to dashboard and try again.</p>
@@ -229,8 +277,10 @@
             }));
 
             if (state.subjects.length > 0) {
-                renderFocusCard();
-                renderSubjects();
+                const lastStudiedIndex = state.subjects.findIndex(s => s.last_studied);
+                state.focusedIndex = lastStudiedIndex >= 0 ? lastStudiedIndex : 0;
+                renderFocusStack();
+                setupScrollFocus();
             } else {
                 renderFallbackUI();
             }
@@ -243,7 +293,7 @@
     window.studyApp = {
         selectSubject,
         openMode,
-        startFocusSubject,
+        handleItemClick,
         showStudyPlan,
         closeModal,
         generatePlan,
