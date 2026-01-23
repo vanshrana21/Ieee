@@ -21,18 +21,6 @@
             .replace(/"/g, '&quot;');
     }
 
-    function toRoman(num) {
-        const roman = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
-        let str = '';
-        for (let i in roman) {
-            while (num >= roman[i]) {
-                str += i;
-                num -= roman[i];
-            }
-        }
-        return str;
-    }
-
     async function fetchJson(url, opts = {}) {
         const token = window.auth?.getToken?.() || localStorage.getItem('access_token');
         
@@ -60,33 +48,6 @@
         return json;
     }
 
-    function getModuleStatus(module, isBALLB) {
-        if (isBALLB) return 'not-started';
-        
-        const totalContents = module.total_contents || 0;
-        const completedContents = module.completed_contents || 0;
-        
-        if (totalContents === 0) return 'not-started';
-        if (module.is_completed || completedContents >= totalContents) return 'completed';
-        if (completedContents > 0) return 'in-progress';
-        return 'not-started';
-    }
-
-    function getStatusLabel(status) {
-        const labels = {
-            'not-started': 'Not Started',
-            'in-progress': 'In Progress',
-            'completed': 'Completed'
-        };
-        return labels[status] || 'Not Started';
-    }
-
-    function getCtaText(status) {
-        if (status === 'completed') return 'Review';
-        if (status === 'in-progress') return 'Continue';
-        return 'Start';
-    }
-
     async function loadModules() {
         const modulesList = document.getElementById('modulesList');
         if (!modulesList) return;
@@ -96,46 +57,22 @@
             state.courseName = profile.course_name || '';
             state.semester = profile.current_semester || 1;
 
-            const isBALLB = state.courseName && (
-                state.courseName.toUpperCase().includes('BA LLB') || 
-                state.courseName.toUpperCase().includes('BA.LLB') ||
-                state.courseName.toUpperCase().includes('BACHELOR OF ARTS')
-            );
-
-            let response;
-            if (isBALLB) {
-                response = await fetchJson(`${API_BASE}/api/ba-llb/subjects/${state.subjectId}/modules`);
-                const unitsArray = response.units || response.modules || [];
-                state.modules = unitsArray.map(m => ({
-                    ...m,
-                    is_unit: true,
-                    total_contents: 0
-                }));
-                state.subjectName = response.subject?.name || response.subject_name || 'Subject';
-            } else {
-                response = await fetchJson(`${API_BASE}/api/student/subject/${state.subjectId}/modules`);
-                const unitsArray = response.units || response.modules || [];
-                state.modules = unitsArray.map(m => ({
-                    ...m,
-                    is_unit: false,
-                    total_contents: m.total_contents || 0
-                }));
-                state.subjectName = response.subject_name || 'Subject';
-            }
+            const response = await fetchJson(`${API_BASE}/api/student/subject/${state.subjectId}/modules`);
+            const modulesArray = response.units || response.modules || [];
+            
+            state.modules = modulesArray.map(m => ({
+                ...m,
+                total_contents: m.total_contents || 0
+            }));
+            state.subjectName = response.subject_name || 'Subject';
 
             state.isLoading = false;
             
             document.getElementById('subjectTitle').textContent = state.subjectName;
             document.getElementById('semesterBadge').textContent = `Semester ${state.semester}`;
+            document.getElementById('headerSubtitle').textContent = 'Select a module to begin learning';
             
-            const moduleCount = state.modules.length;
-            const unitType = isBALLB ? 'unit' : 'module';
-            document.getElementById('headerSubtitle').textContent = 
-                moduleCount > 0 
-                    ? `${moduleCount} ${unitType}${moduleCount !== 1 ? 's' : ''} available`
-                    : 'Select a module to begin learning';
-            
-            renderModules(isBALLB);
+            renderModules();
         } catch (error) {
             console.error('Failed to load modules:', error);
             modulesList.innerHTML = `
@@ -147,7 +84,7 @@
         }
     }
 
-    function renderModules(isBALLB = false) {
+    function renderModules() {
         const modulesList = document.getElementById('modulesList');
         if (!modulesList) return;
 
@@ -162,83 +99,42 @@
                             <line x1="9" y1="11" x2="15" y2="11"/>
                         </svg>
                     </div>
-                    <h3 class="empty-title">Modules are being prepared</h3>
-                    <p class="empty-subtitle">Content for this subject is currently being developed. You will be notified once learning materials are available.</p>
+                    <h3 class="empty-title">No modules found for this subject</h3>
+                    <p class="empty-subtitle">Modules will be added soon.</p>
                 </div>
             `;
             return;
         }
 
-        const unitType = isBALLB ? 'Unit' : 'Module';
-
         modulesList.innerHTML = state.modules.map((module, index) => {
-            const status = getModuleStatus(module, isBALLB);
-            const statusLabel = getStatusLabel(status);
-            const ctaText = getCtaText(status);
-            const hasContent = true;
-            
-            const rawOrder = module.sequence_order || module.order_index || (index + 1);
-            const moduleNumber = isBALLB ? toRoman(rawOrder) : rawOrder;
+            const moduleNumber = module.order_index || (index + 1);
             const moduleId = module.module_id || module.id;
-            
-            const progressPercent = module.total_contents > 0 
-                ? Math.round((module.completed_contents / module.total_contents) * 100) 
-                : 0;
-
-            const description = module.description || '';
-            const truncatedDesc = description.length > 120 
-                ? description.substring(0, 120) + '...' 
-                : description;
+            const totalContents = module.total_contents || 0;
+            const subtitle = totalContents > 0 
+                ? `${totalContents} lesson${totalContents !== 1 ? 's' : ''} available`
+                : 'Lessons coming soon';
 
             return `
-                <div class="module-card ${!hasContent ? 'no-content' : ''}" onclick="window.modulesPage.navigateToModule(${moduleId}, ${isBALLB})">
+                <div class="module-card" onclick="window.modulesPage.navigateToModule(${moduleId})">
                     <div class="module-header">
                         <div class="module-info">
-                            <p class="module-number">${unitType} ${moduleNumber}</p>
+                            <p class="module-number">Module ${moduleNumber}</p>
                             <h3 class="module-title">${escapeHtml(module.title)}</h3>
-                            ${truncatedDesc ? `<p class="module-description">${escapeHtml(truncatedDesc)}</p>` : ''}
+                            <p class="module-subtitle">${subtitle}</p>
                         </div>
                         <div class="module-actions">
-                            <span class="status-badge ${status}">${statusLabel}</span>
-                            ${hasContent ? `
-                                <button class="module-cta ${status === 'completed' ? 'secondary' : ''}" 
-                                        onclick="event.stopPropagation(); window.modulesPage.navigateToModule(${moduleId}, ${isBALLB})">
-                                    ${ctaText}
-                                </button>
-                            ` : ''}
+                            <button class="module-cta" onclick="event.stopPropagation(); window.modulesPage.navigateToModule(${moduleId})">
+                                Open Module
+                            </button>
                         </div>
                     </div>
-                    ${(!isBALLB && hasContent && module.total_contents > 0) ? `
-                        <div class="module-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill ${status === 'completed' ? 'completed' : ''}" style="width: ${progressPercent}%"></div>
-                            </div>
-                            <p class="progress-text">${module.completed_contents || 0} of ${module.total_contents} lessons completed</p>
-                        </div>
-                    ` : ''}
                 </div>
             `;
         }).join('');
     }
 
-    async function navigateToModule(moduleId, isBALLB = false) {
-        if (isBALLB) {
-            window.location.href = `module-content.html?module_id=${moduleId}&subject_id=${state.subjectId}&course=ba-llb`;
-            return;
-        }
-
-        try {
-            const resumeData = await fetchJson(`${API_BASE}/api/student/modules/${moduleId}/resume`);
-            
-            if (resumeData.next_content_id) {
-                window.location.href = `learn-content.html?id=${resumeData.next_content_id}&module_id=${moduleId}&subject_id=${state.subjectId}`;
-            } else {
-                window.location.href = `module-content.html?module_id=${moduleId}&subject_id=${state.subjectId}`;
-            }
-        } catch (error) {
-            console.error('Failed to get module resume:', error);
-            window.location.href = `module-content.html?module_id=${moduleId}&subject_id=${state.subjectId}`;
-        }
+    async function navigateToModule(moduleId) {
+        window.location.href = `learn-content.html?module_id=${moduleId}&subject_id=${state.subjectId}`;
     }
 
     function init() {

@@ -128,23 +128,14 @@ body {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px 24px;
-    transition: border-color 200ms ease, box-shadow 200ms ease;
+    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
     cursor: pointer;
 }
 
 .module-card:hover {
     border-color: var(--accent);
-    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.08);
-}
-
-.module-card.no-content {
-    opacity: 0.6;
-    cursor: default;
-}
-
-.module-card.no-content:hover {
-    border-color: var(--border);
-    box-shadow: none;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1);
+    transform: translateY(-1px);
 }
 
 .module-header {
@@ -181,6 +172,12 @@ body {
     font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.5;
+}
+
+.module-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
 }
 
 .module-actions {
