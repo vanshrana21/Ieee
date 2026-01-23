@@ -10,48 +10,40 @@
     <link rel="stylesheet" href="../css/start-studying.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="navbar-content">
-            <div class="logo">
-                ⚖️ LegalAI Research
-            </div>
-            <button class="back-btn" onclick="goBackToDashboard()">← Back to Dashboard</button>
+            <div class="logo">Juris AI</div>
+            <button class="back-btn" onclick="goBackToDashboard()">← Dashboard</button>
         </div>
     </nav>
 
-    <!-- Main Container -->
     <div class="container">
-        <!-- Subject Selection Section -->
         <div id="subjectSelection" class="subject-selection">
             <div class="page-header">
-                <h1>📚 Choose Your Subject</h1>
-                <p>Select a subject to begin your study session</p>
-                
-                <!-- Optional: Add search functionality -->
-                <!-- <div class="search-box">
-                    <input type="text" id="subjectSearch" placeholder="🔍 Search subjects..." />
-                </div> -->
+                <h1>Choose Your Subject</h1>
+                <p>Scroll to explore your subjects</p>
             </div>
 
-            <!-- Subject Focus Strip Section -->
-            <div class="focus-strip-wrapper">
+            <div class="focus-strip-wrapper" id="focusStripWrapper">
                 <div class="subject-focus-strip" id="subjectFocusStrip">
-                    <!-- Subjects will be rendered here by JavaScript -->
-                </div>
-                
-                <!-- Focus Guidance (Micro-hint and Smart CTA) -->
-                <div id="focusGuidance" class="focus-guidance hidden">
-                    <p id="whyMicroHint" class="why-micro-hint"></p>
-                    <button id="smartCTA" class="smart-cta"></button>
                 </div>
             </div>
+
+            <div class="scroll-indicator" id="scrollIndicator">
+                <span>Scroll</span>
+                <div class="scroll-dots" id="scrollDots"></div>
+            </div>
+
+            <div class="sticky-cta" id="stickyCta">
+                <button id="stickyCtaBtn">Continue with Subject →</button>
+            </div>
+
+            <div id="focusGuidance" class="focus-guidance hidden"></div>
         </div>
 
-        <!-- Study Hub Section (Hidden Initially) -->
         <div id="studyHub" class="study-hub hidden">
             <div class="breadcrumb">
-                <span onclick="backToSubjects()">📚 Subjects</span>
+                <span onclick="backToSubjects()">Subjects</span>
                 <span class="separator">›</span>
                 <span id="currentSubject">Select a Subject</span>
             </div>
@@ -87,22 +79,18 @@
                 </div>
             </div>
 
-            <div id="studyMapContainer" class="study-map-container">
-            </div>
+            <div id="studyMapContainer" class="study-map-container"></div>
 
-            <!-- Content Area -->
             <div id="contentArea" class="content-area hidden">
                 <div class="content-header">
                     <button class="back-link" onclick="backToModes()">← Back to Study Modes</button>
                     <h2 id="contentTitle">Learn Concepts</h2>
                 </div>
-
-                <div id="contentBody" class="content-body">
-                    <!-- Dynamic content loads here -->
-                </div>
+                <div id="contentBody" class="content-body"></div>
             </div>
         </div>
     </div>
+
     <script src="../js/error-handler.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/start-studying.js"></script>
