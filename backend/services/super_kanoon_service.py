@@ -30,6 +30,7 @@ def fetch_full_judgment(case_query: str) -> Dict:
     Returns:
         dict with verification results including length, preview, and analysis
     """
+    guid = os.getenv("SOOPER_KANOON_GUID", "")
     logger.info(f"[SuperKanoon Test] Starting search for: {case_query}")
     
     result = {
@@ -46,18 +47,22 @@ def fetch_full_judgment(case_query: str) -> Dict:
         "raw_data": None
     }
     
-    if not SOOPER_KANOON_GUID:
+    if not guid:
         result["error"] = "SOOPER_KANOON_GUID not set in environment"
         logger.error(f"[SuperKanoon Test] {result['error']}")
         return result
     
     try:
-        formatted_query = case_query.lower().replace(" ", "-").replace("v.", "v")
-        search_url = f"{SOOPER_KANOON_API_BASE}/cases/search/name:{formatted_query}.json"
+        # Format query for search
+        formatted_query = case_query.lower().replace(" ", "-")
+        # According to some docs, the search endpoint might be directly under /api
+        search_url = f"{SOOPER_KANOON_API_BASE}/search/name:{formatted_query}.json"
         
         headers = {
-            "HTTP-GUID": SOOPER_KANOON_GUID,
-            "Accept": "application/json"
+            "HTTP-GUID": guid,
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://sooperkanoon.com/api"
         }
         
         logger.info(f"[SuperKanoon Test] Calling URL: {search_url}")
