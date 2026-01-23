@@ -112,7 +112,7 @@ async function loadFullCaseData(caseId) {
  * Render Case Output to UI
  */
 function displayCaseOutput(data) {
-    const { raw_case, ai_structured_summary } = data;
+    const { raw_case, ai_structured_summary, has_full_text, full_text_reason, source } = data;
     
     // Switch views
     document.getElementById('inputSection').classList.add('hidden');
@@ -159,20 +159,25 @@ function displayCaseOutput(data) {
         // Update header for PDF
         const h3 = panelHeader.querySelector('h3');
         if (h3) h3.textContent = '⚖️ Official Supreme Court PDF';
-    } else if (raw_case.judgment && raw_case.judgment.trim()) {
+    } else if (has_full_text && raw_case.judgment && raw_case.judgment.trim()) {
         judgmentContainer.style.padding = '2.5rem';
         judgmentContainer.innerHTML = `<h4>Full Judgment</h4><div>${formatLegalText(raw_case.judgment)}</div>`;
         const h3 = panelHeader.querySelector('h3');
         if (h3) h3.textContent = '⚖️ Full Judgment';
     } else {
         judgmentContainer.style.padding = '2.5rem';
+        const reasonText = full_text_reason || 'metadata-only case';
         judgmentContainer.innerHTML = `
             <div style="background: rgba(234, 179, 8, 0.1); border-left: 4px solid #eab308; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
                 <p style="color: #854d0e; margin: 0; font-weight: 500;">
-                    ⚠️ Full judgment text not available from authoritative source. Metadata-only case.
+                    ⚠️ Full judgment text not available from authoritative source.
+                </p>
+                <p style="color: #854d0e; margin: 8px 0 0 0; font-size: 0.9em;">
+                    Reason: ${reasonText}
                 </p>
             </div>
-            <p class="text-muted">Authoritative text unavailable for this specific citation.</p>
+            <p class="text-muted">The AI summary below is generated from available metadata and legal knowledge.</p>
+            <p class="text-muted" style="font-size: 0.85em; margin-top: 10px;">Source: ${source || 'Kanoon'}</p>
         `;
     }
 

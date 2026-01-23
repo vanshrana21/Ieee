@@ -270,7 +270,10 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
                 "pdf_url": "/assets/Maneka Gandhi v. Union of India (1978).pdf"
             },
             "ai_summary_full": MANEKA_GANDHI_DETERMINISTIC_DATA["ai_summary_full"],
-            "ai_structured_summary": MANEKA_GANDHI_DETERMINISTIC_DATA["ai_structured_summary"]
+            "ai_structured_summary": MANEKA_GANDHI_DETERMINISTIC_DATA["ai_structured_summary"],
+            "has_full_text": True,
+            "full_text_reason": None,
+            "source": "Kanoon"
         }
 
     # 1. Fetch
@@ -311,5 +314,8 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
     
     return {
         "raw_case": full_detail,
-        "ai_structured_summary": ai_summary
+        "ai_structured_summary": ai_summary,
+        "has_full_text": full_detail.get("has_full_text", False),
+        "full_text_reason": full_detail.get("full_text_reason"),
+        "source": full_detail.get("source", "Kanoon")
     }
