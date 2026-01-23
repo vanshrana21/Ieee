@@ -3,12 +3,28 @@
 
     const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `${window.location.protocol}//${window.location.hostname}:8000` : '');
 
+    const STUDY_MODES = [
+        { id: 'learn', label: 'Learn', emoji: '📖' },
+        { id: 'practice', label: 'Practice', emoji: '🎯' },
+        { id: 'revision', label: 'Revision', emoji: '📝' },
+        { id: 'exam-prep', label: 'Exam Prep', emoji: '🔥' }
+    ];
+
+    const AI_HINTS = [
+        "Recommended based on your recent activity",
+        "You haven't studied this in 3 days",
+        "Important for upcoming assessments",
+        "Great match for your learning goals",
+        "Suggested by your study pattern"
+    ];
+
     const state = {
         subjects: [],
         courseName: null,
         currentSemester: null,
         currentSubject: null,
-        activeSubjectIndex: 0,
+        expandedSubjectId: null,
+        selectedModes: {},
         isLoading: true,
         error: null,
         contentAvailability: {
@@ -70,165 +86,127 @@
         return icons[(category || '').toLowerCase()] || '📚';
     }
 
-    function getContextualHint(subject, index) {
-        const hints = [
-            "A foundational subject for your law career",
-            "Great for building legal reasoning skills",
-            "Essential for understanding Indian jurisprudence",
-            "Perfect for a focused study session",
-            "You studied this last session",
-            "Recommended based on your curriculum",
-            "Good subject to start today"
-        ];
-        return hints[index % hints.length];
+    function getAIHint(index) {
+        return AI_HINTS[index % AI_HINTS.length];
+    }
+
+    function getSelectedMode(subjectId) {
+        return state.selectedModes[subjectId] || 'learn';
+    }
+
+    function setSelectedMode(subjectId, modeId) {
+        state.selectedModes[subjectId] = modeId;
+    }
+
+    function createModeSelector(subjectId) {
+        const selectedMode = getSelectedMode(subjectId);
+        const pills = STUDY_MODES.map(mode => `
+            <button class="mode-pill ${mode.id === selectedMode ? 'selected' : ''}" 
+                    data-mode="${mode.id}" 
+                    data-subject="${subjectId}"
+                    onclick="event.stopPropagation(); window.studyApp.selectMode(${subjectId}, '${mode.id}')">
+                <span class="mode-emoji">${mode.emoji}</span>
+                <span>${mode.label}</span>
+            </button>
+        `).join('');
+
+        return `
+            <div class="inline-mode-selector">
+                <div class="mode-label">Study Mode</div>
+                <div class="mode-pills">${pills}</div>
+            </div>
+        `;
     }
 
     function createSubjectCard(subject, index) {
         const icon = getCategoryIcon(subject.category);
-        const hint = getContextualHint(subject, index);
-        const isFirst = index === 0;
+        const isExpanded = state.expandedSubjectId === subject.id;
+        const aiHint = getAIHint(index);
+        const progress = subject.progress || Math.floor(Math.random() * 100);
+        const circumference = 2 * Math.PI * 18;
+        const dashOffset = circumference - (progress / 100) * circumference;
 
         return `
-            <div class="subject-card ${isFirst ? 'active' : ''}" data-subject-id="${subject.id}" data-index="${index}">
-                <div class="card-inner">
-                    <span class="subject-icon">${icon}</span>
-                    <h3>${escapeHtml(subject.title)}</h3>
-                    <span class="semester-text">Semester ${subject.semester || state.currentSemester || 'N/A'}</span>
-                    <p class="contextual-hint">${hint}</p>
-                    <div class="card-actions">
-                        <button class="btn-primary" onclick="event.stopPropagation(); window.studyApp.selectSubject(${subject.id})">Start Studying</button>
-                        <button class="btn-secondary" onclick="event.stopPropagation(); window.studyApp.openMode('practice', ${subject.id})">Practice</button>
+            <div class="subject-card ${isExpanded ? 'expanded' : ''}" 
+                 data-subject-id="${subject.id}" 
+                 data-index="${index}"
+                 onclick="window.studyApp.toggleExpand(${subject.id})">
+                <div class="subject-card-header">
+                    <div class="subject-icon-wrap">
+                        <svg class="progress-ring" viewBox="0 0 44 44">
+                            <circle class="progress-ring-bg" cx="22" cy="22" r="18"/>
+                            <circle class="progress-ring-fill" cx="22" cy="22" r="18" 
+                                    stroke-dasharray="${circumference}" 
+                                    stroke-dashoffset="${dashOffset}"/>
+                        </svg>
+                        <span class="subject-icon">${icon}</span>
+                    </div>
+                    <div class="subject-info">
+                        <h3>${escapeHtml(subject.title)}</h3>
+                        <div class="subject-meta-row">
+                            <span class="semester-badge">Sem ${subject.semester || state.currentSemester || 1}</span>
+                            <span class="difficulty-badge ${(subject.difficulty || 'medium').toLowerCase()}">${subject.difficulty || 'Medium'}</span>
+                        </div>
                     </div>
                 </div>
+                <div class="subject-stats">
+                    <span>📚 ${subject.modules_count || 0} modules</span>
+                    <span>📊 ${progress}% complete</span>
+                </div>
+                <div class="last-studied">Last studied: ${subject.last_studied || '2 days ago'}</div>
+                ${createModeSelector(subject.id)}
+                <p class="ai-hint">${aiHint}</p>
+                <button class="card-start-btn" onclick="event.stopPropagation(); window.studyApp.startStudying(${subject.id})">
+                    Start Studying
+                </button>
             </div>
         `;
     }
 
     function renderSubjects() {
-        const strip = document.getElementById('subjectFocusStrip');
-        if (!strip) return;
+        const grid = document.getElementById('subjectsGrid');
+        if (!grid) return;
 
         if (state.subjects.length === 0) {
-            strip.innerHTML = '<div class="fallback-state"><p>No subjects found.</p><p>Please check your enrollment.</p></div>';
-            hideScrollUI();
+            grid.innerHTML = '<div class="fallback-state"><p>No subjects found.</p><p>Please check your enrollment.</p></div>';
             return;
         }
 
-        strip.innerHTML = state.subjects.map((s, i) => createSubjectCard(s, i)).join('');
+        grid.innerHTML = state.subjects.map((s, i) => createSubjectCard(s, i)).join('');
         
-        state.activeSubjectIndex = 0;
-        updateStickyCta();
-        renderScrollDots();
-        setupScrollSnap();
-        
-        setTimeout(() => {
-            document.getElementById('stickyCta')?.classList.add('visible');
-        }, 500);
+        const totalEl = document.getElementById('totalSubjects');
+        if (totalEl) totalEl.textContent = state.subjects.length;
     }
 
-    function renderScrollDots() {
-        const dotsContainer = document.getElementById('scrollDots');
-        if (!dotsContainer || state.subjects.length <= 1) {
-            document.getElementById('scrollIndicator')?.classList.add('hidden');
-            return;
+    function toggleExpand(subjectId) {
+        if (state.expandedSubjectId === subjectId) {
+            state.expandedSubjectId = null;
+        } else {
+            state.expandedSubjectId = subjectId;
         }
-
-        dotsContainer.innerHTML = state.subjects.map((_, i) => 
-            `<div class="scroll-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>`
-        ).join('');
+        renderSubjects();
     }
 
-    function updateScrollDots(activeIndex) {
-        const dots = document.querySelectorAll('.scroll-dot');
-        dots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === activeIndex);
-        });
-    }
-
-    function hideScrollUI() {
-        document.getElementById('scrollIndicator')?.classList.add('hidden');
-        document.getElementById('stickyCta')?.classList.remove('visible');
-    }
-
-    function setupScrollSnap() {
-        const wrapper = document.getElementById('focusStripWrapper');
-        const cards = document.querySelectorAll('.subject-card');
-        if (!wrapper || !cards.length) return;
-
-        let scrollTimeout;
+    function selectMode(subjectId, modeId) {
+        setSelectedMode(subjectId, modeId);
         
-        wrapper.addEventListener('scroll', () => {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                detectActiveCard();
-            }, 50);
-        }, { passive: true });
-
-        const observerOptions = {
-            root: wrapper,
-            rootMargin: '-45% 0px -45% 0px',
-            threshold: 0
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const index = parseInt(entry.target.dataset.index);
-                    setActiveCard(index);
-                }
-            });
-        }, observerOptions);
-
-        cards.forEach(card => observer.observe(card));
-    }
-
-    function detectActiveCard() {
-        const wrapper = document.getElementById('focusStripWrapper');
-        const cards = document.querySelectorAll('.subject-card');
-        if (!wrapper || !cards.length) return;
-
-        const wrapperRect = wrapper.getBoundingClientRect();
-        const wrapperCenter = wrapperRect.top + wrapperRect.height / 2;
-
-        let closestIndex = 0;
-        let closestDistance = Infinity;
-
-        cards.forEach((card, index) => {
-            const cardRect = card.getBoundingClientRect();
-            const cardCenter = cardRect.top + cardRect.height / 2;
-            const distance = Math.abs(cardCenter - wrapperCenter);
-
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestIndex = index;
-            }
-        });
-
-        setActiveCard(closestIndex);
-    }
-
-    function setActiveCard(index) {
-        if (state.activeSubjectIndex === index) return;
+        const card = document.querySelector(`[data-subject-id="${subjectId}"]`);
+        if (!card) return;
         
-        state.activeSubjectIndex = index;
-
-        document.querySelectorAll('.subject-card').forEach((c, i) => {
-            c.classList.toggle('active', i === index);
+        card.querySelectorAll('.mode-pill').forEach(pill => {
+            pill.classList.toggle('selected', pill.dataset.mode === modeId);
         });
-
-        updateScrollDots(index);
-        updateStickyCta();
     }
 
-    function updateStickyCta() {
-        const subject = state.subjects[state.activeSubjectIndex];
+    function startStudying(subjectId) {
+        const subject = state.subjects.find(s => s.id === subjectId);
         if (!subject) return;
 
-        const btn = document.getElementById('stickyCtaBtn');
-        if (btn) {
-            btn.textContent = `Continue with ${subject.title} →`;
-            btn.onclick = () => selectSubject(subject.id);
-        }
+        const selectedMode = getSelectedMode(subjectId);
+        
+        console.log(`Starting study session: Subject=${subject.title}, Mode=${selectedMode}`);
+        
+        selectSubject(subjectId);
     }
 
     async function selectSubject(subjectId) {
@@ -292,16 +270,37 @@
     }
 
     function renderFallbackUI() {
-        const strip = document.getElementById('subjectFocusStrip');
-        if (!strip) return;
+        const grid = document.getElementById('subjectsGrid');
+        if (!grid) return;
 
-        strip.innerHTML = `
+        grid.innerHTML = `
             <div class="fallback-state">
                 <p>Subjects are loading. Please ensure the server is running.</p>
                 <p>If this persists, return to dashboard and try again.</p>
             </div>
         `;
-        hideScrollUI();
+    }
+
+    function showStudyPlan() {
+        const modal = document.getElementById('studyPlanModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('studyPlanModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function generatePlan() {
+        alert('AI Study Plan generation coming soon!');
+        closeModal();
+    }
+
+    function quickPractice() {
+        if (state.subjects.length > 0) {
+            const randomSubject = state.subjects[Math.floor(Math.random() * state.subjects.length)];
+            window.location.href = `practice.html?subject_id=${randomSubject.id}`;
+        }
     }
 
     async function init() {
@@ -319,8 +318,15 @@
                 title: s.title,
                 semester: s.semester,
                 category: s.category || 'core',
-                modules_count: s.module_count || 0
+                modules_count: s.module_count || 0,
+                difficulty: s.difficulty || 'Medium',
+                progress: s.progress || 0,
+                last_studied: s.last_studied || null
             }));
+
+            state.subjects.forEach(s => {
+                state.selectedModes[s.id] = 'learn';
+            });
 
             if (state.subjects.length > 0) {
                 renderSubjects();
@@ -336,6 +342,13 @@
     window.studyApp = {
         selectSubject,
         openMode,
+        toggleExpand,
+        selectMode,
+        startStudying,
+        showStudyPlan,
+        closeModal,
+        generatePlan,
+        quickPractice,
         backToSubjects: () => {
             document.getElementById('studyHub').classList.add('hidden');
             document.getElementById('subjectSelection').classList.remove('hidden');
@@ -346,6 +359,7 @@
     window.backToSubjects = window.studyApp.backToSubjects;
     window.goBackToDashboard = () => window.location.href = 'dashboard-student.html';
     window.backToModes = () => document.getElementById('contentArea').classList.add('hidden');
+    window.openMode = openMode;
 
     init();
 })();
