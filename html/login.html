@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.cells.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.topology.min.js"></script>
 </head>
 <body>
     <div id="vanta-bg" class="vanta-background"></div>
@@ -91,18 +91,20 @@
     </div>
     
     <script>
-        VANTA.CELLS({
+        VANTA.TOPOLOGY({
             el: "#vanta-bg",
             mouseControls: true,
             touchControls: true,
             gyroControls: false,
             minHeight: 200.00,
             minWidth: 200.00,
-            scale: 1.00,
-            color1: 0x0a1628,
-            color2: 0x1a4a3a,
-            size: 1.5,
-            speed: 0.8
+            scale: 1.0,
+            scaleMobile: 1.0,
+            color: 0x6fbf9c,
+            backgroundColor: 0x0b1f1a,
+            stroke: 2.0,
+            amplitude: 1.4,
+            speed: 1.6
         });
     </script>
     <script src="../js/error-handler.js"></script>
