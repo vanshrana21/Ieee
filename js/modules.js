@@ -175,7 +175,7 @@
             const status = getModuleStatus(module, isBALLB);
             const statusLabel = getStatusLabel(status);
             const ctaText = getCtaText(status);
-            const hasContent = isBALLB || module.total_contents > 0;
+            const hasContent = true;
             
             const rawOrder = module.sequence_order || module.order_index || (index + 1);
             const moduleNumber = isBALLB ? toRoman(rawOrder) : rawOrder;
