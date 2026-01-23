@@ -273,7 +273,9 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
             "ai_structured_summary": MANEKA_GANDHI_DETERMINISTIC_DATA["ai_structured_summary"],
             "has_full_text": True,
             "full_text_reason": None,
-            "source": "Kanoon"
+            "source": "Kanoon",
+            "summary_source": "Full judgment text",
+            "disclaimer": None
         }
 
     # 1. Fetch
@@ -312,10 +314,21 @@ async def get_case_simplification(case_identifier: str) -> Dict[str, Any]:
             "exam_importance": "Information not available from authoritative source."
         }
     
-    return {
+    has_full_text = full_detail.get("has_full_text", False)
+    
+    response = {
         "raw_case": full_detail,
         "ai_structured_summary": ai_summary,
-        "has_full_text": full_detail.get("has_full_text", False),
+        "has_full_text": has_full_text,
         "full_text_reason": full_detail.get("full_text_reason"),
         "source": full_detail.get("source", "Kanoon")
     }
+    
+    if not has_full_text:
+        response["summary_source"] = "Authoritative metadata + AI legal reasoning"
+        response["disclaimer"] = "Full judgment text unavailable due to publisher restrictions. Summary generated from case metadata and established legal principles."
+    else:
+        response["summary_source"] = "Full judgment text"
+        response["disclaimer"] = None
+    
+    return response
