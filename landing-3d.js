@@ -227,16 +227,180 @@
     ceiling.position.set(0, 6, 0);
     scene.add(ceiling);
 
-    function render() {
+    var BOOK_WIDTH = 0.8;
+    var BOOK_HEIGHT = 0.5;
+    var BOOK_THICKNESS = 0.09;
+
+    var coverMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1a2e,
+        roughness: 0.55,
+        metalness: 0.1
+    });
+
+    var spineMaterial = new THREE.MeshStandardMaterial({
+        color: 0x12121f,
+        roughness: 0.6,
+        metalness: 0.1
+    });
+
+    var pagesMaterial = new THREE.MeshStandardMaterial({
+        color: 0xf2eadf,
+        roughness: 0.9,
+        metalness: 0.0
+    });
+
+    var bookGroup = new THREE.Group();
+
+    var backCoverGeometry = new THREE.BoxGeometry(BOOK_WIDTH, 0.012, BOOK_HEIGHT);
+    var backCover = new THREE.Mesh(backCoverGeometry, coverMaterial);
+    backCover.position.set(0, 0, 0);
+    backCover.castShadow = true;
+    backCover.receiveShadow = true;
+    bookGroup.add(backCover);
+
+    var spineGeometry = new THREE.BoxGeometry(0.02, BOOK_THICKNESS, BOOK_HEIGHT);
+    var spine = new THREE.Mesh(spineGeometry, spineMaterial);
+    spine.position.set(-BOOK_WIDTH / 2 + 0.01, BOOK_THICKNESS / 2, 0);
+    spine.castShadow = true;
+    spine.receiveShadow = true;
+    bookGroup.add(spine);
+
+    var pagesGeometry = new THREE.BoxGeometry(BOOK_WIDTH - 0.06, BOOK_THICKNESS - 0.024, BOOK_HEIGHT - 0.03);
+    var pagesBlock = new THREE.Mesh(pagesGeometry, pagesMaterial);
+    pagesBlock.position.set(0.015, BOOK_THICKNESS / 2, 0);
+    pagesBlock.castShadow = true;
+    pagesBlock.receiveShadow = true;
+    bookGroup.add(pagesBlock);
+
+    var frontCoverPivot = new THREE.Group();
+    frontCoverPivot.position.set(-BOOK_WIDTH / 2, BOOK_THICKNESS, 0);
+    bookGroup.add(frontCoverPivot);
+
+    var frontCoverGeometry = new THREE.BoxGeometry(BOOK_WIDTH, 0.012, BOOK_HEIGHT);
+    var frontCover = new THREE.Mesh(frontCoverGeometry, coverMaterial);
+    frontCover.position.set(BOOK_WIDTH / 2, 0, 0);
+    frontCover.castShadow = true;
+    frontCover.receiveShadow = true;
+    frontCoverPivot.add(frontCover);
+
+    var leftPagesPivot = new THREE.Group();
+    leftPagesPivot.position.set(-BOOK_WIDTH / 2 + 0.02, BOOK_THICKNESS, 0);
+    bookGroup.add(leftPagesPivot);
+
+    var leftPagesGeometry = new THREE.BoxGeometry(BOOK_WIDTH * 0.45, 0.025, BOOK_HEIGHT - 0.04);
+    var leftPages = new THREE.Mesh(leftPagesGeometry, pagesMaterial);
+    leftPages.position.set(BOOK_WIDTH * 0.225, 0.0125, 0);
+    leftPages.castShadow = true;
+    leftPages.receiveShadow = true;
+    leftPagesPivot.add(leftPages);
+
+    var rightPagesPivot = new THREE.Group();
+    rightPagesPivot.position.set(-BOOK_WIDTH / 2 + 0.02, BOOK_THICKNESS, 0);
+    bookGroup.add(rightPagesPivot);
+
+    var rightPagesGeometry = new THREE.BoxGeometry(BOOK_WIDTH * 0.45, 0.025, BOOK_HEIGHT - 0.04);
+    var rightPages = new THREE.Mesh(rightPagesGeometry, pagesMaterial);
+    rightPages.position.set(BOOK_WIDTH * 0.225, 0.0125, 0);
+    rightPages.castShadow = true;
+    rightPages.receiveShadow = true;
+    rightPagesPivot.add(rightPages);
+
+    var goldTrimGeometry = new THREE.BoxGeometry(BOOK_WIDTH - 0.08, 0.003, 0.02);
+    var goldTrimMaterial = new THREE.MeshStandardMaterial({
+        color: 0xc9a86c,
+        roughness: 0.3,
+        metalness: 0.6
+    });
+
+    var goldTrimTop = new THREE.Mesh(goldTrimGeometry, goldTrimMaterial);
+    goldTrimTop.position.set(BOOK_WIDTH / 2 - 0.04, 0.0065, BOOK_HEIGHT / 2 - 0.04);
+    frontCover.add(goldTrimTop);
+
+    var goldTrimBottom = new THREE.Mesh(goldTrimGeometry, goldTrimMaterial);
+    goldTrimBottom.position.set(BOOK_WIDTH / 2 - 0.04, 0.0065, -BOOK_HEIGHT / 2 + 0.04);
+    frontCover.add(goldTrimBottom);
+
+    var bookStartY = 1.09 + BOOK_THICKNESS / 2;
+    bookGroup.position.set(0, bookStartY, 0.3);
+    bookGroup.rotation.x = 0;
+    scene.add(bookGroup);
+
+    var scrollTarget = 0;
+    var scrollCurrent = 0;
+    var lerpFactor = 0.08;
+    var baseIntensity = 1.6;
+
+    function smoothstep(edge0, edge1, x) {
+        var t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+        return t * t * (3 - 2 * t);
+    }
+
+    function cubicEaseOut(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function cubicEaseInOut(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function updateBookAnimation(t) {
+        var levitateProgress = smoothstep(0.2, 0.4, t);
+        var levitateHeight = cubicEaseOut(levitateProgress) * 0.6;
+        var yPos = bookStartY + levitateHeight;
+
+        var tiltProgress = smoothstep(0.4, 0.55, t);
+        var yRotation = cubicEaseInOut(tiltProgress) * (8 * Math.PI / 180);
+
+        var coverOpenProgress = smoothstep(0.55, 0.7, t);
+        var coverAngle = cubicEaseOut(coverOpenProgress) * (-Math.PI * 0.85);
+
+        var pageSpreadProgress = smoothstep(0.7, 0.9, t);
+        var pageSpread = cubicEaseInOut(pageSpreadProgress);
+        var leftPageAngle = -Math.PI * 0.42 * pageSpread;
+        var rightPageAngle = -Math.PI * 0.02 * pageSpread;
+
+        var settleProgress = smoothstep(0.9, 1.0, t);
+        var settleFactor = 1 - (1 - settleProgress) * 0.02;
+
+        bookGroup.position.y = yPos * settleFactor;
+        bookGroup.rotation.y = yRotation;
+
+        frontCoverPivot.rotation.z = coverAngle;
+
+        leftPagesPivot.rotation.z = coverOpenProgress > 0.3 ? leftPageAngle : 0;
+        rightPagesPivot.rotation.z = coverOpenProgress > 0.3 ? rightPageAngle : 0;
+
+        pagesBlock.visible = coverOpenProgress < 0.5;
+
+        var glowIncrease = smoothstep(0.9, 1.0, t) * 0.3;
+        spotLight.intensity = baseIntensity + glowIncrease;
+    }
+
+    function onScroll() {
+        var scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (scrollHeight > 0) {
+            scrollTarget = window.scrollY / scrollHeight;
+        }
+        scrollTarget = Math.max(0, Math.min(1, scrollTarget));
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        scrollCurrent += (scrollTarget - scrollCurrent) * lerpFactor;
+
+        updateBookAnimation(scrollCurrent);
+
         renderer.render(scene, camera);
     }
 
-    render();
+    animate();
 
     window.addEventListener('resize', function() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        render();
     });
 })();
