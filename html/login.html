@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,60 +11,51 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.cells.min.js"></script>
 </head>
+
 <body>
-    <div id="vanta-bg" class="vanta-background"></div>
-    
+
+    <!-- Connect Three Canvas Background -->
+    <div id="bg-animation"></div>
+
+    <!-- Login Container -->
     <div class="login-container">
         <div class="login-left">
             <div class="login-branding">
                 <div class="login-logo">
                     <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="32" height="32" rx="6" fill="rgba(255,255,255,0.15)"/>
-                        <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572"/>
-                        <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff"/>
+                        <rect width="32" height="32" rx="6" fill="rgba(255,255,255,0.15)" />
+                        <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572" />
+                        <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff" />
                     </svg>
                     <span class="login-brand-text">JurisAI</span>
                 </div>
                 <h1 class="login-tagline">AI-Powered Legal Education</h1>
-                <p class="login-description">Master law with intelligent learning paths, case studies, and AI-assisted research.</p>
+                <p class="login-description">Master law with intelligent learning paths, case studies, and AI-assisted
+                    research.</p>
             </div>
         </div>
-        
+
         <div class="login-right">
             <div class="login-card">
                 <div class="login-card-header">
                     <h2 class="login-title">Welcome back</h2>
                     <p class="login-subtitle">Sign in to your account to continue</p>
                 </div>
-                
+
                 <form id="loginForm" class="login-form">
                     <div class="form-group">
                         <label for="email" class="form-label">Email address</label>
-                        <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
-                            class="form-input" 
-                            placeholder="you@university.edu"
-                            required
-                        >
+                        <input type="email" id="email" name="email" class="form-input" placeholder="you@university.edu"
+                            required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="password" class="form-label">Password</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            class="form-input" 
-                            placeholder="Enter your password"
-                            required
-                        >
+                        <input type="password" id="password" name="password" class="form-input"
+                            placeholder="Enter your password" required>
                     </div>
-                    
+
                     <div class="login-options">
                         <label class="login-checkbox">
                             <input type="checkbox" name="remember">
@@ -71,40 +63,30 @@
                         </label>
                         <a href="forgot.html" class="login-link">Forgot password?</a>
                     </div>
-                    
+
                     <button type="submit" class="btn-primary login-submit">
                         Sign In
                     </button>
-                    
+
                     <div class="login-divider">
                         <span>or</span>
                     </div>
-                    
+
                     <a href="dashboard-student.html" class="btn-outline login-demo">Continue as Demo</a>
                 </form>
-                
+
                 <div class="login-card-footer">
-                   <p>Don't have an account? <a href="signup.html" class="login-link">Sign up</a></p>
+                    <p>Don't have an account? <a href="signup.html" class="login-link">Sign up</a></p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script>
-        VANTA.CELLS({
-            el: "#vanta-bg",
-            color1: 0x7FCF9B,
-            color2: 0xD6E8A3,
-            backgroundColor: 0x081812,
-            size: 2.4,
-            speed: 1.25,
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false
-        });
-    </script>
+
+    <!-- Connect Three Animation Script -->
+    <script src="../js/connect-three-bg.js"></script>
     <script src="../js/error-handler.js"></script>
     <script src="../js/login.js"></script>
     <script src="../js/storage-service.js"></script>
 </body>
+
 </html>
