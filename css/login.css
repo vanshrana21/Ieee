@@ -10,13 +10,42 @@
     --text-muted: rgba(255, 255, 255, 0.7);
 }
 
+/* Fullscreen canvas animated background */
+#bg-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    background: #0a1628;
+}
+
+/* Dark translucent overlay for text readability */
+#bg-animation::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg,
+            rgba(10, 22, 40, 0.6) 0%,
+            rgba(10, 22, 40, 0.4) 50%,
+            rgba(10, 22, 40, 0.6) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -25,20 +54,13 @@ html, body {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0a1628;
 }
 
-.vanta-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-}
-
+/* Login container above animation */
 .login-container {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: grid;
     grid-template-columns: 1fr 1fr;
     min-height: 100vh;
@@ -296,7 +318,7 @@ body {
     .login-card {
         background: rgba(15, 30, 50, 0.95);
     }
-    
+
     .form-input {
         background: rgba(255, 255, 255, 0.1);
     }
