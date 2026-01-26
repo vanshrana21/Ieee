@@ -135,13 +135,16 @@
 }
 
 .audience-title {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 400;
     color: var(--color-primary);
     margin-bottom: var(--spacing-md);
+    letter-spacing: 1px;
 }
 
 .audience-description {
+    font-family: 'DM Sans', sans-serif;
     font-size: var(--font-size-base);
     color: var(--color-text-secondary);
     line-height: var(--line-height-relaxed);
