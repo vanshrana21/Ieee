@@ -77,6 +77,20 @@
     background-attachment: fixed;
 }
 
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: inherit;
+    background-size: inherit;
+    background-position: inherit;
+    filter: brightness(0.55) contrast(0.9);
+    z-index: 0;
+}
+
 .hero-bg-overlay {
     position: absolute;
     top: 0;
@@ -85,9 +99,9 @@
     bottom: 0;
     background: linear-gradient(
         135deg,
-        rgba(21, 42, 69, 0.92) 0%,
-        rgba(30, 58, 95, 0.88) 50%,
-        rgba(21, 42, 69, 0.85) 100%
+        rgba(15, 32, 55, 0.75) 0%,
+        rgba(21, 42, 69, 0.70) 50%,
+        rgba(15, 32, 55, 0.68) 100%
     );
     z-index: 1;
 }
@@ -103,32 +117,33 @@
 
 .hero-content {
     max-width: 700px;
+    padding-left: var(--spacing-lg);
 }
 
 .hero-eyebrow {
     font-family: 'DM Sans', sans-serif;
     font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-accent);
+    font-weight: 500;
+    color: #d4c4a8;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     margin-bottom: var(--spacing-md);
 }
 
 .hero-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 4.5rem;
-    font-weight: 400;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 3.75rem;
+    font-weight: 700;
     color: #ffffff;
-    line-height: 1.1;
+    line-height: 1.15;
     margin-bottom: var(--spacing-lg);
-    letter-spacing: 2px;
+    letter-spacing: normal;
 }
 
 .hero-subtitle {
     font-family: 'DM Sans', sans-serif;
     font-size: var(--font-size-lg);
-    color: rgba(255, 255, 255, 0.85);
+    color: #e6eaf0;
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--spacing-2xl);
     max-width: 560px;
@@ -142,15 +157,33 @@
 }
 
 .hero-actions .btn-primary {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem;
-    letter-spacing: 1.5px;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: normal;
     padding: 1rem 2rem;
+    background-color: var(--color-accent);
+    color: #1a1a1a;
+    border: none;
+    box-shadow: 0 4px 14px rgba(197, 165, 114, 0.4);
+}
+
+.hero-actions .btn-primary:hover {
+    background-color: #d4b896;
+    box-shadow: 0 6px 20px rgba(197, 165, 114, 0.5);
 }
 
 .hero-actions .btn-outline-light {
     font-family: 'DM Sans', sans-serif;
-    font-weight: var(--font-weight-medium);
+    font-weight: 500;
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+}
+
+.hero-actions .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.8);
 }
 
 .dashboard-mock {
@@ -230,12 +263,12 @@
 }
 
 .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.5rem;
-    font-weight: 400;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
     color: var(--color-primary);
     margin-bottom: var(--spacing-md);
-    letter-spacing: 1.5px;
+    letter-spacing: normal;
 }
 
 .section-subtitle {
@@ -288,12 +321,12 @@
 }
 
 .feature-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.35rem;
-    font-weight: 400;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: var(--color-primary);
     margin-bottom: var(--spacing-md);
-    letter-spacing: 0.5px;
+    letter-spacing: normal;
 }
 
 .feature-description {
@@ -349,12 +382,12 @@
 }
 
 .step-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 400;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 600;
     color: var(--color-primary);
     margin-bottom: var(--spacing-md);
-    letter-spacing: 1px;
+    letter-spacing: normal;
 }
 
 .step-description {
@@ -476,12 +509,12 @@
 }
 
 .cta-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.5rem;
-    font-weight: 400;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
     color: var(--color-text-inverse);
     margin-bottom: var(--spacing-md);
-    letter-spacing: 1.5px;
+    letter-spacing: normal;
 }
 
 .cta-subtitle {
@@ -500,9 +533,10 @@
 }
 
 .cta-actions .btn {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem;
-    letter-spacing: 1.5px;
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: normal;
 }
 
 /* ===========================

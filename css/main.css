@@ -30,7 +30,7 @@ body {
     --color-warning: #ffc107;
     
     --font-primary: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-heading: 'Bebas Neue', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
