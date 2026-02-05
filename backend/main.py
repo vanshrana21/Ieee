@@ -3,8 +3,7 @@ import sys
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
-from backend.routes import case_simplifier
-from backend.routes import progress, subjects, dashboard
+from backend.routes import case_simplifier,progress, subjects, dashboard
 from backend.routes import auth, user, curriculum, modules, content, progress
 from backend.routes.practice import router as practice_router
 from backend.routes import search

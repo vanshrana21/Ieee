@@ -29,7 +29,11 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__truncate_error=False
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 # ================= SCHEMAS =================
@@ -82,13 +86,26 @@ class UserResponse(BaseModel):
 
 # ================= UTILS =================
 
+def normalize_password(password: str) -> str:
+    """
+    bcrypt only supports 72 bytes.
+    We safely truncate AFTER UTF-8 encoding to preserve compatibility.
+    """
+    encoded = password.encode("utf-8")
+    if len(encoded) > 72:
+        encoded = encoded[:72]
+    return encoded.decode("utf-8", errors="ignore")
+
+
 def hash_password(password: str) -> str:
     """Hash password using bcrypt"""
+    password = normalize_password(password)
     return pwd_context.hash(password)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Verify password against hash"""
+    plain = normalize_password(plain)
     return pwd_context.verify(plain, hashed)
 
 
