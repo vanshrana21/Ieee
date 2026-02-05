@@ -1,0 +1,810 @@
+/* ===========================
+   LEXORA LANDING PAGE - DARK IMMERSIVE THEME
+   Premium Law Library Aesthetic
+   =========================== */
+
+/* ===========================
+   CSS CUSTOM PROPERTIES
+   =========================== */
+:root {
+    /* Dark Theme Colors */
+    --lexora-bg-dark: #0a0f18;
+    --lexora-bg-deeper: #060b12;
+    --lexora-surface: rgba(15, 23, 35, 0.85);
+    --lexora-surface-glass: rgba(20, 30, 45, 0.6);
+
+    /* Accent Colors */
+    --lexora-gold: #c5a572;
+    --lexora-gold-light: #d4b985;
+    --lexora-gold-dim: rgba(197, 165, 114, 0.15);
+
+    /* Text Colors */
+    --lexora-text-white: #ffffff;
+    --lexora-text-light: #e5e7eb;
+    --lexora-text-muted: #9ca3af;
+
+    /* Effects */
+    --lexora-glass-blur: blur(12px);
+    --lexora-overlay-heavy: rgba(8, 12, 21, 0.75);
+    --lexora-overlay-medium: rgba(8, 12, 21, 0.65);
+    --lexora-overlay-light: rgba(8, 12, 21, 0.55);
+    --lexora-vignette: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+
+/* ===========================
+   GLOBAL PAGE STYLES
+   =========================== */
+body.lexora-landing {
+    background-color: var(--lexora-bg-dark);
+    color: var(--lexora-text-light);
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Typography System */
+body.lexora-landing h1,
+body.lexora-landing h2,
+body.lexora-landing h3,
+body.lexora-landing .hero-title,
+body.lexora-landing .section-title,
+body.lexora-landing .audience-title,
+body.lexora-landing .feature-title,
+body.lexora-landing .step-title,
+body.lexora-landing .cta-title {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body.lexora-landing p,
+body.lexora-landing .hero-subtitle,
+body.lexora-landing .section-subtitle,
+body.lexora-landing .audience-description,
+body.lexora-landing .feature-description,
+body.lexora-landing .step-description,
+body.lexora-landing .cta-subtitle {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Main background container */
+.lexora-page-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    background-image: url('../assets/images/law-library-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.lexora-page-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg,
+            rgba(8, 12, 21, 0.65) 0%,
+            rgba(8, 12, 21, 0.7) 50%,
+            rgba(8, 12, 21, 0.8) 100%);
+}
+
+/* ===========================
+   NAVBAR - DARK TRANSPARENT
+   =========================== */
+body.lexora-landing .navbar {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+}
+
+body.lexora-landing .navbar.scrolled {
+    background-color: rgba(10, 15, 24, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom-color: rgba(197, 165, 114, 0.15);
+}
+
+body.lexora-landing .logo-text {
+    color: var(--lexora-text-white);
+}
+
+body.lexora-landing .nav-links li a {
+    color: var(--lexora-text-light);
+    font-weight: 500;
+}
+
+body.lexora-landing .nav-links li a:hover {
+    color: var(--lexora-gold);
+}
+
+body.lexora-landing .nav-actions .btn-secondary {
+    color: var(--lexora-text-white);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: transparent;
+}
+
+body.lexora-landing .nav-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--lexora-gold);
+    color: var(--lexora-gold);
+}
+
+body.lexora-landing .nav-actions .btn-primary {
+    background-color: var(--lexora-gold);
+    color: #0a0f18;
+    border: none;
+}
+
+body.lexora-landing .nav-actions .btn-primary:hover {
+    background-color: var(--lexora-gold-light);
+}
+
+/* ===========================
+   HERO SECTION - FULL SCREEN
+   =========================== */
+body.lexora-landing .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 80px;
+    background: transparent;
+    overflow: hidden;
+}
+
+body.lexora-landing .hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--lexora-overlay-heavy);
+    z-index: 1;
+}
+
+body.lexora-landing .hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--lexora-vignette);
+    z-index: 1;
+}
+
+body.lexora-landing .hero-container {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    padding-left: 0;
+}
+
+body.lexora-landing .hero-content {
+    text-align: center;
+    padding-left: 0;
+}
+
+body.lexora-landing .hero-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--lexora-gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid var(--lexora-gold-dim);
+    border-radius: 30px;
+    background: rgba(197, 165, 114, 0.08);
+}
+
+body.lexora-landing .hero-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: var(--lexora-text-white);
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.lexora-landing .hero-subtitle {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.25rem;
+    color: var(--lexora-text-light);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0.9;
+}
+
+body.lexora-landing .hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+body.lexora-landing .hero-actions .btn-primary {
+    background-color: var(--lexora-gold);
+    color: #0a0f18;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(197, 165, 114, 0.3);
+}
+
+body.lexora-landing .hero-actions .btn-primary:hover {
+    background-color: var(--lexora-gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(197, 165, 114, 0.4);
+}
+
+body.lexora-landing .hero-actions .btn-outline-light {
+    background: transparent;
+    color: var(--lexora-text-white);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+body.lexora-landing .hero-actions .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--lexora-text-white);
+}
+
+/* ===========================
+   SECTION LABELS (GOLD EYEBROW)
+   =========================== */
+.section-label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--lexora-gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 1rem;
+}
+
+/* ===========================
+   WHO IS LEXORA FOR SECTION
+   =========================== */
+body.lexora-landing .who-is-lexora {
+    position: relative;
+    padding: 8rem 0;
+    background: transparent;
+}
+
+body.lexora-landing .who-is-lexora::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg,
+            var(--lexora-overlay-heavy) 0%,
+            var(--lexora-overlay-medium) 50%,
+            var(--lexora-overlay-heavy) 100%);
+    z-index: 0;
+}
+
+body.lexora-landing .who-is-lexora>.container {
+    position: relative;
+    z-index: 1;
+}
+
+body.lexora-landing .who-is-lexora .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+body.lexora-landing .who-is-lexora .section-title {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--lexora-text-white);
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+body.lexora-landing .who-is-lexora .section-subtitle {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--lexora-text-muted);
+    font-size: 1.1rem;
+}
+
+/* Frosted Glass Cards */
+body.lexora-landing .audience-card {
+    background: var(--lexora-surface-glass);
+    backdrop-filter: var(--lexora-glass-blur);
+    -webkit-backdrop-filter: var(--lexora-glass-blur);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.lexora-landing .audience-card:hover {
+    background: rgba(30, 40, 55, 0.7);
+    border-color: rgba(197, 165, 114, 0.3);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.lexora-landing .audience-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+body.lexora-landing .audience-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(197, 165, 114, 0.2) 0%, rgba(197, 165, 114, 0.08) 100%);
+    border: 1px solid rgba(197, 165, 114, 0.25);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    color: var(--lexora-gold);
+}
+
+body.lexora-landing .audience-card:hover .audience-icon {
+    background: var(--lexora-gold);
+    color: #0a0f18;
+    border-color: var(--lexora-gold);
+}
+
+body.lexora-landing .audience-title {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--lexora-text-white);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+body.lexora-landing .audience-description {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--lexora-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+/* ===========================
+   FEATURES SECTION - DARK
+   =========================== */
+body.lexora-landing .features {
+    position: relative;
+    padding: 8rem 0;
+    background: transparent;
+}
+
+body.lexora-landing .features::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg,
+            rgba(8, 12, 21, 0.8) 0%,
+            rgba(10, 15, 24, 0.85) 50%,
+            rgba(8, 12, 21, 0.8) 100%);
+    z-index: 0;
+}
+
+body.lexora-landing .features>.container {
+    position: relative;
+    z-index: 1;
+}
+
+body.lexora-landing .features .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+body.lexora-landing .features .section-title {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--lexora-text-white);
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+body.lexora-landing .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+body.lexora-landing .feature-card {
+    background: var(--lexora-surface-glass);
+    backdrop-filter: var(--lexora-glass-blur);
+    -webkit-backdrop-filter: var(--lexora-glass-blur);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.lexora-landing .feature-card:hover {
+    background: rgba(25, 35, 50, 0.7);
+    border-color: rgba(197, 165, 114, 0.3);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.lexora-landing .feature-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(197, 165, 114, 0.2) 0%, rgba(197, 165, 114, 0.08) 100%);
+    border: 1px solid rgba(197, 165, 114, 0.25);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    color: var(--lexora-gold);
+}
+
+body.lexora-landing .feature-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+body.lexora-landing .feature-card:hover .feature-icon {
+    background: var(--lexora-gold);
+    color: #0a0f18;
+    border-color: var(--lexora-gold);
+}
+
+body.lexora-landing .feature-title {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--lexora-text-white);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+body.lexora-landing .feature-description {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--lexora-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+/* ===========================
+   HOW IT WORKS SECTION - 4 STEPS
+   =========================== */
+body.lexora-landing .how-it-works {
+    position: relative;
+    padding: 8rem 0;
+    background: transparent;
+}
+
+body.lexora-landing .how-it-works::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg,
+            var(--lexora-overlay-heavy) 0%,
+            rgba(12, 18, 30, 0.8) 50%,
+            var(--lexora-overlay-heavy) 100%);
+    z-index: 0;
+}
+
+body.lexora-landing .how-it-works>.container {
+    position: relative;
+    z-index: 1;
+}
+
+body.lexora-landing .how-it-works .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+body.lexora-landing .how-it-works .section-title {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--lexora-text-white);
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+/* Steps with connecting line */
+body.lexora-landing .steps {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+body.lexora-landing .steps::before {
+    content: '';
+    position: absolute;
+    left: 32px;
+    top: 40px;
+    bottom: 40px;
+    width: 2px;
+    background: linear-gradient(180deg,
+            transparent 0%,
+            var(--lexora-gold) 10%,
+            var(--lexora-gold) 90%,
+            transparent 100%);
+    opacity: 0.4;
+}
+
+body.lexora-landing .step {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-bottom: 3rem;
+}
+
+body.lexora-landing .step:last-child {
+    margin-bottom: 0;
+}
+
+body.lexora-landing .step-number {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--lexora-gold) 0%, #a68b5b 100%);
+    color: #0a0f18;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-radius: 50%;
+    box-shadow: 0 8px 25px rgba(197, 165, 114, 0.35);
+    position: relative;
+    z-index: 1;
+}
+
+body.lexora-landing .step-content {
+    flex: 1;
+    padding-top: 0.75rem;
+}
+
+body.lexora-landing .step-title {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--lexora-text-white);
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+body.lexora-landing .step-description {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--lexora-text-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+/* ===========================
+   CTA SECTION - CINEMATIC ENDING
+   =========================== */
+body.lexora-landing .cta {
+    position: relative;
+    padding: 10rem 0;
+    background: transparent;
+    overflow: hidden;
+}
+
+body.lexora-landing .cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg,
+            rgba(6, 10, 18, 0.85) 0%,
+            rgba(4, 8, 15, 0.92) 50%,
+            rgba(2, 5, 10, 0.98) 100%);
+    z-index: 0;
+}
+
+body.lexora-landing .cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
+    z-index: 0;
+}
+
+body.lexora-landing .cta>.container {
+    position: relative;
+    z-index: 1;
+}
+
+body.lexora-landing .cta-content {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+body.lexora-landing .cta-title {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--lexora-text-white);
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.lexora-landing .cta-subtitle {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--lexora-text-light);
+    font-size: 1.2rem;
+    margin-bottom: 2.5rem;
+    opacity: 0.85;
+}
+
+body.lexora-landing .cta-actions .btn-primary {
+    background: linear-gradient(135deg, var(--lexora-gold) 0%, #d4b985 100%);
+    color: #0a0f18;
+    border: none;
+    padding: 1.1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(197, 165, 114, 0.4);
+    transition: all 0.3s ease;
+}
+
+body.lexora-landing .cta-actions .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(197, 165, 114, 0.5);
+}
+
+/* ===========================
+   FOOTER - DARK ELEGANT
+   =========================== */
+body.lexora-landing .footer {
+    background-color: rgba(4, 7, 12, 0.98);
+    border-top: 1px solid rgba(197, 165, 114, 0.1);
+    padding-top: 4rem;
+    padding-bottom: 2rem;
+}
+
+body.lexora-landing .footer-logo .logo-text {
+    color: var(--lexora-text-white);
+}
+
+body.lexora-landing .footer-description {
+    color: var(--lexora-text-muted);
+}
+
+body.lexora-landing .footer-section h4 {
+    color: var(--lexora-gold);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+
+body.lexora-landing .footer-section ul li a {
+    color: var(--lexora-text-muted);
+}
+
+body.lexora-landing .footer-section ul li a:hover {
+    color: var(--lexora-gold);
+}
+
+body.lexora-landing .footer-bottom {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+body.lexora-landing .footer-bottom p {
+    color: var(--lexora-text-muted);
+}
+
+/* ===========================
+   RESPONSIVE STYLES
+   =========================== */
+@media (max-width: 992px) {
+    body.lexora-landing .hero-title {
+        font-size: 3.5rem;
+    }
+
+    body.lexora-landing .steps::before {
+        display: none;
+    }
+
+    body.lexora-landing .who-is-lexora,
+    body.lexora-landing .features,
+    body.lexora-landing .how-it-works,
+    body.lexora-landing .cta {
+        padding: 5rem 0;
+    }
+    
+    body.lexora-landing .audience-grid,
+    body.lexora-landing .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    body.lexora-landing .hero {
+        min-height: auto;
+        padding: 8rem 1rem 5rem;
+    }
+
+    body.lexora-landing .hero-title {
+        font-size: 2.5rem;
+    }
+
+    body.lexora-landing .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    body.lexora-landing .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    body.lexora-landing .hero-actions .btn {
+        width: 100%;
+    }
+
+    body.lexora-landing .who-is-lexora .section-title,
+    body.lexora-landing .features .section-title,
+    body.lexora-landing .how-it-works .section-title {
+        font-size: 2rem;
+    }
+
+    body.lexora-landing .cta-title {
+        font-size: 2rem;
+    }
+
+    body.lexora-landing .step {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    body.lexora-landing .step-number {
+        margin: 0 auto;
+    }
+
+    body.lexora-landing .audience-grid,
+    body.lexora-landing .features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    body.lexora-landing .hero-title {
+        font-size: 2rem;
+    }
+
+    body.lexora-landing .hero-eyebrow {
+        font-size: 0.65rem;
+        padding: 0.4rem 1rem;
+    }
+
+    body.lexora-landing .cta-title {
+        font-size: 1.75rem;
+    }
+}

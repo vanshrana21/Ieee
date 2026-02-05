@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://use.typekit.net/xxxxxxx.css" rel="stylesheet">
     <style>
         @font-face {
@@ -13,6 +14,7 @@
             font-style: normal;
             font-display: swap;
         }
+
         @font-face {
             font-family: 'Proxima Nova';
             src: local('Proxima Nova Bold'), local('ProximaNova-Bold');
@@ -20,6 +22,7 @@
             font-style: normal;
             font-display: swap;
         }
+
         @font-face {
             font-family: 'Proxima Nova';
             src: local('Proxima Nova Regular'), local('ProximaNova-Regular');
@@ -31,9 +34,10 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Lexora - Law School, Simplified. AI-powered study platform for Indian law students.">
+    <meta name="description"
+        content="Lexora - Law School, Simplified. AI-powered study platform for Indian law students.">
     <title>Lexora - Law School, Simplified</title>
-    
+
     <!-- CRITICAL: Load theme FIRST to prevent flash -->
     <script src="../js/theme.js"></script>
     <link rel="stylesheet" href="../css/theme.css">
@@ -41,25 +45,29 @@
     <link rel="stylesheet" href="../css/landing.css">
     <link rel="stylesheet" href="../css/animation.css">
     <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/lexora-landing.css">
 </head>
-<body>
+
+<body class="lexora-landing">
+    <!-- Global Dark Library Background -->
+    <div class="lexora-page-bg"></div>
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
             <div class="nav-logo">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
-                    <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572"/>
-                    <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff"/>
+                    <rect width="32" height="32" rx="6" fill="#1e3a5f" />
+                    <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572" />
+                    <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff" />
                 </svg>
                 <span class="logo-text">Lexora</span>
             </div>
-            
+
             <ul class="nav-links">
                 <li><a href="index.html#features">Features</a></li>
                 <li><a href="index.html#how-it-works">How it works</a></li>
                 <li><a href="pricing.html">Pricing</a></li>
             </ul>
-            
+
             <div class="nav-actions">
                 <a href="login.html" class="btn btn-secondary">Sign In</a>
                 <a href="signup.html" class="btn btn-primary">Get Started</a>
@@ -71,10 +79,10 @@
         <div class="hero-bg-overlay"></div>
         <div class="container hero-container">
             <div class="hero-content">
-                <p class="hero-eyebrow">Built for Indian Law Students</p>
+                <p class="hero-eyebrow">BUILT FOR INDIAN LAW STUDENTS</p>
                 <h1 class="hero-title">Law School, Simplified.</h1>
-                <p class="hero-subtitle">Lexora helps law students read cases faster, prepare for exams, practice moots, and build confidence — from first year to final year.</p>
-                
+                <p class="hero-subtitle">Read cases faster, prepare for exams, practice moots, and master law with AI — semester by semester.</p>
+
                 <div class="hero-actions">
                     <a href="signup.html" class="btn btn-primary btn-large">Start Your Law Journey</a>
                     <a href="#who-is-lexora-for" class="btn btn-outline-light btn-large">See How Lexora Helps</a>
@@ -86,45 +94,49 @@
     <section class="who-is-lexora" id="who-is-lexora-for">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Who is Lexora For?</h2>
-                <p class="section-subtitle">Designed for law students at every stage of their journey</p>
+                <span class="section-label">FOR EVERY LAW STUDENT</span>
+                <h2 class="section-title">Who is Lexora for?</h2>
+                <p class="section-subtitle">Built for law students at every stage of their academic journey.</p>
             </div>
-            
+
             <div class="audience-grid">
                 <div class="audience-card">
                     <div class="audience-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                         </svg>
                     </div>
                     <h3 class="audience-title">Law Students</h3>
-                    <p class="audience-description">Semester-wise subjects, cases, notes, and exam preparation — all structured by syllabus.</p>
+                    <p class="audience-description">BA LLB, BBA LLB, and LLB students preparing for university exams and building strong legal foundations.</p>
                 </div>
-                
+
                 <div class="audience-card">
                     <div class="audience-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 13l-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/>
-                            <path d="m16 16 6-6"/>
-                            <path d="m8 8 6-6"/>
-                            <path d="m9 7 8 8"/>
-                            <path d="m21 11-8-8"/>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 13l-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10" />
+                            <path d="m16 16 6-6" />
+                            <path d="m8 8 6-6" />
+                            <path d="m9 7 8 8" />
+                            <path d="m21 11-8-8" />
                         </svg>
                     </div>
-                    <h3 class="audience-title">Moot Court Participants</h3>
-                    <p class="audience-description">Practice arguments, face AI judges, and improve courtroom articulation.</p>
+                    <h3 class="audience-title">Moot Advocates</h3>
+                    <p class="audience-description">Aspiring lawyers mastering argumentation with AI-powered moot court practice.</p>
                 </div>
-                
+
                 <div class="audience-card">
                     <div class="audience-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                            <path d="M6 12v5c3 3 9 3 12 0v-5" />
                         </svg>
                     </div>
-                    <h3 class="audience-title">All Years (1st to Final)</h3>
-                    <p class="audience-description">Whether you're just starting law school or preparing for finals, Lexora adapts to your level.</p>
+                    <h3 class="audience-title">All Semesters</h3>
+                    <p class="audience-description">From first year to final — Lexora adapts to your course and semester requirements.</p>
                 </div>
             </div>
         </div>
@@ -133,46 +145,89 @@
     <section class="features" id="features">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Key Features</h2>
-                <p class="section-subtitle">Tools designed for exam success and moot court preparation</p>
+                <span class="section-label">PLATFORM FEATURES</span>
+                <h2 class="section-title">Everything you need</h2>
             </div>
-            
+
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="M21 21l-4.35-4.35"/>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.35-4.35" />
                         </svg>
                     </div>
                     <h3 class="feature-title">Case Simplifier</h3>
-                    <p class="feature-description">Full judgments broken into facts, issues, arguments, and ratio — explained in simple language for exams.</p>
+                    <p class="feature-description">AI summaries, key facts, and ratio decidendi.</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 13l-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/>
-                            <path d="m16 16 6-6"/>
-                            <path d="m8 8 6-6"/>
-                            <path d="m9 7 8 8"/>
-                            <path d="m21 11-8-8"/>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 13l-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10" />
+                            <path d="m16 16 6-6" />
+                            <path d="m8 8 6-6" />
+                            <path d="m9 7 8 8" />
+                            <path d="m21 11-8-8" />
                         </svg>
                     </div>
-                    <h3 class="feature-title">Moot Court Simulator</h3>
-                    <p class="feature-description">Argue as petitioner or respondent, face AI judges, and receive structured feedback.</p>
+                    <h3 class="feature-title">Moot Court Practice</h3>
+                    <p class="feature-description">Structured arguments with AI opponent and feedback.</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                            <path d="M8 7h8M8 11h8M8 15h5"/>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                            <path d="M8 7h8M8 11h8M8 15h5" />
                         </svg>
                     </div>
-                    <h3 class="feature-title">Semester-wise Study Hub</h3>
-                    <p class="feature-description">Choose your course and semester to access subjects, units, cases, notes, and practice questions.</p>
+                    <h3 class="feature-title">Semester Study Hub</h3>
+                    <p class="feature-description">Content organized by BA LLB, BBA LLB, LLB syllabi.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5" />
+                            <path d="M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI Tutor</h3>
+                    <p class="feature-description">Instant clarification of legal concepts and case laws.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <path d="M14 2v6h6" />
+                            <path d="M12 18v-6" />
+                            <path d="M9 15h6" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Notes & Practice</h3>
+                    <p class="feature-description">Structured notes, MCQs, and answer writing.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.35-4.35" />
+                            <path d="M11 8a3 3 0 0 0-3 3" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Legal Research</h3>
+                    <p class="feature-description">Intelligent search for cases, statutes, and principles.</p>
                 </div>
             </div>
         </div>
@@ -181,32 +236,40 @@
     <section class="how-it-works" id="how-it-works">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">How It Works</h2>
-                <p class="section-subtitle">Your study journey in three simple steps</p>
+                <span class="section-label">SIMPLE PROCESS</span>
+                <h2 class="section-title">How Lexora Works</h2>
             </div>
-            
+
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h3 class="step-title">Choose Your Course & Semester</h3>
-                        <p class="step-description">Select your law program (BA LLB, BBA LLB, LLB) and current semester. Lexora organizes everything by your syllabus so you study what matters.</p>
+                        <h3 class="step-title">Choose Course</h3>
+                        <p class="step-description">Select your program and semester</p>
                     </div>
                 </div>
-                
+
                 <div class="step">
                     <div class="step-number">2</div>
                     <div class="step-content">
-                        <h3 class="step-title">Study Cases, Notes & Practice Answers</h3>
-                        <p class="step-description">Access simplified case summaries, subject notes, and model answers. Each case is broken down into facts, issues, arguments, and ratio for easy revision.</p>
+                        <h3 class="step-title">Learn & Read</h3>
+                        <p class="step-description">Access simplified cases and notes</p>
                     </div>
                 </div>
-                
+
                 <div class="step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h3 class="step-title">Test Yourself with Moots & Practice Modules</h3>
-                        <p class="step-description">Practice moot court arguments with AI judges, take subject quizzes, and build confidence before your exams. Track your progress semester by semester.</p>
+                        <h3 class="step-title">Practice</h3>
+                        <p class="step-description">Moot courts, MCQs, and writing</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Track Progress</h3>
+                        <p class="step-description">Monitor your academic growth</p>
                     </div>
                 </div>
             </div>
@@ -216,8 +279,8 @@
     <section class="cta">
         <div class="container">
             <div class="cta-content">
-                <h2 class="cta-title">Everything a Law Student Needs — In One Platform</h2>
-                <p class="cta-subtitle">From your first lecture to your final moot.</p>
+                <h2 class="cta-title">Get Started Today</h2>
+                <p class="cta-subtitle">Start your law journey with clarity and confidence</p>
                 <div class="cta-actions">
                     <a href="signup.html" class="btn btn-primary btn-large">Get Started with Lexora</a>
                 </div>
@@ -231,15 +294,16 @@
                 <div class="footer-section">
                     <div class="footer-logo">
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
-                            <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572"/>
-                            <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff"/>
+                            <rect width="32" height="32" rx="6" fill="#1e3a5f" />
+                            <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572" />
+                            <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff" />
                         </svg>
                         <span class="logo-text">Lexora</span>
                     </div>
-                    <p class="footer-description">Lexora is an AI-powered academic and practice platform built for law students across all years.</p>
+                    <p class="footer-description">Lexora is an AI-powered academic and practice platform built for law
+                        students across all years.</p>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4>Product</h4>
                     <ul>
@@ -248,7 +312,7 @@
                         <li><a href="pricing.html">Pricing</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4>Company</h4>
                     <ul>
@@ -256,7 +320,7 @@
                         <li><a href="#">Contact</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4>Legal</h4>
                     <ul>
@@ -270,28 +334,28 @@
             </div>
         </div>
     </footer>
-    
+
     <!-- GSAP Core Library -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    
+
     <!-- GSAP ScrollTrigger Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-    
+
     <!-- GSAP ScrollToPlugin (for smooth anchor scrolling) -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
-    
+
     <!-- Animation System -->
     <script src="../js/index.js"></script>
 
     <script src="../js/auth.js"></script>
-    
+
     <!-- Parallax effect for hero -->
     <script>
-        (function() {
+        (function () {
             'use strict';
-            
+
             const hero = document.querySelector('.hero');
-            
+
             function parallaxScroll() {
                 const scrolled = window.pageYOffset;
                 const rate = scrolled * 0.3;
@@ -299,9 +363,10 @@
                     hero.style.backgroundPositionY = rate + 'px';
                 }
             }
-            
+
             window.addEventListener('scroll', parallaxScroll, { passive: true });
         })();
     </script>
 </body>
+
 </html>
