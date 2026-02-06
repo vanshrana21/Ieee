@@ -32,6 +32,7 @@ from backend.routes import student
 from backend.routes import ba_llb
 from backend.routes import test_kanoon
 from backend.routes import debug_super_kanoon
+from backend.routes import debate
 
 
 # ============================================
@@ -277,6 +278,7 @@ app.include_router(student.router, prefix="/api")
 app.include_router(ba_llb.router, prefix="/api")
 app.include_router(test_kanoon.router)
 app.include_router(debug_super_kanoon.router)
+app.include_router(debate.router)
 
 
 if __name__ == "__main__":
