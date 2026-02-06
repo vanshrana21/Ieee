@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Test - Lexora</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e3a5f;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .test-item {
+            padding: 12px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-left: 4px solid #ccc;
+            border-radius: 4px;
+        }
+        .test-item.pass {
+            border-left-color: #28a745;
+        }
+        .test-item.fail {
+            border-left-color: #dc3545;
+        }
+        button {
+            background: #1e3a5f;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #2d5180;
+        }
+        .code {
+            background: #f4f4f4;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .links {
+            margin-top: 20px;
+        }
+        .links a {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            color: #1e3a5f;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Lexora Frontend Test Suite</h1>
+        <p>This page tests the integration between your frontend and backend.</p>
+
+        <div id="backendStatus" class="status warning">
+            ⏳ Testing backend connection...
+        </div>
+
+        <h2>Test Results</h2>
+        <div id="testResults"></div>
+
+        <h2>Manual Tests</h2>
+        <div>
+            <button onclick="testRegister()">Test Register</button>
+            <button onclick="testLogin()">Test Login</button>
+            <button onclick="testGetUser()">Test Get User</button>
+            <button onclick="testGetCredits()">Test Get Credits</button>
+            <button onclick="runAllTests()">Run All Tests</button>
+        </div>
+
+        <h2>Quick Links</h2>
+        <div class="links">
+            <a href="index.html" target="_blank">→ Login Page</a>
+            <a href="dashboard.html" target="_blank">→ Dashboard</a>
+            <a href="http://127.0.0.1:8000/docs" target="_blank">→ Backend API Docs</a>
+        </div>
+
+        <h2>Backend Information</h2>
+        <div class="code" id="backendInfo">
+            Checking backend...
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const testResults = [];
+
+        function addTestResult(name, passed, message) {
+            testResults.push({ name, passed, message });
+            updateTestDisplay();
+        }
+
+        function updateTestDisplay() {
+            const container = document.getElementById('testResults');
+            container.innerHTML = testResults.map(test => `
+                <div class="test-item ${test.passed ? 'pass' : 'fail'}">
+                    <strong>${test.passed ? '✓' : '✗'} ${test.name}</strong><br>
+                    <small>${test.message}</small>
+                </div>
+            `).join('');
+        }
+
+        async function checkBackend() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/health');
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('backendStatus');
+                const infoDiv = document.getElementById('backendInfo');
+                
+                if (response.ok) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✓ Backend is running and healthy!';
+                    infoDiv.innerHTML = `
+Status: ${data.status}
+Environment: ${data.environment}
+Version: ${data.version}
+Timestamp: ${data.timestamp}
+                    `;
+                    addTestResult('Backend Health Check', true, 'Backend responded successfully');
+                } else {
+                    throw new Error('Backend returned error');
+                }
+            } catch (error) {
+                const statusDiv = document.getElementById('backendStatus');
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '✗ Cannot connect to backend at http://127.0.0.1:8000';
+                
+                const infoDiv = document.getElementById('backendInfo');
+                infoDiv.innerHTML = `Error: ${error.message}\n\nMake sure your backend is running:\ncd /path/to/backend\npython -m uvicorn backend.main:app --reload`;
+                
+                addTestResult('Backend Health Check', false, error.message);
+            }
+        }
+
+        async function testRegister() {
+            const testEmail = `test_${Date.now()}@example.com`;
+            const result = await register('Test User', testEmail, 'test123');
+            
+            if (result.success) {
+                addTestResult('Register', true, `Successfully registered ${testEmail}`);
+            } else {
+                addTestResult('Register', false, result.error);
+            }
+        }
+
+        async function testLogin() {
+            // First register a user
+            const testEmail = `test_${Date.now()}@example.com`;
+            await register('Test User', testEmail, 'test123');
+            
+            // Then try to login
+            const result = await login(testEmail, 'test123');
+            
+            if (result.success && result.token) {
+                addTestResult('Login', true, 'Successfully logged in and received token');
+            } else {
+                addTestResult('Login', false, result.error || 'No token received');
+            }
+        }
+
+        async function testGetUser() {
+            // First ensure we're logged in
+            const testEmail = `test_${Date.now()}@example.com`;
+            await register('Test User', testEmail, 'test123');
+            await login(testEmail, 'test123');
+            
+            // Now get user info
+            const result = await getCurrentUser();
+            
+            if (result.success && result.data) {
+                addTestResult('Get User Info', true, `Retrieved user: ${result.data.email}`);
+            } else {
+                addTestResult('Get User Info', false, result.error || 'Failed to get user info');
+            }
+        }
+
+        async function testGetCredits() {
+            // First ensure we're logged in
+            const testEmail = `test_${Date.now()}@example.com`;
+            await register('Test User', testEmail, 'test123');
+            await login(testEmail, 'test123');
+            
+            // Now get credits
+            const result = await getUserCredits();
+            
+            if (result.success && result.data) {
+                addTestResult('Get Credits', true, `Credits: ${result.data.credits}`);
+            } else {
+                addTestResult('Get Credits', false, result.error || 'Failed to get credits');
+            }
+        }
+
+        async function runAllTests() {
+            testResults.length = 0;
+            updateTestDisplay();
+            
+            await checkBackend();
+            await testRegister();
+            await testLogin();
+            await testGetUser();
+            await testGetCredits();
+            
+            const passed = testResults.filter(t => t.passed).length;
+            const total = testResults.length;
+            
+            alert(`Tests complete!\nPassed: ${passed}/${total}`);
+        }
+
+        // Check backend on load
+        checkBackend();
+    </script>
+</body>
+</html>
