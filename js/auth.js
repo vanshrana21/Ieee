@@ -1,16 +1,60 @@
 /**
  * auth.js
- * Complete authentication module for LegalAI Research
- * Handles login, signup, logout, token management, and role-based routing
- * Phase 2: Added enrollment functionality
+ * Complete authentication module for LegalAI Research - Phase 5A RBAC
+ * Handles login, signup, logout, token management, and role-based access control
+ * 
+ * Phase 5A Updates:
+ * - 5 roles: STUDENT, JUDGE, FACULTY, ADMIN, SUPER_ADMIN
+ * - Permission matrix for moot court
+ * - Refresh token support
+ * - Role guards
  */
 
 if (!window.API_BASE_URL) {
     window.API_BASE_URL = 'http://127.0.0.1:8000';
 }
+
 const TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 const ROLE_KEY = 'user_role';
+const USER_KEY = 'user_info';
 const USER_NAME_KEY = 'legalai_user_name';
+
+// Phase 5A: Role definitions
+const ROLES = {
+    STUDENT: 'student',
+    JUDGE: 'judge',
+    FACULTY: 'faculty',
+    ADMIN: 'admin',
+    SUPER_ADMIN: 'super_admin'
+};
+
+// Phase 5A: Role hierarchy for permission checks
+const ROLE_HIERARCHY = {
+    [ROLES.SUPER_ADMIN]: 5,
+    [ROLES.ADMIN]: 4,
+    [ROLES.FACULTY]: 3,
+    [ROLES.JUDGE]: 2,
+    [ROLES.STUDENT]: 1
+};
+
+// Phase 5A: Moot Court Permission Matrix
+const MOOT_COURT_PERMISSIONS = {
+    CREATE_PROJECT: [ROLES.STUDENT],
+    WRITE_IRAC: [ROLES.STUDENT],
+    ORAL_ROUND_SPEAKER: [ROLES.STUDENT],
+    ORAL_ROUND_BENCH: [ROLES.JUDGE, ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    EVALUATE_AND_SCORE: [ROLES.JUDGE, ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    VIEW_ALL_TEAMS: [ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    CREATE_COMPETITIONS: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    MANAGE_INSTITUTIONS: [ROLES.SUPER_ADMIN],
+    AI_COACH: [ROLES.STUDENT],
+    AI_REVIEW: [ROLES.STUDENT],
+    COUNTER_ARGUMENT: [ROLES.STUDENT],
+    JUDGE_ASSIST: [ROLES.JUDGE, ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    BENCH_QUESTIONS: [ROLES.JUDGE, ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    FEEDBACK_SUGGEST: [ROLES.JUDGE, ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN]
+};
 
 // ============================================================================
 // TOKEN MANAGEMENT
@@ -42,6 +86,7 @@ function getAccessToken() {
 function removeToken() {
     try {
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
         localStorage.removeItem('user_info');
         localStorage.removeItem(ROLE_KEY);
         localStorage.removeItem(USER_NAME_KEY);
@@ -50,6 +95,25 @@ function removeToken() {
     } catch (error) {
         console.error('Failed to remove token:', error);
         return false;
+    }
+}
+
+function setRefreshToken(token) {
+    try {
+        localStorage.setItem(REFRESH_TOKEN_KEY, token);
+        return true;
+    } catch (error) {
+        console.error('Failed to store refresh token:', error);
+        return false;
+    }
+}
+
+function getRefreshToken() {
+    try {
+        return localStorage.getItem(REFRESH_TOKEN_KEY);
+    } catch (error) {
+        console.error('Failed to retrieve refresh token:', error);
+        return null;
     }
 }
 
@@ -587,6 +651,212 @@ async function getUserCurriculum() {
 }
 
 // ============================================================================
+// PHASE 5A: RBAC - PERMISSION CHECKS
+// ============================================================================
+
+/**
+ * Check if current user has specific role
+ * @param {string} role - Role to check
+ * @returns {boolean}
+ */
+function hasRole(role) {
+    return getUserRole() === role;
+}
+
+/**
+ * Check if current user has any of the specified roles
+ * @param {string[]} roles - Array of roles
+ * @returns {boolean}
+ */
+function hasAnyRole(roles) {
+    const userRole = getUserRole();
+    return roles.includes(userRole);
+}
+
+/**
+ * Check if current user has minimum role level (hierarchy-based)
+ * @param {string} minRole - Minimum required role
+ * @returns {boolean}
+ */
+function hasMinRole(minRole) {
+    const userRole = getUserRole();
+    const userLevel = ROLE_HIERARCHY[userRole] || 0;
+    const minLevel = ROLE_HIERARCHY[minRole] || 0;
+    return userLevel >= minLevel;
+}
+
+/**
+ * Check if user has specific moot court permission
+ * @param {string} permission - Permission key from MOOT_COURT_PERMISSIONS
+ * @returns {boolean}
+ */
+function hasPermission(permission) {
+    const userRole = getUserRole();
+    const allowedRoles = MOOT_COURT_PERMISSIONS[permission] || [];
+    return allowedRoles.includes(userRole);
+}
+
+// ============================================================================
+// PHASE 5A: RBAC - ROLE GUARDS
+// ============================================================================
+
+/**
+ * Require specific role(s), redirect if not authorized
+ * @param {string[]} roles - Allowed roles
+ * @returns {boolean}
+ */
+function requireRole(roles) {
+    if (!isAuthenticated()) {
+        window.location.href = '/html/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return false;
+    }
+    
+    if (!hasAnyRole(roles)) {
+        window.location.href = '/html/unauthorized.html';
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Guard: Students only
+ * @returns {boolean}
+ */
+function guardStudentOnly() {
+    return requireRole([ROLES.STUDENT]);
+}
+
+/**
+ * Guard: Judges and above (faculty, admin, super_admin)
+ * @returns {boolean}
+ */
+function guardJudgeAndAbove() {
+    return requireRole([ROLES.JUDGE, ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+}
+
+/**
+ * Guard: Faculty and above
+ * @returns {boolean}
+ */
+function guardFacultyAndAbove() {
+    return requireRole([ROLES.FACULTY, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+}
+
+/**
+ * Guard: Admin and above
+ * @returns {boolean}
+ */
+function guardAdminAndAbove() {
+    return requireRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+}
+
+/**
+ * Guard: Super admin only
+ * @returns {boolean}
+ */
+function guardSuperAdminOnly() {
+    return requireRole([ROLES.SUPER_ADMIN]);
+}
+
+// ============================================================================
+// PHASE 5A: UI HELPERS
+// ============================================================================
+
+/**
+ * Hide element if user doesn't have permission
+ * @param {HTMLElement} element
+ * @param {string} permission
+ */
+function hideIfNotPermitted(element, permission) {
+    if (!hasPermission(permission)) {
+        element.style.display = 'none';
+    }
+}
+
+/**
+ * Disable element if user doesn't have permission
+ * @param {HTMLElement} element
+ * @param {string} permission
+ */
+function disableIfNotPermitted(element, permission) {
+    if (!hasPermission(permission)) {
+        element.disabled = true;
+        element.title = 'You do not have permission to use this feature';
+        element.classList.add('disabled-by-permission');
+    }
+}
+
+/**
+ * Show/hide element based on permission
+ * @param {HTMLElement} element
+ * @param {string} permission
+ */
+function toggleElementByPermission(element, permission) {
+    if (hasPermission(permission)) {
+        element.style.display = '';
+        element.disabled = false;
+    } else {
+        element.style.display = 'none';
+        element.disabled = true;
+    }
+}
+
+// ============================================================================
+// PHASE 5A: TOKEN REFRESH
+// ============================================================================
+
+/**
+ * Refresh access token using refresh token
+ * @returns {Promise<boolean>}
+ */
+async function refreshAccessToken() {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        if (!response.ok) {
+            throw new Error('Token refresh failed');
+        }
+
+        const data = await response.json();
+        
+        setToken(data.access_token);
+        setRefreshToken(data.refresh_token);
+        
+        // Update user info
+        const user = {
+            id: data.user_id,
+            role: data.role,
+            institution_id: data.institution_id
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        
+        return true;
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        return false;
+    }
+}
+
+/**
+ * Schedule automatic token refresh
+ */
+function scheduleTokenRefresh() {
+    // Refresh every 25 minutes (before 30-min expiry)
+    setInterval(async () => {
+        if (isAuthenticated()) {
+            await refreshAccessToken();
+        }
+    }, 25 * 60 * 1000);
+}
+
+// ============================================================================
 // ROUTE PROTECTION
 // ============================================================================
 
@@ -717,6 +987,7 @@ function handleLogout() {
 // ============================================================================
 
 window.auth = {
+    // Auth operations
     register,
     login,
     logout,
@@ -725,21 +996,55 @@ window.auth = {
     getCurrentUser,
     getUserCredits,
     getUserCurriculum,
+    refreshAccessToken,
+    scheduleTokenRefresh,
+    
+    // Auth checks
     isAuthenticated,
     requireAuth,
     redirectIfAuthenticated,
     redirectIfEnrolled,
     enrollUser,
+    
+    // Token management
     getToken,
     getAccessToken,
+    getRefreshToken,
     setToken,
+    setRefreshToken,
     saveAccessToken,
     removeToken,
     clearAccessToken,
     authenticatedFetch,
+    
+    // Role management
     getUserRole,
     setUserRole,
     getDashboardUrl,
+    ROLES,
+    ROLE_HIERARCHY,
+    MOOT_COURT_PERMISSIONS,
+    
+    // Phase 5A: RBAC permission checks
+    hasRole,
+    hasAnyRole,
+    hasMinRole,
+    hasPermission,
+    
+    // Phase 5A: Role guards
+    requireRole,
+    guardStudentOnly,
+    guardJudgeAndAbove,
+    guardFacultyAndAbove,
+    guardAdminAndAbove,
+    guardSuperAdminOnly,
+    
+    // Phase 5A: UI helpers
+    hideIfNotPermitted,
+    disableIfNotPermitted,
+    toggleElementByPermission,
+    
+    // User info
     getUserName,
     saveUserName,
     getUserFirstName

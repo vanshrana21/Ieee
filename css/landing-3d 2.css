@@ -1,0 +1,54 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0b0604;
+  font-family: "Georgia", serif;
+}
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-text {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 5;
+  color: #f2e6d8;
+}
+
+.hero-text h1 {
+  font-size: 64px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.hero-text p {
+  margin-top: 14px;
+  font-size: 18px;
+  color: #d4b36a;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,0) 35%,
+    rgba(0,0,0,0.85) 100%
+  );
+}

@@ -1296,3 +1296,1452 @@ body {
     justify-content: flex-end;
     flex-shrink: 0;
 }
+
+/* ======================== */
+/* PHASE 3 — ORAL ROUNDS    */
+/* ======================== */
+
+/* Oral Round Header */
+.oral-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--border-light);
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.oral-nav {
+    flex-shrink: 0;
+}
+
+.oral-meta {
+    flex: 1;
+    text-align: center;
+}
+
+.oral-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.oral-badges {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.badge-stage {
+    background: #EEF2FF;
+    color: #4338CA;
+}
+
+.badge-role {
+    background: #F3F4F6;
+    color: var(--text-secondary);
+}
+
+.oral-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Oral Round Button */
+.btn-oral {
+    border-color: rgba(220, 38, 38, 0.2);
+    color: #DC2626;
+}
+
+.btn-oral:hover {
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.4);
+}
+
+/* Role Bar */
+.oral-role-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    background: #FAFBFC;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.oral-role-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.oral-role-btn {
+    padding: 0.35rem 0.875rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+    background: var(--white);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.oral-role-btn.active {
+    background: #DC2626;
+    color: white;
+    border-color: #DC2626;
+}
+
+/* Setup Panel */
+.oral-setup-panel {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.oral-setup-panel h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+    text-align: center;
+}
+
+.oral-setup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.oral-setup-item label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.375rem;
+    font-weight: 500;
+}
+
+.oral-setup-item input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.oral-setup-item input:focus {
+    outline: none;
+    border-color: var(--accent-teal);
+}
+
+/* Active Round Panel */
+.oral-round-panel {
+    padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Timer Section */
+.oral-timer-section {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.oral-timer-display {
+    font-size: 3rem;
+    font-weight: 800;
+    font-family: 'SF Mono', Monaco, monospace;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.oral-timer-display.warning {
+    color: #F59E0B;
+}
+
+.oral-timer-display.critical {
+    color: #DC2626;
+    animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.oral-timer-status {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.oral-timer-status.paused {
+    color: #F59E0B;
+}
+
+.oral-timer-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-timer:hover {
+    background: #F1F5F9;
+    border-color: var(--border-medium);
+}
+
+/* Stage Bar */
+.oral-stage-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.oral-stage-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #F1F5F9;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+}
+
+.oral-stage-item.active {
+    background: var(--white);
+    border-color: var(--accent-teal);
+    opacity: 1;
+}
+
+.oral-stage-item.completed {
+    background: #ECFDF5;
+    opacity: 1;
+}
+
+.stage-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border-medium);
+}
+
+.oral-stage-item.active .stage-dot {
+    background: var(--accent-teal);
+}
+
+.oral-stage-item.completed .stage-dot {
+    background: var(--success);
+}
+
+.stage-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.oral-stage-item.active .stage-label {
+    color: var(--text-primary);
+}
+
+/* Content Layout */
+.oral-content-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1rem;
+}
+
+/* Speaker Panel */
+.oral-speaker-panel {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.oral-issue-selector {
+    margin-bottom: 1rem;
+}
+
+.oral-issue-selector label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.375rem;
+    font-weight: 500;
+}
+
+.oral-issue-selector select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: var(--white);
+}
+
+.oral-response-area {
+    margin-bottom: 1rem;
+}
+
+.oral-response-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.oral-speaker-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-teal);
+}
+
+.oral-timestamp {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.oral-response-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 200px;
+    font-family: inherit;
+}
+
+.oral-response-input:focus {
+    outline: none;
+    border-color: var(--accent-teal);
+}
+
+.oral-response-input:disabled {
+    background: #F1F5F9;
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.oral-response-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.375rem;
+}
+
+/* Responses Log */
+.oral-responses-log {
+    border-top: 1px solid var(--border-light);
+    padding-top: 1rem;
+}
+
+.oral-responses-log h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.oral-response-item {
+    padding: 0.625rem 0.75rem;
+    background: #FAFBFC;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.oral-response-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.oral-response-text {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* Bench Panel */
+.oral-bench-panel {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.oral-bench-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.oral-bench-header h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.oral-bench-status {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: #ECFDF5;
+    color: var(--success);
+}
+
+.oral-bench-status.paused {
+    background: #FFFBEB;
+    color: #F59E0B;
+}
+
+/* AI Suggestions */
+.oral-ai-suggestions {
+    background: #FDFCFF;
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.oral-ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.oral-ai-header span:first-child {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #5B21B6;
+}
+
+.oral-ai-list {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+.oral-ai-placeholder {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.oral-ai-item {
+    padding: 0.5rem;
+    background: var(--white);
+    border: 1px solid rgba(124, 58, 237, 0.1);
+    border-radius: 4px;
+    margin-bottom: 0.375rem;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.oral-ai-item:hover {
+    border-color: #7C3AED;
+    background: rgba(124, 58, 237, 0.03);
+}
+
+.btn-ai-sm {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+}
+
+/* Question Form */
+.oral-question-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.oral-question-input {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    resize: vertical;
+    min-height: 60px;
+}
+
+.oral-question-input:focus {
+    outline: none;
+    border-color: var(--accent-teal);
+}
+
+/* Active Question */
+.oral-active-question {
+    background: #FFFBEB;
+    border: 2px solid #F59E0B;
+    border-radius: 8px;
+    padding: 0.875rem;
+    animation: pulseQuestion 2s ease-in-out infinite;
+}
+
+@keyframes pulseQuestion {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); }
+}
+
+.oral-question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.oral-question-header span:first-child {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #B45309;
+}
+
+.oral-timer-paused {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #DC2626;
+    background: #FEF2F2;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.oral-question-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+/* Question History */
+.oral-question-history {
+    border-top: 1px solid var(--border-light);
+    padding-top: 0.75rem;
+}
+
+.oral-question-history h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.oral-history-item {
+    padding: 0.5rem 0.625rem;
+    background: #FAFBFC;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    margin-bottom: 0.375rem;
+    font-size: 0.8rem;
+}
+
+.oral-history-meta {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+/* Judge Notes */
+.oral-judge-notes {
+    border-top: 1px solid var(--border-light);
+    padding-top: 0.75rem;
+}
+
+.oral-judge-notes h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.oral-private-tag {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: #F1F5F9;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+}
+
+.oral-notes-input {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Transcript Modal */
+.oral-transcript-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 400;
+    animation: fadeIn 0.15s ease;
+}
+
+.oral-transcript-panel {
+    background: var(--white);
+    border-radius: 12px;
+    max-width: 800px;
+    width: 92%;
+    max-height: 85vh;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+}
+
+.oral-transcript-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.oral-transcript-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.oral-transcript-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.oral-transcript-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+.transcript-section {
+    margin-bottom: 1.5rem;
+}
+
+.transcript-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.375rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.transcript-entry {
+    margin-bottom: 1rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--border-light);
+}
+
+.transcript-entry.question {
+    border-left-color: #F59E0B;
+}
+
+.transcript-entry.response {
+    border-left-color: var(--accent-teal);
+}
+
+.transcript-entry-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.transcript-entry-role {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.transcript-entry-text {
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .oral-content-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .oral-bench-panel {
+        order: -1;
+    }
+    
+    .oral-setup-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .oral-timer-display {
+        font-size: 2rem;
+    }
+    
+    .oral-stage-bar {
+        flex-direction: column;
+    }
+    
+    .oral-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .oral-meta {
+        text-align: left;
+    }
+}
+
+/* ======================== */
+/* PHASE 4 — EVALUATION     */
+/* ======================== */
+
+/* Evaluation Overlay */
+.evaluation-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    animation: fadeIn 0.2s ease;
+}
+
+.evaluation-panel {
+    background: var(--white);
+    border-radius: 12px;
+    max-width: 1400px;
+    width: 95%;
+    max-height: 90vh;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Evaluation Header */
+.evaluation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    background: #FAFBFC;
+    border-radius: 12px 12px 0 0;
+}
+
+.evaluation-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.evaluation-title-row h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.evaluation-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-eval {
+    border-color: rgba(37, 99, 235, 0.2);
+    color: #2563EB;
+}
+
+.btn-eval:hover {
+    background: rgba(37, 99, 235, 0.06);
+    border-color: rgba(37, 99, 235, 0.4);
+}
+
+/* Evaluation Content */
+.evaluation-content {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Review Panel (Left) */
+.eval-review-panel {
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Section Tabs */
+.eval-section-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border-light);
+    background: #FAFBFC;
+}
+
+.eval-tab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.eval-tab:hover {
+    color: var(--text-primary);
+    background: rgba(46, 111, 149, 0.04);
+}
+
+.eval-tab.active {
+    color: var(--accent-teal);
+    border-bottom-color: var(--accent-teal);
+    background: var(--white);
+}
+
+/* Tab Content */
+.eval-tab-content {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.eval-tab-content.active {
+    display: block;
+}
+
+.eval-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Issues List in Eval Panel */
+.eval-issues-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.eval-issue-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.eval-issue-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-teal);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.eval-issue-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.eval-irac-section {
+    margin-bottom: 0.5rem;
+}
+
+.eval-irac-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.eval-irac-content {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    background: #FAFBFC;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    border-left: 3px solid var(--border-light);
+}
+
+.eval-irac-content.empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Oral Summary */
+.eval-oral-summary {
+    padding: 1rem;
+}
+
+.eval-oral-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.eval-stat-box {
+    background: #F1F5F9;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.eval-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-teal);
+}
+
+.eval-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* Transcript in Eval */
+.eval-transcript {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+
+/* Scoring Panel (Right) */
+.eval-scoring-panel {
+    background: #FAFBFC;
+    padding: 1.25rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.eval-scoring-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.eval-scoring-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Judge ID */
+.eval-judge-id {
+    background: var(--white);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+}
+
+.eval-judge-id label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.375rem;
+}
+
+.eval-judge-id input {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Scoring Categories */
+.eval-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.eval-category {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 0.875rem;
+}
+
+.eval-category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.eval-category-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.eval-category-score {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.eval-score-input {
+    width: 50px;
+    padding: 0.3rem;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.eval-max-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.eval-category-comment {
+    margin-top: 0.5rem;
+}
+
+.eval-category-comment textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    resize: vertical;
+    min-height: 50px;
+}
+
+/* Overall Comments */
+.eval-overall {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 0.875rem;
+}
+
+.eval-overall h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.eval-overall textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    resize: vertical;
+}
+
+/* AI Assist */
+.eval-ai-assist {
+    background: #FDFCFF;
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.eval-ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.eval-ai-header span:first-child {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #5B21B6;
+}
+
+.eval-ai-content {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+.eval-ai-placeholder {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Score Summary */
+.eval-summary {
+    background: var(--white);
+    border: 2px solid var(--accent-teal);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.eval-total-score {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.eval-total-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.eval-total-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent-teal);
+}
+
+.eval-max-value {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.eval-percentage {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Multi-Judge Panel */
+.eval-multi-judge {
+    border-top: 1px solid var(--border-light);
+    padding: 1rem 1.5rem;
+    background: #FAFBFC;
+}
+
+.eval-multi-judge h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.eval-judges-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.eval-judge-chip {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    padding: 0.35rem 0.875rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.eval-judge-chip.final {
+    border-color: var(--success);
+    background: #ECFDF5;
+    color: var(--success);
+}
+
+.eval-aggregate {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+}
+
+.eval-aggregate-item {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.eval-aggregate-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.eval-aggregate-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent-teal);
+}
+
+/* Feedback Report */
+.feedback-report-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 600;
+    animation: fadeIn 0.2s ease;
+}
+
+.feedback-report-panel {
+    background: var(--white);
+    border-radius: 12px;
+    max-width: 700px;
+    width: 92%;
+    max-height: 85vh;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.feedback-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.feedback-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.feedback-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.feedback-section {
+    margin-bottom: 1.5rem;
+}
+
+.feedback-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.375rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.feedback-score-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.feedback-score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 0.875rem;
+    background: #FAFBFC;
+    border-radius: 6px;
+}
+
+.feedback-score-name {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+}
+
+.feedback-score-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--accent-teal);
+}
+
+.feedback-comment {
+    background: #FAFBFC;
+    border-left: 3px solid var(--accent-teal);
+    padding: 0.875rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.feedback-strengths,
+.feedback-improvements {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.feedback-strengths h5,
+.feedback-improvements h5 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.feedback-strengths h5 {
+    color: var(--success);
+}
+
+.feedback-improvements h5 {
+    color: #F59E0B;
+}
+
+.feedback-strengths ul,
+.feedback-improvements ul {
+    margin-left: 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.feedback-strengths li {
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.feedback-improvements li {
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.feedback-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-light);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .evaluation-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .eval-review-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .eval-scoring-panel {
+        max-height: 50vh;
+    }
+    
+    .feedback-score-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .evaluation-panel {
+        width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .evaluation-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+    
+    .evaluation-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .eval-oral-stats {
+        grid-template-columns: 1fr;
+    }
+}

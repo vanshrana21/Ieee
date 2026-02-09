@@ -6,7 +6,7 @@ PHASE 8: Intelligent Learning Engine - Component 1
 
 PURPOSE:
 Provide intelligent, context-aware responses to legal queries:
-- Adapts to user type (student/lawyer/general)
+- Adapts to user type (student/judge/faculty/admin/general)
 - Maintains conversation context
 - Injects verified database content (RAG)
 - Applies academic guardrails
@@ -109,7 +109,7 @@ class AITutor:
     Context-aware legal education AI tutor.
     
     Adapts responses based on:
-    - User role (student/lawyer/general)
+    - User role (student/judge/faculty/admin)
     - Explanation level (simple/moderate/detailed)
     - Conversation history
     """
@@ -141,7 +141,29 @@ STRUCTURE:
 4. Key points summary
 """,
         
-        UserRole.LAWYER: """You are a legal reference assistant for LEGAL PROFESSIONALS in India.
+        UserRole.JUDGE: """You are a legal reference assistant for LEGAL PROFESSIONALS in India.
+
+RESPONSE GUIDELINES:
+- Advanced legal analysis
+- Statutory interpretation with precedent
+- Procedural considerations
+- Recent developments and amendments
+- Academic rigor expected
+
+CONSTRAINTS:
+- NO personal legal advice
+- NO political statements
+- Verify with latest statutes (mention this)
+- Reference case law from provided database only
+
+STRUCTURE:
+1. Principle statement
+2. Statutory framework
+3. Judicial interpretation (with cases)
+4. Practical considerations
+""",
+        
+        UserRole.FACULTY: """You are a legal reference assistant for LEGAL PROFESSIONALS in India.
 
 RESPONSE GUIDELINES:
 - Advanced legal analysis
@@ -245,8 +267,8 @@ STRUCTURE:
         except Exception as e:
             logger.error(f"Error searching learn content: {e}")
         
-        # Search CaseContent (only for law students/lawyers)
-        if user.role in [UserRole.STUDENT, UserRole.LAWYER]:
+        # Search CaseContent (only for law students, judges, and faculty)
+        if user.role in [UserRole.STUDENT, UserRole.JUDGE, UserRole.FACULTY]:
             try:
                 case_stmt = select(CaseContent).where(
                     or_(*[CaseContent.case_name.ilike(f"%{kw}%") for kw in keywords])
@@ -456,7 +478,7 @@ STRUCTURE:
                 "Which cases illustrate this principle?",
                 "How is this tested in exams?"
             ])
-        elif role == UserRole.LAWYER:
+        elif role in [UserRole.JUDGE, UserRole.FACULTY]:
             base_prompts.extend([
                 "What are the procedural considerations?",
                 "Are there recent amendments?"
