@@ -1,0 +1,531 @@
+/**
+ * ai-practice.css
+ * Phase 3: AI Moot Court Practice Mode Styles
+ * Mobile-first design for Indian law students
+ */
+
+/* Base container */
+.ai-judge-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 16px;
+    min-height: calc(100vh - 80px);
+}
+
+/* Screen layouts */
+.ai-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Header */
+.ai-header {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.ai-header h1 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.ai-header p {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    color: #64748b;
+    margin: 0;
+}
+
+/* Side badges */
+.ai-side-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: capitalize;
+    margin-top: 12px;
+}
+
+.ai-side-petitioner {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ai-side-respondent {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Problem cards */
+.ai-problems-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ai-problem-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-problem-card h3 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0 0 8px 0;
+}
+
+.ai-problem-card p {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #64748b;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.ai-problem-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Buttons */
+.ai-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 48px;
+    text-decoration: none;
+}
+
+.ai-btn:active {
+    transform: scale(0.98);
+}
+
+.ai-btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.ai-btn-primary:hover {
+    background: #2563eb;
+}
+
+.ai-btn-secondary {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+.ai-btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.ai-btn-tertiary {
+    background: transparent;
+    color: #3b82f6;
+    border: 1px solid #3b82f6;
+}
+
+.ai-btn-tertiary:hover {
+    background: #eff6ff;
+}
+
+.ai-btn-large {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 18px;
+}
+
+/* Argument form */
+.ai-argument-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-textarea {
+    width: 95%;
+    margin: 0 auto;
+    min-height: 120px;
+    padding: 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.ai-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.ai-helper-text {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.ai-helper-text p {
+    margin: 4px 0;
+}
+
+.ai-char-counter {
+    text-align: right;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.ai-validation-error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* AI Feedback screen */
+.ai-judge-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+}
+
+.ai-feedback-box {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #1a1a2e;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-feedback-box p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+/* Scores */
+.ai-scores {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-score-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ai-score-label {
+    font-weight: 600;
+    color: #334155;
+    min-width: 120px;
+}
+
+.ai-score-stars {
+    font-size: 18px;
+}
+
+.ai-score-hint {
+    color: #ef4444;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Debrief screen */
+.ai-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ai-metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-metric-card h4 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-metric-value {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.ai-improvement {
+    color: #10b981;
+    margin-left: 8px;
+}
+
+.ai-metric-warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.ai-metric-warning p {
+    font-size: 14px;
+    color: #64748b;
+}
+
+/* CTA Buttons */
+.ai-cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* Loading state */
+.ai-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 20px;
+}
+
+.ai-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: ai-spin 1s linear infinite;
+}
+
+@keyframes ai-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ai-loading p {
+    font-size: 16px;
+    color: #64748b;
+}
+
+/* Error state */
+.ai-error {
+    text-align: center;
+    padding: 40px 20px;
+    background: #fee2e2;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.ai-error p {
+    color: #991b1b;
+    font-size: 16px;
+    margin: 0 0 20px 0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .ai-judge-container {
+        padding: 12px;
+    }
+    
+    .ai-header h1 {
+        font-size: 20px;
+    }
+    
+    .ai-header p {
+        font-size: 14px;
+    }
+    
+    .ai-problem-card {
+        padding: 16px;
+    }
+    
+    .ai-problem-actions {
+        flex-direction: column;
+    }
+    
+    .ai-btn {
+        width: 100%;
+    }
+    
+    .ai-textarea {
+        width: 100%;
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    .ai-score-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .ai-score-label {
+        min-width: auto;
+    }
+}
+
+/* Tablet and up */
+@media (min-width: 641px) {
+    .ai-judge-container {
+        padding: 24px;
+    }
+    
+    .ai-header h1 {
+        font-size: 28px;
+    }
+    
+    .ai-cta-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .ai-cta-buttons .ai-btn {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+/* Phase 4: India-Specific Behavior Badges */
+.behavior-badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: help;
+    transition: transform 0.2s ease;
+}
+
+.badge:hover {
+    transform: translateY(-1px);
+}
+
+/* Green for satisfied behaviors */
+.etiquette-badge {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+/* Blue for citation */
+.citation-badge {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+/* Amber for landmark cases */
+.case-badge {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+/* Purple for proportionality */
+.proportionality-badge {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #d8b4fe;
+}
+
+/* Orange for interruptions */
+.interruption-badge {
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fdba74;
+    animation: pulse 1.5s infinite;
+}
+
+/* Red for violations (missing class) */
+.badge.missing {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+}
+
+/* Score hints */
+.score-hint {
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 500;
+    font-style: italic;
+    margin-left: auto;
+}
+
+/* Pulse animation for interruption badge */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Mobile behavior badge adjustments */
+@media (max-width: 640px) {
+    .behavior-badges {
+        gap: 6px;
+    }
+    
+    .badge {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+}

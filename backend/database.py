@@ -55,6 +55,57 @@ async def get_db():
             await session.close()
 
 
+async def check_and_migrate_institution_column():
+    """
+    Check if the 'institution_id' column exists in users table and add it if missing.
+    Also adds refresh_token and refresh_token_expires columns from Phase 5A.
+    Idempotent: safe to run multiple times.
+    """
+    async with engine.begin() as conn:
+        try:
+            # Check if users table exists
+            result = await conn.execute(
+                text("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+            )
+            table_exists = result.fetchone() is not None
+            
+            if not table_exists:
+                logger.info("Users table doesn't exist yet - skipping column migrations")
+                return
+            
+            # Check existing columns
+            result = await conn.execute(text("PRAGMA table_info(users)"))
+            columns = [row[1] for row in result.fetchall()]
+            
+            # Add institution_id if missing
+            if 'institution_id' not in columns:
+                logger.warning("institution_id column missing - adding column")
+                await conn.execute(text("ALTER TABLE users ADD COLUMN institution_id INTEGER"))
+                logger.info("✓ Successfully added institution_id column")
+            else:
+                logger.info("✓ institution_id column already exists")
+            
+            # Add refresh_token if missing (Phase 5A)
+            if 'refresh_token' not in columns:
+                logger.warning("refresh_token column missing - adding column")
+                await conn.execute(text("ALTER TABLE users ADD COLUMN refresh_token VARCHAR"))
+                logger.info("✓ Successfully added refresh_token column")
+            else:
+                logger.info("✓ refresh_token column already exists")
+            
+            # Add refresh_token_expires if missing (Phase 5A)
+            if 'refresh_token_expires' not in columns:
+                logger.warning("refresh_token_expires column missing - adding column")
+                await conn.execute(text("ALTER TABLE users ADD COLUMN refresh_token_expires TIMESTAMP"))
+                logger.info("✓ Successfully added refresh_token_expires column")
+            else:
+                logger.info("✓ refresh_token_expires column already exists")
+                
+        except Exception as e:
+            logger.error(f"Column migration error: {str(e)}")
+            raise
+
+
 async def check_and_migrate_role_column():
     """
     Check if the 'role' column exists in users table and add it if missing.
@@ -158,6 +209,9 @@ async def init_db():
         from backend.orm.user_notes import UserNotes          # PHASE 6
         from backend.orm.user_progress import UserProgress
         
+        # ⭐ PHASE 2: AI Moot Court Practice Mode
+        from backend.orm.ai_oral_session import AIOralSession, AIOralTurn
+        
         # ⭐ PHASE 8: Import progress tracking models
         from backend.orm.user_content_progress import UserContentProgress
         from backend.orm.practice_attempt import PracticeAttempt
@@ -165,6 +219,7 @@ async def init_db():
         
         # First, handle migration for existing database
         await check_and_migrate_role_column()
+        await check_and_migrate_institution_column()
         
         # Then create all tables (this will only create missing tables)
         async with engine.begin() as conn:

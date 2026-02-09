@@ -1,15 +1,23 @@
 # backend/routes/debate.py
 """
-Moot Court API
+Moot Court API - Phase 5A Protected
 Handles moot court simulation flow with AI-powered opposing arguments,
 plus Phase 2: AI Coach, AI Review, Counter-Argument Simulator, Judge Assist.
+
+ALL endpoints protected with RBAC:
+- Students: AI Coach, Review, Counter-Arguments
+- Judges: Judge Assist, Bench Questions, Feedback Suggest
 """
 import os
 import logging
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 import google.generativeai as genai
+
+# Phase 5A: RBAC imports
+from backend.rbac import get_current_user, require_role, require_permission
+from backend.orm.user import User, UserRole
 
 router = APIRouter(prefix="/api/moot-court", tags=["Moot Court"])
 logger = logging.getLogger(__name__)
@@ -64,6 +72,14 @@ class JudgeAssistRequest(BaseModel):
     petitioner_submissions: List[Dict[str, Any]] = Field(default=[], description="Petitioner IRAC submissions")
     respondent_submissions: List[Dict[str, Any]] = Field(default=[], description="Respondent IRAC submissions")
     mode: str = Field(..., description="summarize, compare, or scoring_rationale")
+
+
+class BenchQuestionsRequest(BaseModel):
+    proposition: str = Field(..., description="Moot proposition text")
+    side: str = Field(..., description="petitioner or respondent")
+    current_stage: str = Field(..., description="petitioner, respondent, or rebuttal")
+    issue_text: str = Field(default="", description="Current issue being addressed")
+    issue_index: int = Field(default=0, description="Index of current issue")
 
 
 class DebateRequest(BaseModel):
@@ -376,11 +392,27 @@ REASONING: [Your detailed legal reasoning, 200-300 words]
 # ============================================
 
 @router.post("/ai-coach")
-async def ai_coach(request: AICoachRequest) -> Dict[str, Any]:
+async def ai_coach(
+    request: AICoachRequest,
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
     """
     AI Moot Coach — responds to student questions with guidance,
     hints, and structural critique. Never drafts or rewrites content.
+    
+    Phase 5A: Protected - STUDENTS only
     """
+    # RBAC Check: Only students can access AI Coach
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "AI Coach is only available to students",
+                "code": "PERMISSION_DENIED"
+            }
+        )
     if not model:
         raise HTTPException(status_code=503, detail="AI service unavailable.")
 
@@ -426,11 +458,27 @@ Respond now:"""
 
 
 @router.post("/ai-review")
-async def ai_review(request: AIReviewRequest) -> Dict[str, Any]:
+async def ai_review(
+    request: AIReviewRequest,
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
     """
     Issue-Level AI Review — analyses one IRAC block and returns
     bullet-point feedback per section. Never inserts text.
+    
+    Phase 5A: Protected - STUDENTS only
     """
+    # RBAC Check: Only students can access AI Review
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "AI Review is only available to students",
+                "code": "PERMISSION_DENIED"
+            }
+        )
     if not model:
         raise HTTPException(status_code=503, detail="AI service unavailable.")
 
@@ -488,11 +536,27 @@ End with exactly: "{AI_DISCLAIMER}"
 
 
 @router.post("/counter-argument")
-async def counter_argument(request: CounterArgumentRequest) -> Dict[str, Any]:
+async def counter_argument(
+    request: CounterArgumentRequest,
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
     """
     Counter-Argument Simulator — describes likely opposing arguments,
     bench skepticism, and weak spots. Read-only; never writes rebuttals.
+    
+    Phase 5A: Protected - STUDENTS only
     """
+    # RBAC Check: Only students can access Counter-Argument Simulator
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "Counter-Argument Simulator is only available to students",
+                "code": "PERMISSION_DENIED"
+            }
+        )
     if not model:
         raise HTTPException(status_code=503, detail="AI service unavailable.")
 
@@ -535,11 +599,28 @@ End with exactly: "{AI_DISCLAIMER}"
 
 
 @router.post("/judge-assist")
-async def judge_assist(request: JudgeAssistRequest) -> Dict[str, Any]:
+async def judge_assist(
+    request: JudgeAssistRequest,
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
     """
     Judge Assist Mode — helps evaluators summarize, compare, or
     think through scoring rationales. Never assigns final scores.
+    
+    Phase 5A: Protected - JUDGES, FACULTY, ADMIN, SUPER_ADMIN
     """
+    # RBAC Check: Only judges and above can access Judge Assist
+    allowed_roles = [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    if current_user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "Judge Assist is only available to judges and faculty",
+                "code": "PERMISSION_DENIED"
+            }
+        )
     if not model:
         raise HTTPException(status_code=503, detail="AI service unavailable.")
 
@@ -612,3 +693,183 @@ End with exactly: "{AI_DISCLAIMER}"
     except Exception as e:
         logger.error(f"Judge assist error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Judge assist failed: {str(e)}")
+
+
+@router.post("/bench-questions")
+async def bench_questions(
+    request: BenchQuestionsRequest,
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Generate AI-suggested bench questions for oral rounds.
+    Judges must manually approve or edit before sending.
+    AI does NOT auto-interrupt.
+    
+    Phase 5A: Protected - JUDGES, FACULTY, ADMIN, SUPER_ADMIN
+    """
+    # RBAC Check: Only judges and above can access Bench Questions
+    allowed_roles = [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    if current_user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "Bench Questions is only available to judges",
+                "code": "PERMISSION_DENIED"
+            }
+        )
+    if not model:
+        raise HTTPException(status_code=503, detail="AI service unavailable.")
+
+    prompt = f"""You are an experienced moot court judge preparing questions for an oral round.
+
+MOOT PROPOSITION: {request.proposition[:1500]}
+
+CURRENT SPEAKER: {request.side.upper()}
+CURRENT STAGE: {request.current_stage.upper()}
+ISSUE BEING ADDRESSED: {request.issue_text or 'General arguments'}
+
+Your task: Generate 3-5 realistic, challenging bench questions that a judge might ask during this stage.
+
+STRICT RULES:
+- Questions should test the speaker's understanding, logic, and ability to think under pressure
+- Questions should be concise and clear
+- Vary the difficulty: some straightforward, some probing, some challenging assumptions
+- Do NOT provide answers or model responses
+- Do NOT write leading or loaded questions that assume facts not in evidence
+
+Generate exactly 5 questions as a simple list.
+
+Format your response as a simple list, one question per line, no numbering."""
+
+    try:
+        response = await generate_gemini_response(prompt)
+
+        # Parse questions from response
+        questions = [q.strip() for q in response.strip().split('\n') if q.strip() and len(q.strip()) > 10]
+        questions = questions[:5]  # Limit to 5 questions
+
+        if len(questions) < 3:
+            # Fallback questions if parsing failed
+            questions = [
+                f"What is the strongest precedent against your position on this issue?",
+                f"How do you distinguish the facts of this case from [relevant precedent]?",
+                f"What would be the practical consequences if the Court were to accept your argument?",
+                f"Can you clarify the standard of review applicable to this issue?",
+                f"How do you respond to the argument that your interpretation would create [specific problem]?"
+            ]
+
+        return {"success": True, "questions": questions, "count": len(questions)}
+    except Exception as e:
+        logger.error(f"Bench questions error: {str(e)}")
+        # Return fallback questions on error
+        return {
+            "success": True,
+            "questions": [
+                "What is the strongest authority supporting your position?",
+                "How do you address the opposing counsel's argument on this point?",
+                "Can you explain the practical implications of your proposed remedy?"
+            ],
+            "count": 3,
+            "fallback": True
+        }
+
+
+class FeedbackSuggestRequest(BaseModel):
+    scores: Dict[str, int] = Field(..., description="Category scores")
+    rubric: List[Dict[str, Any]] = Field(..., description="Rubric categories")
+    overall_comments: str = Field(default="", description="Judge's overall comments")
+    submission_summary: str = Field(default="", description="Summary of submission issues")
+
+
+@router.post("/feedback-suggest")
+async def feedback_suggest(
+    request: FeedbackSuggestRequest,
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    AI Feedback Assist for judges - suggests phrasing for strengths and improvements.
+    Strictly advisory - judges maintain full control.
+    
+    Phase 5A: Protected - JUDGES, FACULTY, ADMIN, SUPER_ADMIN
+    """
+    # RBAC Check: Only judges and above can access Feedback Suggest
+    allowed_roles = [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    if current_user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "Forbidden",
+                "message": "AI Feedback Assist is only available to judges",
+                "code": "PERMISSION_DENIED"
+            }
+        )
+    if not model:
+        raise HTTPException(status_code=503, detail="AI service unavailable.")
+
+    # Build score summary
+    score_summary = "\n".join([
+        f"- {cat['name']}: {request.scores.get(cat['id'], 0)}/{cat['maxScore']}"
+        for cat in request.rubric
+    ])
+
+    prompt = f"""You are assisting a moot court judge in writing constructive feedback for a law student.
+
+SCORES BY CATEGORY:
+{score_summary}
+
+OVERALL COMMENTS: {request.overall_comments[:500]}
+
+SUBMISSION SUMMARY: {request.submission_summary[:300]}
+
+Your task: Suggest phrasing for two sections:
+1. STRENGTHS - positive feedback based on high-scoring categories
+2. AREAS FOR IMPROVEMENT - constructive feedback based on lower-scoring categories
+
+STRICT RULES:
+- Suggest concise, professional, encouraging language
+- Be specific and actionable
+- Do NOT assign scores or rankings
+- Do NOT make final judgments
+- Keep suggestions brief (2-3 points each)
+
+Format your response exactly as:
+STRENGTHS:
+[bullet points]
+
+IMPROVEMENTS:
+[bullet points]"""
+
+    try:
+        response = await generate_gemini_response(prompt)
+
+        # Parse response
+        strengths = ""
+        improvements = ""
+
+        if "STRENGTHS:" in response and "IMPROVEMENTS:" in response:
+            parts = response.split("IMPROVEMENTS:")
+            strengths = parts[0].replace("STRENGTHS:", "").strip()
+            improvements = parts[1].strip() if len(parts) > 1 else ""
+        else:
+            strengths = "Strong performance in key areas. Continue developing your analytical skills."
+            improvements = "Consider strengthening weaker categories with more detailed research and clearer argumentation."
+
+        return {
+            "success": True,
+            "strengths": strengths,
+            "improvements": improvements,
+            "advisory": True
+        }
+    except Exception as e:
+        logger.error(f"Feedback suggest error: {str(e)}")
+        return {
+            "success": True,
+            "strengths": "Unable to generate suggestions. Please use your professional judgment.",
+            "improvements": "Unable to generate suggestions. Please use your professional judgment.",
+            "advisory": True,
+            "fallback": True
+        }
+

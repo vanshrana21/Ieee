@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unauthorized - Juris AI</title>
+    <link rel="stylesheet" href="../css/auth.css">
+    <style>
+        .unauthorized-container {
+            max-width: 600px;
+            margin: 100px auto;
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .unauthorized-icon {
+            width: 80px;
+            height: 80px;
+            background: #FEE2E2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        
+        .unauthorized-icon svg {
+            width: 40px;
+            height: 40px;
+            color: #DC2626;
+        }
+        
+        .unauthorized-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 16px;
+        }
+        
+        .unauthorized-message {
+            font-size: 16px;
+            color: #6B7280;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        
+        .unauthorized-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: #2563EB;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #1D4ED8;
+        }
+        
+        .btn-secondary {
+            background: #F3F4F6;
+            color: #374151;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #E5E7EB;
+        }
+        
+        .role-info {
+            background: #F3F4F6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            text-align: left;
+        }
+        
+        .role-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+        
+        .role-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .role-info li {
+            font-size: 13px;
+            color: #6B7280;
+            padding: 4px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .role-info li::before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #9CA3AF;
+        }
+    </style>
+</head>
+<body>
+    <div class="unauthorized-container">
+        <div class="unauthorized-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+        </div>
+        
+        <h1 class="unauthorized-title">Access Denied</h1>
+        
+        <p class="unauthorized-message">
+            You do not have permission to access this resource. This area is restricted to users with specific roles.
+        </p>
+        
+        <div class="unauthorized-actions">
+            <a href="/html/dashboard.html" class="btn-secondary">Go to Dashboard</a>
+            <a href="/html/login.html" class="btn-primary">Switch Account</a>
+        </div>
+        
+        <div class="role-info">
+            <h3>Available Roles in Juris AI:</h3>
+            <ul>
+                <li><strong>Student</strong> - Create projects, write IRAC, practice oral rounds</li>
+                <li><strong>Judge</strong> - Evaluate submissions, ask bench questions, score performances</li>
+                <li><strong>Faculty</strong> - View all teams, monitor progress, provide guidance</li>
+                <li><strong>Admin</strong> - Manage competitions, users, and system settings</li>
+                <li><strong>Super Admin</strong> - Full system control and institution management</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
+</body>
+</html>

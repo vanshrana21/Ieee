@@ -280,6 +280,64 @@ app.include_router(test_kanoon.router)
 app.include_router(debug_super_kanoon.router)
 app.include_router(debate.router)
 
+# Phase 5B: Institution and Competition routes (Multi-tenancy)
+from backend.routes import institutions, competitions
+app.include_router(institutions.router, prefix="/api")
+app.include_router(competitions.router, prefix="/api")
+
+# Phase 5C: Submissions and Oral Round Slots
+from backend.routes import submissions, slots
+app.include_router(submissions.router, prefix="/api")
+app.include_router(slots.router, prefix="/api")
+
+# Phase 5C: Moot Project Persistence (Replaces localStorage)
+from backend.routes import moot_projects, oral_rounds, moot_evaluations
+app.include_router(moot_projects.router, prefix="/api")
+app.include_router(oral_rounds.router, prefix="/api")
+app.include_router(moot_evaluations.router, prefix="/api")
+
+# Phase 5D: Competition Workflow, Deadlines & Submission Locking
+from backend.routes import competition_workflow
+app.include_router(competition_workflow.router, prefix="/api")
+
+# Phase 5D: Scoring and Conflict Resolution
+from backend.routes import scoring
+app.include_router(scoring.router, prefix="/api")
+
+# Phase 5E: Rankings and Leaderboards
+from backend.routes import rankings
+app.include_router(rankings.router, prefix="/api")
+
+# Phase 6A: Team Structure & Membership
+from backend.routes import teams
+app.include_router(teams.router, prefix="/api")
+
+# Phase 7: Faculty Oversight & Academic Monitoring
+from backend.routes import faculty
+app.include_router(faculty.router, prefix="/api")
+
+# Phase 8: AI Governance, Safety & Explainability Layer
+from backend.routes import ai_governance
+app.include_router(ai_governance.router, prefix="/api")
+
+# Phase 9: Judging, Evaluation & Competition Scoring
+from backend.routes import judge, evaluation_admin, results
+app.include_router(judge.router, prefix="/api")
+app.include_router(evaluation_admin.router, prefix="/api")
+app.include_router(results.router, prefix="/api")
+
+# Phase 2 MVP: AI Moot Court Practice Mode
+from backend.routes.ai_moot import ai_moot_router
+app.include_router(ai_moot_router, prefix="/api")
+
+# DEBUG: Log all registered routes on startup
+from fastapi.routing import APIRoute
+registered_paths = sorted([route.path for route in app.routes if isinstance(route, APIRoute)])
+logger.info(f"✓ Registered API routes ({len(registered_paths)}): {registered_paths[:10]}...")  # Log first 10
+if "/api/ai-moot/problems" in registered_paths:
+    logger.info("✓ AI Moot routes properly registered")
+else:
+    logger.warning("⚠️  AI Moot routes MISSING - check router registration")
 
 if __name__ == "__main__":
     import uvicorn

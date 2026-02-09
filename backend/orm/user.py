@@ -11,10 +11,12 @@ from backend.orm.base import Base
 
 
 class UserRole(str, Enum):
-    """User roles"""
+    """User roles for Phase 5A RBAC"""
     STUDENT = "student"
-    LAWYER = "lawyer"
+    JUDGE = "judge"
+    FACULTY = "faculty"
     ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
 
 
 class User(Base):
@@ -33,13 +35,25 @@ class User(Base):
     """
     __tablename__ = "users"
     
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     
     # Authentication
     email = Column(String(255), nullable=False, unique=True, index=True)
     full_name = Column(String(200), nullable=False)
     password_hash = Column(String(255), nullable=False)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT, index=True)
+    
+    # Institution Context (Phase 5A)
+    institution_id = Column(
+        Integer,
+        ForeignKey("institutions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+    
+    # Refresh Token for session management (Phase 5A)
+    refresh_token = Column(String(255), nullable=True)
+    refresh_token_expires = Column(Integer, nullable=True)  # Unix timestamp
     
     # Course Enrollment
     course_id = Column(
