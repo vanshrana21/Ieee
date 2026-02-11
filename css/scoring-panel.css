@@ -1,0 +1,523 @@
+/*
+ * css/scoring-panel.css
+ * Phase 3.2: Judge Scoring Panel Styles
+ * Isolated from existing styles - NEW FILE
+ */
+
+/* ================= SCORING PANEL (Floating, Judge-Only) ================= */
+.scoring-panel {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 380px;
+    max-height: 90vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #e94560;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(233, 69, 96, 0.3);
+    z-index: 1000;
+    overflow-y: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+}
+
+.scoring-panel.minimized {
+    height: 60px;
+    overflow: hidden;
+}
+
+.scoring-panel.minimized .panel-content {
+    display: none;
+}
+
+/* Panel Header */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: move;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #e94560;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-minimize {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-minimize:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ================= TEAM SELECTION ================= */
+.team-selection {
+    margin-bottom: 20px;
+}
+
+.team-selection label {
+    display: block;
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    margin-bottom: 10px;
+}
+
+.team-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-team {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.btn-team.petitioner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-team.respondent {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.btn-team:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-team.active {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    border: 2px solid #fff;
+}
+
+.btn-team:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.selected-team {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #ffd89b;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* ================= SCORING CRITERIA ================= */
+.scoring-criteria {
+    margin-bottom: 20px;
+}
+
+.criterion {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.criterion:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.criterion-label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.criterion-name {
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.criterion-desc {
+    font-size: 0.8rem;
+    color: #a0a0a0;
+}
+
+/* Score Slider */
+.slider-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.score-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.score-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e94560;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(233, 69, 96, 0.4);
+    transition: all 0.2s ease;
+}
+
+.score-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.6);
+}
+
+.score-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e94560;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(233, 69, 96, 0.4);
+}
+
+.score-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.7rem;
+    color: #666;
+}
+
+/* Score Value Display */
+.score-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+/* Score color coding */
+.score-value.low {
+    color: #F44336;
+}
+
+.score-value.medium {
+    color: #FFC107;
+}
+
+.score-value.high {
+    color: #4CAF50;
+}
+
+/* ================= TOTAL SCORE PREVIEW ================= */
+.total-preview {
+    background: linear-gradient(135deg, rgba(233, 69, 96, 0.2) 0%, rgba(233, 69, 96, 0.1) 100%);
+    border: 2px solid #e94560;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.total-score-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.total-label {
+    font-size: 1rem;
+    color: #a0a0a0;
+}
+
+.total-value {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #e94560;
+}
+
+.total-max {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* Score Bar */
+.score-bar-container {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.score-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #F44336 0%, #FFC107 50%, #4CAF50 100%);
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+/* ================= FEEDBACK SECTION ================= */
+.feedback-section {
+    margin-bottom: 15px;
+}
+
+.feedback-section label {
+    display: block;
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+.feedback-section textarea,
+.feedback-section input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.95rem;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.feedback-section textarea {
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.feedback-section textarea:focus,
+.feedback-section input[type="text"]:focus {
+    outline: none;
+    border-color: #e94560;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.feedback-section textarea::placeholder,
+.feedback-section input[type="text"]::placeholder {
+    color: #666;
+}
+
+/* ================= ACTION BUTTONS ================= */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, #e94560 0%, #d63050 100%);
+    color: white;
+}
+
+.btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ================= SCORE STATUS ================= */
+.score-status {
+    text-align: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.status-indicator {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-indicator.draft {
+    background: rgba(255, 193, 7, 0.2);
+    color: #FFC107;
+    border: 1px solid #FFC107;
+}
+
+.status-indicator.submitted {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+}
+
+/* ================= SCORES DISPLAY PANEL (For all users) ================= */
+.scores-display-panel {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 300px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #667eea;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    z-index: 999;
+}
+
+.scores-display-panel h3 {
+    margin: 0 0 15px 0;
+    font-size: 1rem;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scores-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.score-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 12px;
+    border-left: 4px solid;
+}
+
+.score-card.petitioner {
+    border-left-color: #667eea;
+}
+
+.score-card.respondent {
+    border-left-color: #f5576c;
+}
+
+.score-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.score-card.petitioner h4 {
+    color: #667eea;
+}
+
+.score-card.respondent h4 {
+    color: #f5576c;
+}
+
+.score-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.score-breakdown span {
+    font-size: 0.75rem;
+    color: #a0a0a0;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.score-card .total {
+    font-size: 1.1rem;
+    color: #ffd89b;
+}
+
+.no-scores {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .scoring-panel {
+        width: 90vw;
+        right: 5vw;
+        top: 10px;
+        max-height: 80vh;
+    }
+    
+    .scores-display-panel {
+        width: 90vw;
+        left: 5vw;
+        bottom: 10px;
+    }
+    
+    .criterion {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .slider-container {
+        order: 2;
+    }
+    
+    .score-value {
+        order: 1;
+        align-self: flex-end;
+    }
+}

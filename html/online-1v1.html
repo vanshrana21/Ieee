@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online 1v1 - Moot Arena</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        .arena-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .match-header {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .rating-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+        }
+        
+        .battle-arena {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        
+        .opponent-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .player-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .vs-divider {
+            font-size: 24px;
+            font-weight: 700;
+            color: #e94560;
+        }
+        
+        .timer-section {
+            text-align: center;
+            margin: 32px 0;
+        }
+        
+        .timer-display {
+            font-size: 64px;
+            font-weight: 700;
+            color: #16213e;
+            font-family: monospace;
+        }
+        
+        .timer-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        .phase-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+        
+        .phase-step {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .phase-step.active {
+            background: #e94560;
+            color: white;
+        }
+        
+        .phase-step.completed {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .argument-battle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .argument-panel {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .argument-panel.your-turn {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+        
+        .argument-panel.opponent-turn {
+            opacity: 0.7;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .role-tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .tag-petitioner { background: #e3f2fd; color: #1565c0; }
+        .tag-respondent { background: #ffebee; color: #c62828; }
+        
+        .argument-input-area {
+            min-height: 200px;
+        }
+        
+        .argument-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 14px;
+        }
+        
+        .argument-display {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            min-height: 150px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .sidebar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        
+        .topic-box {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .rating-change {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .rating-up { background: #e8f5e9; color: #2e7d32; }
+        .rating-down { background: #ffebee; color: #c62828; }
+        .rating-same { background: #f5f5f5; color: #666; }
+        
+        .match-result {
+            text-align: center;
+            padding: 32px;
+        }
+        
+        .result-emoji {
+            font-size: 72px;
+            margin-bottom: 16px;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .result-subtitle {
+            color: #666;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .argument-battle {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚖️</span>
+                <span class="logo-text">LegalAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="dashboard-student.html">Dashboard</a>
+                <a href="live-competitions.html">Live Competitions</a>
+                <span class="rating-badge">🏆 Rating: <span id="user-rating">1000</span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="arena-container">
+        <!-- Match Header -->
+        <div class="match-header">
+            <div>
+                <h1>🌐 Online 1v1 Moot Arena</h1>
+                <p id="match-topic">Topic: Constitutional Challenge</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 14px; opacity: 0.9;">Match Code</div>
+                <div style="font-size: 24px; font-weight: 700; font-family: monospace;" id="match-code">MATCH-12345</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Battle Arena -->
+            <div class="battle-arena">
+                <!-- Opponent Bar -->
+                <div class="opponent-bar">
+                    <div class="player-info">
+                        <div class="player-avatar">🧑‍⚖️</div>
+                        <div>
+                            <div style="font-weight: 600;">You</div>
+                            <div style="font-size: 14px; color: #666;">Rating: <span id="your-rating">1000</span></div>
+                        </div>
+                    </div>
+                    <div class="vs-divider">VS</div>
+                    <div class="player-info">
+                        <div>
+                            <div style="font-weight: 600; text-align: right;" id="opponent-name">Opponent</div>
+                            <div style="font-size: 14px; color: #666; text-align: right;">Rating: <span id="opponent-rating">1000</span></div>
+                        </div>
+                        <div class="player-avatar">👨‍⚖️</div>
+                    </div>
+                </div>
+
+                <!-- Phase Indicator -->
+                <div class="phase-indicator">
+                    <div class="phase-step completed">🔍 Match Found</div>
+                    <div class="phase-step completed">📚 Prep</div>
+                    <div class="phase-step active">⚔️ Live Moot</div>
+                    <div class="phase-step">📊 Scoring</div>
+                    <div class="phase-step">🏆 Results</div>
+                </div>
+
+                <!-- Timer -->
+                <div class="timer-section">
+                    <div class="timer-display" id="timer">15:00</div>
+                    <div class="timer-label">Time Remaining</div>
+                </div>
+
+                <!-- Argument Battle -->
+                <div class="argument-battle">
+                    <!-- Your Panel -->
+                    <div class="argument-panel your-turn" id="your-panel">
+                        <div class="panel-header">
+                            <span class="role-tag tag-petitioner" id="your-role">PETITIONER</span>
+                            <span style="font-size: 12px; color: #666;">Your Turn ✓</span>
+                        </div>
+                        <div class="argument-input-area">
+                            <textarea class="argument-textarea" id="your-argument" placeholder="Present your legal arguments here... Include relevant citations and logical reasoning."></textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                                <span style="font-size: 12px; color: #666;">Press Ctrl+Enter to submit</span>
+                                <button class="btn primary" id="submit-argument">📤 Submit</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opponent Panel -->
+                    <div class="argument-panel opponent-turn" id="opponent-panel">
+                        <div class="panel-header">
+                            <span class="role-tag tag-respondent" id="opponent-role">RESPONDENT</span>
+                            <span style="font-size: 12px; color: #999;">Waiting...</span>
+                        </div>
+                        <div class="argument-display" id="opponent-argument">
+                            <p style="color: #999; font-style: italic;">Opponent is preparing their argument...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: center;">
+                    <button class="btn secondary" id="btn-objection">⚠️ Objection</button>
+                    <button class="btn secondary" id="btn-citation">📚 Citation</button>
+                    <button class="btn secondary" id="btn-precedent">⚖️ Precedent</button>
+                    <button class="btn danger" id="btn-forfeit">🏳️ Forfeit</button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Topic -->
+                <div class="sidebar-card">
+                    <div class="topic-box">
+                        <div style="font-size: 12px; opacity: 0.8; margin-bottom: 8px;">TOPIC</div>
+                        <div style="font-weight: 600;" id="sidebar-topic">Right to Privacy vs National Security</div>
+                    </div>
+                    
+                    <h3>📝 Problem Statement</h3>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;" id="problem-statement">
+                        The government has mandated Aadhaar linkage for all services. Petitioners argue this violates right to privacy under Article 21. Respondents argue national security and welfare delivery justify the measure.
+                    </p>
+                </div>
+
+                <!-- Your Stats -->
+                <div class="sidebar-card">
+                    <h3>📊 Your Stats</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                        <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: 700;" id="stat-matches">0</div>
+                            <div style="font-size: 12px; color: #666;">Matches</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: 700;" id="stat-wins">0</div>
+                            <div style="font-size: 12px; color: #666;">Wins</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: 700;" id="stat-winrate">0%</div>
+                            <div style="font-size: 12px; color: #666;">Win Rate</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: 700;" id="stat-tier">Rookie</div>
+                            <div style="font-size: 12px; color: #666;">Tier</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick References -->
+                <div class="sidebar-card">
+                    <h3>📚 Quick References</h3>
+                    <div class="quick-actions">
+                        <button class="action-btn" onclick="alert('Opening Constitution...')">
+                            <span>📖</span>
+                            <span>Constitution of India</span>
+                        </button>
+                        <button class="action-btn" onclick="alert('Opening Precedents...')">
+                            <span>⚖️</span>
+                            <span>Landmark Cases</span>
+                        </button>
+                        <button class="action-btn" onclick="alert('Opening Citations...')">
+                            <span>📄</span>
+                            <span>Citation Guide</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Match Result (Hidden initially) -->
+                <div class="sidebar-card" id="result-card" style="display: none;">
+                    <div class="match-result">
+                        <div class="result-emoji" id="result-emoji">🏆</div>
+                        <div class="result-title" id="result-title">Victory!</div>
+                        <div class="result-subtitle" id="result-subtitle">You won this moot</div>
+                        
+                        <div class="rating-change rating-up" id="rating-change">
+                            +25 Rating
+                        </div>
+                        
+                        <div style="margin-top: 16px;">
+                            <button class="btn primary" style="width: 100%;" onclick="window.location.href='live-competitions.html'">
+                                🔄 Play Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get match ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const matchId = urlParams.get('match_id') || '1';
+        
+        // State
+        let timeRemaining = 900; // 15 minutes in seconds
+        let timerInterval = null;
+        let isYourTurn = true;
+        
+        // DOM elements
+        const timerEl = document.getElementById('timer');
+        const yourArgument = document.getElementById('your-argument');
+        const opponentArgument = document.getElementById('opponent-argument');
+        const yourPanel = document.getElementById('your-panel');
+        const opponentPanel = document.getElementById('opponent-panel');
+        
+        // Timer functions
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timeRemaining > 0) {
+                    timeRemaining--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    endMatch();
+                }
+            }, 1000);
+        }
+        
+        function endMatch() {
+            // Show results
+            document.getElementById('result-card').style.display = 'block';
+            
+            // Determine winner (placeholder logic)
+            const won = Math.random() > 0.5;
+            const ratingChange = won ? 25 : -15;
+            
+            document.getElementById('result-emoji').textContent = won ? '🏆' : '😔';
+            document.getElementById('result-title').textContent = won ? 'Victory!' : 'Defeat';
+            document.getElementById('result-subtitle').textContent = won ? 'You won this moot!' : 'Better luck next time!';
+            
+            const ratingEl = document.getElementById('rating-change');
+            ratingEl.textContent = (ratingChange > 0 ? '+' : '') + ratingChange + ' Rating';
+            ratingEl.className = 'rating-change ' + (ratingChange > 0 ? 'rating-up' : ratingChange < 0 ? 'rating-down' : 'rating-same');
+        }
+        
+        // Submit argument
+        document.getElementById('submit-argument')?.addEventListener('click', () => {
+            const text = yourArgument.value.trim();
+            if (text.length < 10) {
+                alert('Argument too short. Minimum 10 characters.');
+                return;
+            }
+            
+            // TODO: Submit via WebSocket
+            console.log('Submitting argument:', text);
+            
+            // Switch turns (placeholder)
+            isYourTurn = false;
+            updateTurnDisplay();
+        });
+        
+        // Keyboard shortcut
+        yourArgument?.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                document.getElementById('submit-argument').click();
+            }
+        });
+        
+        function updateTurnDisplay() {
+            if (isYourTurn) {
+                yourPanel.classList.add('your-turn');
+                yourPanel.classList.remove('opponent-turn');
+                opponentPanel.classList.add('opponent-turn');
+                opponentPanel.classList.remove('your-turn');
+            } else {
+                yourPanel.classList.add('opponent-turn');
+                yourPanel.classList.remove('your-turn');
+                opponentPanel.classList.add('your-turn');
+                opponentPanel.classList.remove('opponent-turn');
+            }
+        }
+        
+        // Action buttons
+        document.getElementById('btn-objection')?.addEventListener('click', () => {
+            const type = prompt('Type of objection:\n1. Relevance\n2. Hearsay\n3. Leading\n4. Other');
+            if (type) {
+                console.log('Raised objection:', type);
+            }
+        });
+        
+        document.getElementById('btn-citation')?.addEventListener('click', () => {
+            alert('Citation helper:\n\nFormat: [Case Name] ([Year]) [Volume] [Reporter] [Page]\n\nExample: Kesavananda Bharati v. State of Kerala (1973) 4 SCC 225');
+        });
+        
+        document.getElementById('btn-precedent')?.addEventListener('click', () => {
+            alert('Key precedents for this topic:\n\n• Puttaswamy (2017) - Right to Privacy\n• Maneka Gandhi (1978) - Article 21\n• Aadhaar judgment (2018) - Proportionality');
+        });
+        
+        document.getElementById('btn-forfeit')?.addEventListener('click', () => {
+            if (confirm('Are you sure you want to forfeit? This will count as a loss.')) {
+                console.log('Player forfeited');
+                endMatch();
+            }
+        });
+        
+        // Initialize
+        updateTimerDisplay();
+        startTimer();
+        
+        console.log('Online 1v1 Mode initialized. Match:', matchId);
+    </script>
+</body>
+</html>

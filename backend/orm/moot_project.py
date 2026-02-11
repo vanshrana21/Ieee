@@ -207,3 +207,15 @@ class IRACBlock(Base):
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
+
+
+# ============================================================================
+# PHASE 3 PLACEHOLDERS - Satisfy route imports without breaking Phase 2
+# ============================================================================
+class MootProjectRound(Base):
+    __tablename__ = "moot_project_rounds"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+class MootProjectSubmission(Base):
+    __tablename__ = "moot_project_submissions"
+    id = Column(Integer, primary_key=True, autoincrement=True)

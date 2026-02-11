@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Student Upload - Juris AI</title>
+    <link rel="stylesheet" href="../css/institution-branding.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .upload-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .upload-header {
+            background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%);
+            color: #D4AF37;
+            padding: 30px;
+        }
+        
+        .upload-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .upload-header p {
+            opacity: 0.9;
+        }
+        
+        .upload-content {
+            padding: 30px;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .upload-zone:hover {
+            border-color: #8B0000;
+            background: #fff8f8;
+        }
+        
+        .upload-zone.drag-over {
+            border-color: #8B0000;
+            background: #fff0f0;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .upload-zone h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .upload-zone p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .btn-upload {
+            background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%);
+            color: #D4AF37;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .csv-template {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .csv-template h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .csv-template pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        
+        .csv-template .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #8B0000;
+            color: #8B0000;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .csv-template .btn-download:hover {
+            background: #8B0000;
+            color: white;
+        }
+        
+        .progress-section {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .progress-section.active {
+            display: block;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar-container {
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+            border-radius: 15px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar.processing {
+            background: linear-gradient(90deg, #8B0000 0%, #D4AF37 100%);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-card.success {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .stat-card.error {
+            background: #ffebee;
+            border-left: 4px solid #F44336;
+        }
+        
+        .stat-card.pending {
+            background: #fff3e0;
+            border-left: 4px solid #FF9800;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .time-remaining {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .error-log-section {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #ffebee;
+            border-radius: 10px;
+        }
+        
+        .error-log-section.active {
+            display: block;
+        }
+        
+        .btn-download-errors {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #F44336;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        
+        .column-mapping {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .column-mapping h4 {
+            margin-bottom: 15px;
+        }
+        
+        .mapping-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .mapping-row:last-child {
+            border-bottom: none;
+        }
+        
+        .mapping-label {
+            font-weight: 600;
+            width: 120px;
+            color: #333;
+        }
+        
+        .mapping-value {
+            color: #666;
+        }
+        
+        .mapping-status {
+            margin-left: auto;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .mapping-status.matched {
+            background: #e8f5e9;
+            color: #4CAF50;
+        }
+        
+        .mapping-status.manual {
+            background: #fff3e0;
+            color: #FF9800;
+        }
+        
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <div class="upload-header">
+            <h1>📤 Bulk Student Upload</h1>
+            <p>Import multiple student accounts via CSV file</p>
+        </div>
+        
+        <div class="upload-content">
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="upload-zone">
+                <div class="upload-icon">📄</div>
+                <h3>Drag & drop your CSV file here</h3>
+                <p>or click to browse from your computer</p>
+                <button class="btn-upload" onclick="document.getElementById('file-input').click()">
+                    Choose File
+                </button>
+                <input type="file" id="file-input" class="file-input" accept=".csv">
+            </div>
+            
+            <!-- Column Mapping Preview -->
+            <div class="column-mapping" id="column-mapping" style="display: none;">
+                <h4>📋 Column Mapping Preview</h4>
+                <div id="mapping-rows">
+                    <!-- Auto-populated -->
+                </div>
+                <button class="btn-upload" onclick="startUpload()" style="margin-top: 15px;">
+                    ✓ Confirm & Start Upload
+                </button>
+            </div>
+            
+            <!-- Progress Section -->
+            <div class="progress-section" id="progress-section">
+                <div class="progress-header">
+                    <h3>Processing...</h3>
+                    <span id="progress-text">0/0 rows</span>
+                </div>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-bar processing" id="progress-bar" style="width: 0%;">
+                        0%
+                    </div>
+                </div>
+                
+                <div class="time-remaining" id="time-remaining">
+                    Estimated time remaining: --
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card success">
+                        <div class="stat-value" id="success-count">0</div>
+                        <div class="stat-label">✓ Successful</div>
+                    </div>
+                    <div class="stat-card error">
+                        <div class="stat-value" id="error-count">0</div>
+                        <div class="stat-label">✗ Failed</div>
+                    </div>
+                    <div class="stat-card pending">
+                        <div class="stat-value" id="pending-count">0</div>
+                        <div class="stat-label">⏳ Remaining</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Error Log Section -->
+            <div class="error-log-section" id="error-log-section">
+                <h4>⚠️ Some records failed to process</h4>
+                <p>Download the error log to see which records failed and why.</p>
+                <button class="btn-download-errors" onclick="downloadErrorLog()">
+                    📥 Download Error Log
+                </button>
+            </div>
+            
+            <!-- CSV Template -->
+            <div class="csv-template">
+                <h4>📄 CSV Format Template</h4>
+                <p>Your CSV file should include these columns:</p>
+                <pre>name,email,roll_number,year,course
+Rahul Sharma,rahul@nlsiu.ac.in,NL2024001,3,BA LLB
+Priya Patel,priya@nlsiu.ac.in,NL2024002,3,BA LLB
+Amit Kumar,amit@nlsiu.ac.in,NL2024003,2,LLB</pre>
+                <a href="#" class="btn-download" onclick="downloadTemplate()">
+                    📥 Download Template CSV
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/bulk-upload-controller.js"></script>
+    <script>
+        const controller = new BulkUploadController();
+        
+        // Drag and drop
+        const uploadZone = document.getElementById('upload-zone');
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                handleFile(files[0]);
+            }
+        });
+        
+        // File input
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        function handleFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                alert('Please upload a CSV file only.');
+                return;
+            }
+            controller.previewCSV(file);
+        }
+        
+        function startUpload() {
+            controller.startUpload();
+        }
+        
+        function downloadErrorLog() {
+            controller.downloadErrorLog();
+        }
+        
+        function downloadTemplate() {
+            const csv = 'name,email,roll_number,year,course\n' +
+                       'Rahul Sharma,rahul@nlsiu.ac.in,NL2024001,3,BA LLB\n' +
+                       'Priya Patel,priya@nlsiu.ac.in,NL2024002,3,BA LLB\n' +
+                       'Amit Kumar,amit@nlsiu.ac.in,NL2024003,2,LLB';
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'student_upload_template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

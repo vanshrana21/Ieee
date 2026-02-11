@@ -1,0 +1,293 @@
+<!--
+Phase 4: Memorial Analysis Results Display
+
+AI Judge analysis results with scores, feedback, case citations,
+and doctrine analysis.
+
+Features:
+- Overall score display
+- Score breakdown by criteria
+- Strengths and improvements
+- Case citations detected
+- Doctrine analysis
+
+Role-based: Team members see own; judges see all
+-->
+<div class="memorial-analysis-container" id="memorial-analysis-container">
+  <div class="analysis-header">
+    <div class="header-content">
+      <div class="header-icon">🤖</div>
+      <div class="header-text">
+        <h2>AI Judge Analysis</h2>
+        <p class="header-subtitle">Comprehensive evaluation of your memorial</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="team-badge" id="team-badge">
+        <span class="team-name" id="team-name">Team Puttaswamy (Petitioner)</span>
+      </div>
+      <div class="analysis-date" id="analysis-date">
+        <span class="date-icon">📅</span>
+        <span>Analyzed on Feb 11, 2026 at 14:31</span>
+      </div>
+      <a href="#" class="btn small secondary" id="download-pdf" download>
+        <span>📥</span> Download PDF
+      </a>
+    </div>
+  </div>
+  
+  <!-- Overall Score Section -->
+  <div class="overall-score-section">
+    <div class="score-circle-container">
+      <div class="score-circle" id="score-circle">
+        <div class="score-value" id="overall-score">4.0</div>
+        <div class="score-label">Overall Score</div>
+        <div class="score-max">out of 5.0</div>
+      </div>
+      <div class="score-percentage" id="score-percentage">80%</div>
+    </div>
+    <div class="score-breakdown">
+      <h3>Score Breakdown</h3>
+      <div class="score-items">
+        <div class="score-item">
+          <div class="criterion-info">
+            <span class="criterion-name">IRAC Structure</span>
+            <span class="criterion-desc">Issue-Rule-Application-Conclusion</span>
+          </div>
+          <div class="criterion-bar">
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" id="irac-bar" style="width: 80%;"></div>
+            </div>
+            <span class="criterion-score" id="irac-score">4/5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="criterion-info">
+            <span class="criterion-name">Citation Format</span>
+            <span class="criterion-desc">SCC format accuracy (AIR, SCR)</span>
+          </div>
+          <div class="criterion-bar">
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" id="citation-bar" style="width: 100%;"></div>
+            </div>
+            <span class="criterion-score" id="citation-score">5/5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="criterion-info">
+            <span class="criterion-name">Legal Reasoning</span>
+            <span class="criterion-desc">Argument quality and precedent use</span>
+          </div>
+          <div class="criterion-bar">
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" id="reasoning-bar" style="width: 60%;"></div>
+            </div>
+            <span class="criterion-score" id="reasoning-score">3/5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Strengths Section -->
+  <div class="analysis-section">
+    <div class="section-header">
+      <div class="section-icon positive">✅</div>
+      <h3>Strengths</h3>
+    </div>
+    <div class="strengths-list" id="strengths-list">
+      <div class="strength-item">
+        <div class="item-icon">✓</div>
+        <div class="item-content">
+          <strong>Perfect SCC citation format throughout</strong>
+          <p>All case citations follow proper (YEAR) VOLUME SCC PAGE format</p>
+        </div>
+      </div>
+      <div class="strength-item">
+        <div class="item-icon">✓</div>
+        <div class="item-content">
+          <strong>Clear issue identification in IRAC structure</strong>
+          <p>Each section begins with well-defined legal issues</p>
+        </div>
+      </div>
+      <div class="strength-item">
+        <div class="item-icon">✓</div>
+        <div class="item-content">
+          <strong>Strong application of Maneka precedent</strong>
+          <p>Procedure established by law test applied correctly</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Improvements Section -->
+  <div class="analysis-section">
+    <div class="section-header">
+      <div class="section-icon warning">⚠️</div>
+      <h3>Areas for Improvement</h3>
+    </div>
+    <div class="improvements-list" id="improvements-list">
+      <div class="improvement-item">
+        <div class="item-icon">!</div>
+        <div class="item-content">
+          <strong>Need proportionality test analysis</strong>
+          <p>Apply Puttaswamy para 184 proportionality test to your Article 21 arguments</p>
+          <div class="suggestion">
+            <span class="suggestion-label">Suggestion:</span>
+            <span>Include the four-step proportionality test: legitimacy, suitability, necessity, and balancing</span>
+          </div>
+        </div>
+      </div>
+      <div class="improvement-item">
+        <div class="item-icon">!</div>
+        <div class="item-content">
+          <strong>Missing basic structure doctrine</strong>
+          <p>Include Kesavananda basic structure analysis for constitutional challenges</p>
+          <div class="suggestion">
+            <span class="suggestion-label">Suggestion:</span>
+            <span>Cite Kesavananda (1973) 4 SCC 225 for basic structure doctrine application</span>
+          </div>
+        </div>
+      </div>
+      <div class="improvement-item">
+        <div class="item-icon">!</div>
+        <div class="item-content">
+          <strong>Time management in arguments</strong>
+          <p>Some sections are overly verbose - focus on key precedents</p>
+          <div class="suggestion">
+            <span class="suggestion-label">Suggestion:</span>
+            <span>Trim repetitive arguments; prioritize strongest 3-4 precedents</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Case Citations Section -->
+  <div class="analysis-section">
+    <div class="section-header">
+      <div class="section-icon">📚</div>
+      <h3>Case Citations Detected</h3>
+    </div>
+    <div class="citations-list" id="citations-list">
+      <div class="citation-item">
+        <div class="citation-badge verified">✓ SCC</div>
+        <div class="citation-content">
+          <div class="citation-name">Puttaswamy (2017) 10 SCC 1</div>
+          <div class="citation-context">Privacy as fundamental right under Article 21</div>
+          <div class="citation-usage">Used in paras 12, 24, 38</div>
+        </div>
+      </div>
+      <div class="citation-item">
+        <div class="citation-badge verified">✓ SCC</div>
+        <div class="citation-content">
+          <div class="citation-name">Maneka (1978) 1 SCC 248</div>
+          <div class="citation-context">Procedure established by law test</div>
+          <div class="citation-usage">Used in paras 5, 19, 42</div>
+        </div>
+      </div>
+      <div class="citation-item">
+        <div class="citation-badge warning">⚠ Missing Analysis</div>
+        <div class="citation-content">
+          <div class="citation-name">Kesavananda (1973) 4 SCC 225</div>
+          <div class="citation-context">Basic structure doctrine - cited but not analyzed</div>
+          <div class="citation-usage">Mentioned in para 8, needs application</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Doctrine Analysis Section -->
+  <div class="analysis-section">
+    <div class="section-header">
+      <div class="section-icon">⚖️</div>
+      <h3>Doctrine Analysis</h3>
+    </div>
+    <div class="doctrines-grid" id="doctrines-grid">
+      <div class="doctrine-card missing">
+        <div class="doctrine-icon">⚖️</div>
+        <div class="doctrine-name">Proportionality Test</div>
+        <div class="doctrine-status">
+          <span class="status-icon">❌</span>
+          <span class="status-text">Missing</span>
+        </div>
+        <div class="doctrine-description">
+          Required for fundamental rights challenges under Article 21. Apply Puttaswamy para 184 test.
+        </div>
+        <div class="doctrine-action">
+          <button class="btn small secondary learn-more">Learn More</button>
+        </div>
+      </div>
+      <div class="doctrine-card present">
+        <div class="doctrine-icon">⚖️</div>
+        <div class="doctrine-name">Basic Structure</div>
+        <div class="doctrine-status">
+          <span class="status-icon">✅</span>
+          <span class="status-text">Present</span>
+        </div>
+        <div class="doctrine-description">
+          Kesavananda doctrine correctly identified and applied to constitutional challenge.
+        </div>
+      </div>
+      <div class="doctrine-card strong">
+        <div class="doctrine-icon">⚖️</div>
+        <div class="doctrine-name">IRAC Structure</div>
+        <div class="doctrine-status">
+          <span class="status-icon">⭐</span>
+          <span class="status-text">Strong</span>
+        </div>
+        <div class="doctrine-description">
+          Clear issue-rule-application-conclusion flow throughout the memorial.
+        </div>
+      </div>
+      <div class="doctrine-card present">
+        <div class="doctrine-icon">⚖️</div>
+        <div class="doctrine-name">Precedent Application</div>
+        <div class="doctrine-status">
+          <span class="status-icon">✅</span>
+          <span class="status-text">Good</span>
+        </div>
+        <div class="doctrine-description">
+          Strong use of Maneka and Puttaswamy precedents in arguments.
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Additional Feedback Section -->
+  <div class="analysis-section">
+    <div class="section-header">
+      <div class="section-icon">💡</div>
+      <h3>Additional Recommendations</h3>
+    </div>
+    <div class="recommendations-list" id="recommendations-list">
+      <div class="recommendation-item">
+        <div class="rec-icon">📖</div>
+        <div class="rec-content">
+          <strong>Consider citing Navtej Singh (2018)</strong>
+          <p>For dignity-based arguments under Article 21 - complements Puttaswamy</p>
+        </div>
+      </div>
+      <div class="recommendation-item">
+        <div class="rec-icon">🎯</div>
+        <div class="rec-content">
+          <strong>Focus on proportionality in rejoinder</strong>
+          <p>Since this is missing from your main memorial, emphasize it in oral arguments</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Action Buttons -->
+  <div class="analysis-actions">
+    <button class="btn secondary" id="back-to-upload">
+      <span>←</span> Back to Upload
+    </button>
+    <button class="btn secondary" id="view-all-submissions">
+      <span>📋</span> View All Submissions
+    </button>
+    <button class="btn primary" id="submit-for-competition">
+      <span>✅</span> Submit for Competition
+    </button>
+  </div>
+</div>

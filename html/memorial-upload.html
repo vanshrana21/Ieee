@@ -1,0 +1,211 @@
+<!--
+Phase 4: Memorial Upload Interface
+
+PDF upload interface with drag & drop, progress tracking,
+and AI analysis status display.
+
+Features:
+- Drag & drop PDF upload
+- File validation (PDF, <50MB, <50 pages)
+- Upload progress bar
+- AI analysis status tracking
+- Previous submissions list
+
+Role-based: Team captains only can submit
+-->
+<div class="memorial-upload-container" id="memorial-upload-container">
+  <div class="upload-header">
+    <div class="header-icon">📚</div>
+    <h2>Memorial Submission</h2>
+    <p class="header-description">Upload your team's written memorial (PDF format, max 50 pages)</p>
+  </div>
+  
+  <!-- Drag & Drop Zone -->
+  <div class="drop-zone" id="drop-zone">
+    <div class="drop-zone-content">
+      <div class="upload-icon">📄</div>
+      <h3>Drag & Drop PDF Here</h3>
+      <p class="drop-instructions">or click to browse files</p>
+      <p class="drop-requirements">Max 50MB • PDF format only • 50 pages max</p>
+      <input type="file" id="memorial-file" accept=".pdf" style="display: none;">
+    </div>
+    <div class="drop-zone-overlay" id="drop-overlay" style="display: none;">
+      <div class="overlay-content">
+        <div class="overlay-icon">📄</div>
+        <p>Drop PDF file here</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- File Preview (After Selection) -->
+  <div class="file-preview" id="file-preview" style="display: none;">
+    <div class="preview-header">
+      <h4>Selected File</h4>
+      <button class="btn small secondary" id="remove-file" type="button">
+        <span>✕</span> Remove
+      </button>
+    </div>
+    <div class="preview-content">
+      <div class="file-icon">📄</div>
+      <div class="file-info">
+        <div class="file-name" id="file-name">memorial.pdf</div>
+        <div class="file-details">
+          <span class="file-size" id="file-size">2.4 MB</span>
+          <span class="file-pages" id="file-pages">24 pages</span>
+        </div>
+        <div class="file-status" id="file-status">
+          <span class="status-icon success">✓</span>
+          <span class="status-text">Ready to upload</span>
+        </div>
+      </div>
+    </div>
+    <div class="validation-errors" id="validation-errors" style="display: none;">
+      <div class="error-item">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text" id="error-text"></span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Team Selection -->
+  <div class="form-group team-section">
+    <label for="memorial-team" class="form-label">
+      <span class="label-icon">👥</span> Select Team
+    </label>
+    <select id="memorial-team" class="form-control" required>
+      <option value="">-- Select Your Team --</option>
+      <option value="petitioner" data-team-id="">Petitioner Team</option>
+      <option value="respondent" data-team-id="">Respondent Team</option>
+    </select>
+    <div class="form-hint">Only team captains can submit memorials</div>
+  </div>
+  
+  <!-- Submission Notes -->
+  <div class="form-group notes-section">
+    <label for="submission-notes" class="form-label">
+      <span class="label-icon">📝</span> Submission Notes (Optional)
+    </label>
+    <textarea 
+      id="submission-notes" 
+      class="form-control" 
+      placeholder="e.g., This is our first draft, we'll refine arguments before oral round"
+      maxlength="500"
+      rows="3"
+    ></textarea>
+    <div class="char-counter">
+      <span id="notes-count">0</span>/500 characters
+    </div>
+  </div>
+  
+  <!-- Upload Progress -->
+  <div class="upload-progress" id="upload-progress" style="display: none;">
+    <div class="progress-header">
+      <div class="progress-title">
+        <span class="progress-icon">📤</span>
+        <h4>Uploading Memorial...</h4>
+      </div>
+      <div class="progress-percentage" id="progress-percentage">0%</div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+      </div>
+    </div>
+    <div class="progress-details">
+      <span id="progress-bytes">0 KB / 0 MB</span>
+      <span id="progress-time">Calculating...</span>
+    </div>
+  </div>
+  
+  <!-- AI Analysis Status -->
+  <div class="analysis-status" id="analysis-status" style="display: none;">
+    <div class="status-header">
+      <div class="status-icon-ai">🤖</div>
+      <div class="status-text">
+        <h4>AI Judge is analyzing your memorial...</h4>
+        <p>This may take 30-60 seconds for a 30-page PDF</p>
+      </div>
+    </div>
+    <div class="analysis-progress">
+      <div class="analysis-stage" id="analysis-stage">Extracting text from PDF...</div>
+      <div class="analysis-spinner">
+        <div class="spinner-dot"></div>
+        <div class="spinner-dot"></div>
+        <div class="spinner-dot"></div>
+      </div>
+    </div>
+    <div class="analysis-details">
+      <span id="analysis-page">Page 1 of 30</span>
+      <span id="analysis-time">~45 seconds remaining</span>
+    </div>
+  </div>
+  
+  <!-- Success Message -->
+  <div class="success-message" id="success-message" style="display: none;">
+    <div class="success-icon">✅</div>
+    <div class="success-content">
+      <h4>Memorial Uploaded Successfully!</h4>
+      <p>Your memorial is being analyzed by AI Judge. You'll receive feedback shortly.</p>
+      <div class="success-actions">
+        <button class="btn secondary" id="view-analysis-btn" type="button">View Analysis</button>
+        <button class="btn primary" id="upload-another-btn" type="button">Upload Another</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Error Message -->
+  <div class="error-message" id="error-message" style="display: none;">
+    <div class="error-icon">❌</div>
+    <div class="error-content">
+      <h4>Upload Failed</h4>
+      <p id="error-text-detail">Something went wrong. Please try again.</p>
+      <button class="btn secondary" id="retry-btn" type="button">Try Again</button>
+    </div>
+  </div>
+  
+  <!-- Action Buttons -->
+  <div class="action-buttons" id="action-buttons">
+    <button class="btn secondary" id="cancel-upload" type="button">Cancel</button>
+    <button class="btn primary" id="submit-memorial" type="button" disabled>
+      <span class="btn-icon">📤</span>
+      Submit Memorial
+    </button>
+  </div>
+  
+  <!-- Previous Submissions -->
+  <div class="previous-submissions" id="previous-submissions">
+    <div class="submissions-header">
+      <h3>📋 Previous Submissions</h3>
+      <button class="btn small secondary" id="refresh-submissions" type="button">
+        <span>🔄</span> Refresh
+      </button>
+    </div>
+    <div class="submission-list" id="submission-list">
+      <div class="submission-item loading">
+        <div class="spinner-small"></div>
+        <span>Loading submissions...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Submission List Item Template (Hidden) -->
+<template id="submission-item-template">
+  <div class="submission-item" data-submission-id="">
+    <div class="submission-icon">📄</div>
+    <div class="submission-info">
+      <div class="submission-name">memorial.pdf</div>
+      <div class="submission-meta">
+        <span class="submission-date">Feb 11, 2026 at 14:30</span>
+        <span class="submission-size">2.4 MB</span>
+      </div>
+    </div>
+    <div class="submission-status">
+      <span class="status-badge completed">Analysis Complete</span>
+    </div>
+    <div class="submission-actions">
+      <button class="btn small secondary view-analysis">View Analysis</button>
+      <a href="#" class="btn small secondary download-link" download>Download</a>
+    </div>
+  </div>
+</template>

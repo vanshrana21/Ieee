@@ -4,7 +4,7 @@ CourseCurriculum - THE BRAIN of the entire curriculum system
 """
 from sqlalchemy import Column, Integer, Boolean, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class CourseCurriculum(Base):

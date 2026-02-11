@@ -1,0 +1,678 @@
+/*
+ * css/memorial-analysis.css
+ * Phase 4: Memorial Analysis Results Styles
+ * AI analysis display with scores, feedback, case citations, and doctrine analysis
+ */
+
+/* ================= CONTAINER ================= */
+.memorial-analysis-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* Loading State */
+.memorial-analysis-container.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.analysis-error {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.error-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.analysis-error h3 {
+    font-size: 24px;
+    color: #c62828;
+    margin: 0 0 16px 0;
+}
+
+.analysis-error p {
+    color: #666;
+    margin: 0 0 24px 0;
+}
+
+/* ================= HEADER ================= */
+.analysis-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 32px;
+    color: white;
+    margin-bottom: 32px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.header-icon {
+    font-size: 40px;
+}
+
+.header-text h2 {
+    font-size: 28px;
+    margin: 0 0 8px 0;
+}
+
+.header-subtitle {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+.header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.team-badge {
+    background: rgba(102, 126, 234, 0.3);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(102, 126, 234, 0.5);
+}
+
+.team-name {
+    font-weight: 600;
+}
+
+.analysis-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.date-icon {
+    font-size: 14px;
+}
+
+/* ================= OVERALL SCORE SECTION ================= */
+.overall-score-section {
+    display: flex;
+    gap: 40px;
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 32px;
+}
+
+.score-circle-container {
+    text-align: center;
+}
+
+.score-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 8px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.score-circle.low {
+    border-color: #F44336;
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+}
+
+.score-circle.medium {
+    border-color: #FFC107;
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+}
+
+.score-circle.high {
+    border-color: #4CAF50;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+
+.score-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: #16213e;
+    line-height: 1;
+}
+
+.score-label {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.score-max {
+    font-size: 12px;
+    color: #999;
+}
+
+.score-percentage {
+    margin-top: 16px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.score-breakdown {
+    flex: 1;
+}
+
+.score-breakdown h3 {
+    font-size: 18px;
+    color: #16213e;
+    margin: 0 0 24px 0;
+}
+
+.score-items {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.score-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.criterion-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.criterion-name {
+    font-weight: 600;
+    color: #16213e;
+}
+
+.criterion-desc {
+    font-size: 13px;
+    color: #666;
+}
+
+.criterion-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.score-bar-bg {
+    flex: 1;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.score-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease-out;
+}
+
+#irac-bar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+#citation-bar {
+    background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+}
+
+#reasoning-bar {
+    background: linear-gradient(90deg, #FFC107 0%, #FFD54F 100%);
+}
+
+.criterion-score {
+    font-weight: 600;
+    color: #16213e;
+    min-width: 40px;
+    text-align: right;
+}
+
+/* ================= ANALYSIS SECTIONS ================= */
+.analysis-section {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.section-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.section-icon.positive {
+    background: #e8f5e9;
+}
+
+.section-icon.warning {
+    background: #fff3e0;
+}
+
+.analysis-section h3 {
+    font-size: 20px;
+    color: #16213e;
+    margin: 0;
+}
+
+/* ================= STRENGTHS ================= */
+.strengths-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.strength-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: #f8fff8;
+    border: 1px solid #c8e6c9;
+    border-radius: 12px;
+}
+
+.strength-item .item-icon {
+    width: 28px;
+    height: 28px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.strength-item .item-content strong {
+    color: #2e7d32;
+    font-size: 16px;
+}
+
+/* ================= IMPROVEMENTS ================= */
+.improvements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.improvement-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 12px;
+}
+
+.improvement-item .item-icon {
+    width: 28px;
+    height: 28px;
+    background: #FFC107;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.improvement-item .item-content strong {
+    color: #ef6c00;
+    font-size: 16px;
+}
+
+.improvement-item .item-content p {
+    margin: 8px 0 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.suggestion {
+    margin-top: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    border-left: 3px solid #FFC107;
+    font-size: 14px;
+}
+
+.suggestion-label {
+    font-weight: 600;
+    color: #ef6c00;
+}
+
+.priority-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 8px;
+}
+
+.priority-badge.high {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.priority-badge.medium {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+/* ================= CITATIONS ================= */
+.citations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.citation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: #f5f5f5;
+    border-radius: 12px;
+}
+
+.citation-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.citation-badge.verified {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.citation-badge.warning {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.citation-badge.info {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.citation-content {
+    flex: 1;
+}
+
+.citation-name {
+    font-weight: 600;
+    color: #16213e;
+    margin-bottom: 4px;
+}
+
+.citation-context {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.citation-usage {
+    font-size: 12px;
+    color: #999;
+}
+
+/* ================= DOCTRINE ANALYSIS ================= */
+.doctrines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.doctrine-card {
+    padding: 24px;
+    border-radius: 16px;
+    text-align: center;
+    border: 2px solid;
+}
+
+.doctrine-card.present {
+    background: #f8fff8;
+    border-color: #c8e6c9;
+}
+
+.doctrine-card.strong {
+    background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+    border-color: #4CAF50;
+}
+
+.doctrine-card.missing {
+    background: #ffebee;
+    border-color: #ffcdd2;
+}
+
+.doctrine-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.doctrine-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #16213e;
+    margin-bottom: 12px;
+}
+
+.doctrine-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.status-icon {
+    font-size: 18px;
+}
+
+.status-text {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.doctrine-card.present .status-text {
+    color: #2e7d32;
+}
+
+.doctrine-card.missing .status-text {
+    color: #c62828;
+}
+
+.doctrine-description {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.doctrine-reference {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+    color: #999;
+}
+
+.doctrine-action {
+    margin-top: 16px;
+}
+
+/* ================= RECOMMENDATIONS ================= */
+.recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: #f0f4ff;
+    border: 1px solid #c5cae9;
+    border-radius: 12px;
+}
+
+.rec-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.rec-content strong {
+    color: #16213e;
+    font-size: 15px;
+}
+
+/* ================= ACTION BUTTONS ================= */
+.analysis-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn.small {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn.secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: 2px solid #e0e0e0;
+}
+
+.btn.secondary:hover {
+    background: #e0e0e0;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .memorial-analysis-container {
+        padding: 20px 16px;
+    }
+    
+    .analysis-header {
+        padding: 24px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-meta {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .overall-score-section {
+        flex-direction: column;
+        align-items: center;
+        padding: 24px;
+    }
+    
+    .score-circle {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .score-value {
+        font-size: 36px;
+    }
+    
+    .analysis-section {
+        padding: 24px;
+    }
+    
+    .doctrines-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .analysis-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .citation-item {
+        flex-direction: column;
+    }
+    
+    .citation-badge {
+        align-self: flex-start;
+    }
+}

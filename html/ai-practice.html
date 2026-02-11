@@ -129,7 +129,56 @@
 
         <!-- AI Judge Interface Container -->
         <div id="ai-judge-container" class="ai-judge-container">
-            <!-- Content loaded by ai-judge-interface.js -->
+            <!-- Role Selection -->
+            <div id="role-selection" class="role-selection">
+                <div class="ai-header">
+                    <h2>🏛️ AI Moot Court Practice</h2>
+                    <p>Solo practice with AI Judge — no teammates needed</p>
+                </div>
+                <div class="role-cards">
+                    <div class="role-card petitioner">
+                        <h3>🧑‍⚖️ Petitioner</h3>
+                        <p>Argue as the party seeking relief</p>
+                        <button id="petitioner-btn" class="btn-primary">Start as Petitioner</button>
+                    </div>
+                    <div class="role-card respondent">
+                        <h3>🧑‍💼 Respondent</h3>
+                        <p>Argue as the defending party</p>
+                        <button id="respondent-btn" class="btn-primary">Start as Respondent</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Argument Input Section -->
+            <div id="argument-section" class="argument-section hidden">
+                <div class="session-info">
+                    <span class="side-badge" id="session-side"></span>
+                    <span>Turn: <strong id="current-turn">1</strong></span>
+                </div>
+
+                <div class="argument-form">
+                    <label for="argument-input">Your Argument</label>
+                    <textarea id="argument-input" rows="8" placeholder="My Lord, I submit that..." maxlength="1000"></textarea>
+                    <div class="helper-text">
+                        <p>✅ Must say 'My Lord' at start</p>
+                        <p>✅ Cite cases as (2017) 10 SCC 1</p>
+                        <p>✅ Max 1000 characters</p>
+                    </div>
+                    <div class="char-counter">
+                        <span id="char-count">0</span>/1000
+                    </div>
+                    <button id="submit-argument-btn" class="btn-primary btn-large">Submit to Bench →</button>
+                </div>
+
+                <!-- Feedback Container -->
+                <div id="feedback-container" class="feedback-container hidden"></div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loading-spinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Waiting for AI Judge...</p>
+            </div>
         </div>
     </main>
 

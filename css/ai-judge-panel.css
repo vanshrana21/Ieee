@@ -1,0 +1,441 @@
+/*
+ * css/ai-judge-panel.css
+ * Phase 4: AI Judge Panel Styles
+ * Isolated from existing styles - NEW FILE
+ */
+
+/* ================= AI JUDGE PANEL ================= */
+.ai-judge-panel {
+    position: fixed;
+    top: 20px;
+    right: 420px; /* Left of scoring panel */
+    width: 350px;
+    max-height: 90vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #667eea;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    z-index: 1000;
+    overflow-y: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+}
+
+.ai-judge-panel.minimized {
+    height: 60px;
+    overflow: hidden;
+}
+
+.ai-judge-panel .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ai-judge-panel .panel-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-minimize {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-minimize:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ================= INPUT SECTION ================= */
+.input-section {
+    margin-bottom: 20px;
+}
+
+.input-section label {
+    display: block;
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+#ai-argument-input {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+#ai-argument-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#ai-argument-input::placeholder {
+    color: #666;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* ================= TEAM SELECTION ================= */
+.team-selection {
+    margin: 15px 0;
+}
+
+.team-selection label {
+    display: block;
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+.side-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.side-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.side-btn:hover {
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.side-btn.petitioner.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.side-btn.respondent.active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-color: #f5576c;
+}
+
+/* ================= BUTTONS ================= */
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-top: 15px;
+}
+
+.btn.primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn.official {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    color: white;
+}
+
+/* ================= AI FEEDBACK DISPLAY ================= */
+.ai-feedback-display {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ai-feedback-display.hidden {
+    display: none;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.feedback-header h4 {
+    margin: 0;
+    color: #667eea;
+    font-size: 1rem;
+}
+
+.timestamp {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+/* ================= BEHAVIOR BADGES ================= */
+.behavior-badges {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.badge-icon {
+    font-size: 1.2rem;
+}
+
+.badge-text {
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    flex: 1;
+}
+
+.badge-status {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.badge-status.positive {
+    color: #4CAF50;
+}
+
+.badge-status.negative {
+    color: #F44336;
+}
+
+/* ================= SCORE SECTION ================= */
+.score-section {
+    margin-bottom: 20px;
+}
+
+.score-section h5 {
+    margin: 0 0 15px 0;
+    color: #a0a0a0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.score-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.score-label {
+    min-width: 100px;
+    font-size: 0.85rem;
+    color: #ccc;
+}
+
+.score-bar-container {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.score-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.score-bar.low {
+    background: linear-gradient(90deg, #F44336 0%, #FF5722 100%);
+}
+
+.score-bar.medium {
+    background: linear-gradient(90deg, #FFC107 0%, #FF9800 100%);
+}
+
+.score-bar.high {
+    background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+}
+
+.score-value {
+    min-width: 40px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    text-align: right;
+}
+
+/* ================= FEEDBACK TEXT ================= */
+.feedback-text,
+.next-question {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.feedback-text h5,
+.next-question h5 {
+    margin: 0 0 10px 0;
+    color: #667eea;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.feedback-text p,
+.next-question p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #ccc;
+}
+
+/* ================= JUDGE ACTIONS ================= */
+.judge-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.judge-actions.hidden {
+    display: none;
+}
+
+/* ================= HISTORY SECTION ================= */
+.history-section h5 {
+    margin: 0 0 15px 0;
+    color: #a0a0a0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.eval-history {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+
+.history-item .side {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.history-item .side.petitioner {
+    color: #667eea;
+}
+
+.history-item .side.respondent {
+    color: #f5576c;
+}
+
+.history-item .score {
+    color: #ffd89b;
+}
+
+.history-item .official-badge {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.no-history {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1200px) {
+    .ai-judge-panel {
+        right: 20px;
+        top: 100px;
+        width: 320px;
+    }
+}
+
+@media (max-width: 768px) {
+    .ai-judge-panel {
+        width: 90vw;
+        right: 5vw;
+        top: 10px;
+        max-height: 80vh;
+    }
+    
+    .behavior-badges {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .score-item {
+        flex-wrap: wrap;
+    }
+    
+    .score-bar-container {
+        order: 3;
+        width: 100%;
+        margin-top: 5px;
+    }
+}

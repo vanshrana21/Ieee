@@ -1,0 +1,428 @@
+/*
+ * css/objection-modal.css
+ * Phase 3.3: Objection Modal Styles
+ * Isolated from existing styles - NEW FILE
+ */
+
+/* ================= MODAL ================= */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #e94560;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(233, 69, 96, 0.4);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #e94560;
+    font-size: 1.3rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: #e94560;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ================= FORM GROUPS ================= */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: #a0a0a0;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #e94560;
+}
+
+/* ================= OBJECTION TYPES ================= */
+.objection-types {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.obj-btn {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    border: 2px solid rgba(233, 69, 96, 0.3);
+    border-radius: 8px;
+    background: rgba(233, 69, 96, 0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.obj-btn:hover {
+    background: rgba(233, 69, 96, 0.2);
+    border-color: rgba(233, 69, 96, 0.5);
+}
+
+.obj-btn.selected {
+    background: rgba(233, 69, 96, 0.3);
+    border-color: #e94560;
+    box-shadow: 0 0 15px rgba(233, 69, 96, 0.3);
+}
+
+.obj-name {
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.obj-desc {
+    font-size: 0.75rem;
+    color: #a0a0a0;
+}
+
+/* ================= EMERGENCY OBJECTION ================= */
+.emergency-objection {
+    text-align: center;
+    padding: 20px;
+    background: rgba(244, 67, 54, 0.1);
+    border: 2px dashed #F44336;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.btn-emergency {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-emergency:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+}
+
+.emergency-note {
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+/* ================= BUTTONS ================= */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, #e94560 0%, #d63050 100%);
+    color: white;
+}
+
+.btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ================= OBJECTIONS PANEL ================= */
+.objections-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #e94560;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(233, 69, 96, 0.3);
+    z-index: 1000;
+}
+
+.objections-panel .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.objections-panel h3 {
+    margin: 0;
+    color: #e94560;
+    font-size: 1rem;
+}
+
+.btn-refresh {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    transition: transform 0.3s;
+}
+
+.btn-refresh:hover {
+    transform: rotate(180deg);
+}
+
+.objections-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.objection-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 4px solid;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.objection-item.sustained {
+    border-left-color: #4CAF50;
+}
+
+.objection-item.overruled {
+    border-left-color: #F44336;
+}
+
+.objection-item.pending {
+    border-left-color: #FFC107;
+}
+
+.objection-item.withdrawn {
+    border-left-color: #9E9E9E;
+}
+
+.objection-type {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.objection-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.objection-status.sustained {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.objection-status.overruled {
+    background: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+}
+
+.objection-status.pending {
+    background: rgba(255, 193, 7, 0.2);
+    color: #FFC107;
+}
+
+.objection-meta {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.no-objections {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+}
+
+.raise-obj-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #e94560 0%, #d63050 100%);
+    color: white;
+    padding: 14px;
+    font-size: 1rem;
+}
+
+/* ================= JUDGE RULING PANEL ================= */
+.judge-ruling-panel {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #FFC107;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(255, 193, 7, 0.3);
+    z-index: 1500;
+}
+
+.judge-ruling-panel.hidden {
+    display: none;
+}
+
+.judge-ruling-panel h3 {
+    margin: 0 0 15px 0;
+    color: #FFC107;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.pending-objection {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.pending-objection .obj-type {
+    font-weight: bold;
+    color: #FFC107;
+    text-transform: uppercase;
+}
+
+.pending-objection .obj-raised-by {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    margin: 5px 0;
+}
+
+.ruling-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.ruling-buttons .btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 0.9rem;
+}
+
+.ruling-buttons .btn.sustain {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    color: white;
+}
+
+.ruling-buttons .btn.overrule {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+    color: white;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .objection-types {
+        grid-template-columns: 1fr;
+    }
+    
+    .objections-panel,
+    .judge-ruling-panel {
+        width: 90vw;
+        right: 5vw;
+        left: 5vw;
+        transform: none;
+    }
+    
+    .ruling-buttons {
+        flex-direction: column;
+    }
+}

@@ -5,19 +5,11 @@ Database configuration with automatic migration support
 import os
 import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
 from dotenv import load_dotenv
-from backend.orm.bookmark import Bookmark
-from backend.orm.saved_search import SavedSearch
-from backend.orm.smart_note import SmartNote 
-from backend.orm.semantic_embedding import SemanticEmbedding
-from backend.orm.tutor_session import TutorSession 
-from backend.orm.tutor_message import TutorMessage 
-from backend.orm.topic_mastery import TopicMastery 
-from backend.orm.study_plan import StudyPlan  # PHASE 9C
-from backend.orm.study_plan_item import StudyPlanItem
-from backend.orm.ba_llb_curriculum import BALLBSemester, BALLBSubject, BALLBModule
+
+# Import Base from orm.base to avoid circular imports
+from backend.orm.base import Base
 
 load_dotenv()
 
@@ -42,8 +34,6 @@ AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
 )
-
-from backend.orm.base import Base
 
 
 async def get_db():
@@ -198,21 +188,49 @@ async def init_db():
     
     try:
         # Import all models to register them with Base
+        # PHASE 1/2: Core models
         from backend.orm.user import User
         from backend.orm.course import Course
         from backend.orm.subject import Subject
+        
+        # PHASE 2: Competition Infrastructure
+        from backend.orm.competition import Competition
+        from backend.orm.team import Team, TeamMember
+        from backend.orm.memorial import MemorialSubmission
+        from backend.orm.oral_round import OralRound
+        
+        # PHASE 5/6: Moot court and submissions
+        from backend.orm.moot_project import MootProject
+        from backend.orm.submission import Submission
+        from backend.orm.team_activity import TeamActivityLog
+        
+        # PHASE 3: Curriculum
         from backend.orm.curriculum import CourseCurriculum
-        from backend.orm.content_module import ContentModule  # PHASE 6
-        from backend.orm.learn_content import LearnContent    # PHASE 6
-        from backend.orm.case_content import CaseContent      # PHASE 6
-        from backend.orm.practice_question import PracticeQuestion  # PHASE 6
-        from backend.orm.user_notes import UserNotes          # PHASE 6
+        from backend.orm.content_module import ContentModule
+        from backend.orm.learn_content import LearnContent
+        from backend.orm.case_content import CaseContent
+        from backend.orm.practice_question import PracticeQuestion
+        from backend.orm.user_notes import UserNotes
         from backend.orm.user_progress import UserProgress
         
-        # ⭐ PHASE 2: AI Moot Court Practice Mode
+        # PHASE 6C: Bookmarks and saved items
+        from backend.orm.bookmark import Bookmark
+        from backend.orm.saved_search import SavedSearch
+        from backend.orm.smart_note import SmartNote
+        from backend.orm.semantic_embedding import SemanticEmbedding
+        
+        # PHASE 8: AI tutoring and progress
+        from backend.orm.tutor_session import TutorSession
+        from backend.orm.tutor_message import TutorMessage
+        from backend.orm.topic_mastery import TopicMastery
+        from backend.orm.study_plan import StudyPlan
+        from backend.orm.study_plan_item import StudyPlanItem
+        from backend.orm.ba_llb_curriculum import BALLBSemester, BALLBSubject, BALLBModule
+        
+        # PHASE 2: AI Moot Court Practice Mode
         from backend.orm.ai_oral_session import AIOralSession, AIOralTurn
         
-        # ⭐ PHASE 8: Import progress tracking models
+        # PHASE 8: Progress tracking
         from backend.orm.user_content_progress import UserContentProgress
         from backend.orm.practice_attempt import PracticeAttempt
         from backend.orm.subject_progress import SubjectProgress

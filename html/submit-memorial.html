@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Memorial - Juris AI</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/memorials.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>📜 Submit Memorial</h1>
+            <div id="user-info"></div>
+        </header>
+        
+        <div class="memorial-container">
+            <div class="deadline-banner">
+                <h3>⏰ Memorial Deadline:</h3>
+                <p id="deadline-display">2026-02-15 23:59:59</p>
+                <div id="countdown-timer" class="countdown"></div>
+            </div>
+            
+            <div class="upload-zone" id="drop-zone">
+                <div class="upload-icon">📁</div>
+                <h3>Drag & Drop PDF Memorial</h3>
+                <p>or click to browse (max 5MB)</p>
+                <input type="file" id="memorial-file" accept=".pdf" hidden>
+                <button class="btn btn-secondary" id="browse-btn">Browse Files</button>
+            </div>
+            
+            <div id="upload-status" class="status-container" style="display: none;">
+                <div class="status-icon processing">⏳</div>
+                <h3 id="status-text">Processing memorial...</h3>
+                <p id="status-detail">AI analysis in progress. This may take 10-15 seconds.</p>
+            </div>
+            
+            <div id="results-container" class="results-container" style="display: none;">
+                <div class="score-card">
+                    <h3>Overall Score</h3>
+                    <div class="score-display" id="overall-score">4.2/5.0</div>
+                </div>
+                
+                <div class="score-breakdown">
+                    <div class="score-item">
+                        <span>IRAC Structure</span>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 80%;"></div>
+                            <span>4/5</span>
+                        </div>
+                    </div>
+                    <div class="score-item">
+                        <span>SCC Citation Format</span>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 100%; background-color: #4CAF50;"></div>
+                            <span>5/5</span>
+                        </div>
+                    </div>
+                    <div class="score-item">
+                        <span>Legal Reasoning</span>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 60%; background-color: #FFC107;"></div>
+                            <span>3/5</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="badges-section">
+                    <h3>Badges Earned</h3>
+                    <div class="badges-container">
+                        <div class="badge green">Etiquette Master</div>
+                        <div class="badge blue">SCC Format Expert</div>
+                        <div class="badge purple">Proportionality Pro</div>
+                    </div>
+                </div>
+                
+                <div class="feedback-section">
+                    <h3>AI Judge Feedback</h3>
+                    <div id="ai-feedback" class="feedback-text">
+                        Strong IRAC structure. Cite Maneka as (1978) 1 SCC 248 (missing volume number). Apply proportionality test from Puttaswamy para 184 for complete analysis.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
+    <script src="../js/memorial-upload.js"></script>
+</body>
+</html>

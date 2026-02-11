@@ -209,3 +209,15 @@ class SubmissionLog(Base):
             "performed_at": self.performed_at.isoformat() if self.performed_at else None,
             "details": self.details
         }
+
+
+# ============================================================================
+# PHASE 3 PLACEHOLDERS - Satisfy route imports without breaking Phase 2
+# ============================================================================
+class SubmissionVersion(Base):
+    __tablename__ = "submission_versions"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+class SubmissionReview(Base):
+    __tablename__ = "submission_reviews"
+    id = Column(Integer, primary_key=True, autoincrement=True)

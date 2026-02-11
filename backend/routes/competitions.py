@@ -1,621 +1,424 @@
-"""
-backend/routes/competitions.py
-Phase 5B: Competition management routes with institution scoping
-All queries are filtered by institution_id for strict data isolation
-"""
-import logging
-from typing import List, Optional
-from datetime import datetime
-
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, Field, ConfigDict
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, desc
+from sqlalchemy import select, func
+from datetime import datetime, timezone
+from typing import List, Optional
+import os
+import uuid
+from pydantic import BaseModel, validator
 
 from backend.database import get_db
-from backend.orm.competition import Competition, CompetitionType, CompetitionStatus, CompetitionRound
-from backend.orm.team import Team, TeamSide, TeamStatus
-from backend.orm.institution import Institution
+from backend.orm.competition import Competition, CompetitionStatus
+from backend.orm.team import Team, TeamMember, TeamRole
+from backend.orm.memorial import MemorialSubmission, MemorialStatus
 from backend.orm.user import User, UserRole
-from backend.rbac import get_current_user, require_role, require_min_role
-from backend.errors import ErrorCode
+from backend.orm.moot_project import MootProject
+from backend.routes.auth import get_current_user
+from backend.services.ai_judge_service import AIJudgeEngine as AIJudgeService
 
-logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/competitions", tags=["Competitions"])
+router = APIRouter(prefix="/api/competitions", tags=["competitions"])
 
-
-# ================= SCHEMAS =================
+UPLOAD_DIR = "uploads/memorials"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class CompetitionCreate(BaseModel):
-    """Schema for creating a competition"""
-    title: str = Field(..., min_length=3, max_length=255)
-    description: Optional[str] = None
-    moot_type: CompetitionType = Field(default=CompetitionType.HYBRID)
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    submission_deadline: Optional[datetime] = None
-    registration_deadline: Optional[datetime] = None
-    proposition_text: Optional[str] = None
-
-
-class CompetitionUpdate(BaseModel):
-    """Schema for updating a competition"""
-    title: Optional[str] = Field(None, min_length=3, max_length=255)
-    description: Optional[str] = None
-    moot_type: Optional[CompetitionType] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    submission_deadline: Optional[datetime] = None
-    registration_deadline: Optional[datetime] = None
-    proposition_text: Optional[str] = None
-    status: Optional[CompetitionStatus] = None
-    is_published: Optional[bool] = None
-
+    title: str
+    description: str
+    problem_id: int
+    start_date: str
+    memorial_deadline: str
+    oral_start_date: str
+    oral_end_date: str
+    max_team_size: int = 4
+    
+    @validator('start_date', 'memorial_deadline', 'oral_start_date', 'oral_end_date')
+    def validate_datetime(cls, v):
+        try:
+            datetime.fromisoformat(v.replace('Z', '+00:00'))
+            return v
+        except ValueError:
+            raise ValueError("Invalid datetime format. Use ISO 8601 (e.g., 2026-02-10T14:30:00)")
 
 class CompetitionResponse(BaseModel):
-    """Competition response schema"""
-    model_config = ConfigDict(from_attributes=True)
-    
     id: int
-    institution_id: int
     title: str
-    description: Optional[str]
-    moot_type: str
-    start_date: Optional[str]
-    end_date: Optional[str]
-    submission_deadline: Optional[str]
+    description: str
+    problem_id: int
+    start_date: str
+    memorial_deadline: str
+    oral_start_date: str
+    oral_end_date: str
+    max_team_size: int
     status: str
-    is_published: bool
-    team_count: int
-    created_at: str
-    updated_at: str
-
-
-class CompetitionDetailResponse(CompetitionResponse):
-    """Full competition details including proposition"""
-    proposition_text: Optional[str]
-    rounds: List[dict]
-
+    teams_count: int
+    created_by_id: int
 
 class TeamCreate(BaseModel):
-    """Schema for creating a team"""
-    name: str = Field(..., min_length=3, max_length=255)
-    side: TeamSide = Field(default=TeamSide.PETITIONER)
-    member_ids: List[int] = Field(default=[], description="User IDs of team members")
-    email: Optional[str] = None
-    phone: Optional[str] = None
-
-
-# ================= HELPER FUNCTIONS =================
-
-async def check_institution_access(
-    competition_institution_id: int,
-    current_user: User,
-    db: AsyncSession
-) -> bool:
-    """
-    Phase 5B: Verify user has access to competition's institution.
-    SUPER_ADMIN can access any, others only their own.
-    """
-    if current_user.role == UserRole.SUPER_ADMIN:
-        return True
+    name: str
+    side: str
     
-    if current_user.institution_id is None:
-        return False
-    
-    return current_user.institution_id == competition_institution_id
+    @validator('side')
+    def validate_side(cls, v):
+        if v not in ["petitioner", "respondent"]:
+            raise ValueError("Side must be 'petitioner' or 'respondent'")
+        return v
 
+class MemorialResponse(BaseModel):
+    id: int
+    status: str
+    submitted_at: str
+    score_overall: Optional[float]
+    badges_earned: List[str]
 
-async def check_competition_in_institution(
-    competition_id: int,
-    institution_id: int,
-    db: AsyncSession
-) -> bool:
-    """Verify competition belongs to institution"""
-    result = await db.execute(
-        select(Competition).where(
-            and_(
-                Competition.id == competition_id,
-                Competition.institution_id == institution_id
-            )
-        )
-    )
-    return result.scalar_one_or_none() is not None
-
-
-# ================= ROUTES =================
-
-@router.post("", response_model=CompetitionResponse, status_code=201)
+@router.post("/", response_model=CompetitionResponse)
 async def create_competition(
-    data: CompetitionCreate,
-    institution_id: int = Query(..., description="Institution ID for the competition"),
+    comp: CompetitionCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Create a new competition.
-    Phase 5B: Admin+ can create within their institution.
-    """
-    # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "Only Admin, Faculty, or Super Admin can create competitions",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
+    if current_user.role not in [UserRole.ADMIN, UserRole.FACULTY, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins/faculty can create competitions")
     
-    # Verify institution access
-    if not await check_institution_access(institution_id, current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "You can only create competitions in your own institution",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
+    result = await db.execute(select(MootProject).where(MootProject.id == comp.problem_id))
+    problem = result.scalar_one_or_none()
+    if not problem:
+        raise HTTPException(status_code=404, detail="Problem not found")
     
-    # Verify institution exists and is active
-    inst_result = await db.execute(
-        select(Institution).where(
-            and_(Institution.id == institution_id, Institution.status == "active")
-        )
-    )
-    institution = inst_result.scalar_one_or_none()
-    
-    if not institution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "success": False,
-                "error": "Not Found",
-                "message": "Institution not found or suspended",
-                "code": ErrorCode.NOT_FOUND
-            }
-        )
-    
-    # Create competition
-    competition = Competition(
-        institution_id=institution_id,
-        title=data.title,
-        description=data.description,
-        moot_type=data.moot_type,
-        start_date=data.start_date,
-        end_date=data.end_date,
-        submission_deadline=data.submission_deadline,
-        registration_deadline=data.registration_deadline,
-        proposition_text=data.proposition_text,
+    new_comp = Competition(
+        title=comp.title,
+        description=comp.description,
+        problem_id=comp.problem_id,
+        start_date=datetime.fromisoformat(comp.start_date.replace('Z', '+00:00')),
+        memorial_deadline=datetime.fromisoformat(comp.memorial_deadline.replace('Z', '+00:00')),
+        oral_start_date=datetime.fromisoformat(comp.oral_start_date.replace('Z', '+00:00')),
+        oral_end_date=datetime.fromisoformat(comp.oral_end_date.replace('Z', '+00:00')),
+        max_team_size=comp.max_team_size,
         status=CompetitionStatus.DRAFT,
-        is_published=False,
-        created_by=current_user.id
+        created_by_id=current_user.id
     )
     
-    db.add(competition)
+    db.add(new_comp)
     await db.commit()
-    await db.refresh(competition)
+    await db.refresh(new_comp)
     
-    logger.info(f"Competition created: {competition.title} (institution: {institution_id}) by user {current_user.id}")
+    team_count = 0
     
-    return competition.to_dict()
+    return CompetitionResponse(
+        id=new_comp.id,
+        title=new_comp.title,
+        description=new_comp.description,
+        problem_id=new_comp.problem_id,
+        start_date=new_comp.start_date.isoformat(),
+        memorial_deadline=new_comp.memorial_deadline.isoformat(),
+        oral_start_date=new_comp.oral_start_date.isoformat(),
+        oral_end_date=new_comp.oral_end_date.isoformat(),
+        max_team_size=new_comp.max_team_size,
+        status=new_comp.status.value,
+        teams_count=team_count,
+        created_by_id=new_comp.created_by_id
+    )
 
-
-@router.get("", response_model=dict)
+@router.get("/", response_model=List[CompetitionResponse])
 async def list_competitions(
-    institution_id: Optional[int] = Query(None, description="Filter by institution (defaults to user's institution)"),
-    status: Optional[str] = Query(None, description="Filter by status: draft, registration, active, closed"),
-    include_unpublished: bool = Query(False, description="Include unpublished competitions (Admin+ only)"),
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    status: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    """
-    List competitions.
-    Phase 5B: Scoped to user's institution. Cross-institution access is IMPOSSIBLE.
-    """
-    # Determine effective institution_id
-    effective_institution_id = institution_id
+    query = select(Competition).order_by(Competition.start_date.desc())
     
-    if current_user.role != UserRole.SUPER_ADMIN:
-        # Non-super-admins can only see their own institution
-        if effective_institution_id is None:
-            effective_institution_id = current_user.institution_id
-        elif effective_institution_id != current_user.institution_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "success": False,
-                    "error": "Forbidden",
-                    "message": "You can only view competitions from your own institution",
-                    "code": ErrorCode.PERMISSION_DENIED
-                }
-            )
-    
-    # If still no institution_id, return empty
-    if effective_institution_id is None:
-        return {
-            "success": True,
-            "data": [],
-            "total": 0,
-            "page": page,
-            "per_page": per_page
-        }
-    
-    # Build query with institution filter (CRITICAL for tenancy)
-    query = select(Competition).where(Competition.institution_id == effective_institution_id)
-    
-    # Status filter
-    if status:
+    if status and status in [s.value for s in CompetitionStatus]:
         query = query.where(Competition.status == status)
-    
-    # Published filter - non-admin users only see published competitions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
-        query = query.where(Competition.is_published == True)
-    elif not include_unpublished:
-        query = query.where(Competition.is_published == True)
-    
-    # Get total count
-    count_result = await db.execute(query)
-    total = len(count_result.scalars().all())
-    
-    # Pagination
-    query = query.order_by(desc(Competition.created_at))
-    query = query.offset((page - 1) * per_page).limit(per_page)
     
     result = await db.execute(query)
     competitions = result.scalars().all()
     
-    return {
-        "success": True,
-        "data": [comp.to_dict() for comp in competitions],
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "institution_id": effective_institution_id
-    }
+    responses = []
+    for comp in competitions:
+        team_count_result = await db.execute(
+            select(func.count(Team.id)).where(Team.competition_id == comp.id)
+        )
+        team_count = team_count_result.scalar()
+        
+        responses.append(CompetitionResponse(
+            id=comp.id,
+            title=comp.title,
+            description=comp.description,
+            problem_id=comp.problem_id,
+            start_date=comp.start_date.isoformat(),
+            memorial_deadline=comp.memorial_deadline.isoformat(),
+            oral_start_date=comp.oral_start_date.isoformat(),
+            oral_end_date=comp.oral_end_date.isoformat(),
+            max_team_size=comp.max_team_size,
+            status=comp.status.value,
+            teams_count=team_count,
+            created_by_id=comp.created_by_id
+        ))
+    
+    return responses
 
-
-@router.get("/{competition_id}", response_model=CompetitionDetailResponse)
+@router.get("/{comp_id}", response_model=CompetitionResponse)
 async def get_competition(
-    competition_id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    comp_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    """
-    Get competition details.
-    Phase 5B: Only accessible within user's institution.
-    """
-    result = await db.execute(select(Competition).where(Competition.id == competition_id))
-    competition = result.scalar_one_or_none()
+    result = await db.execute(select(Competition).where(Competition.id == comp_id))
+    comp = result.scalar_one_or_none()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Competition not found")
     
-    if not competition:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "success": False,
-                "error": "Not Found",
-                "message": "Competition not found",
-                "code": ErrorCode.NOT_FOUND
-            }
-        )
-    
-    # Phase 5B: Verify institution access
-    if not await check_institution_access(competition.institution_id, current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "You can only access competitions from your own institution",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
-    
-    # Check if unpublished competition is accessible
-    if not competition.is_published:
-        if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": "Not Found",
-                    "message": "Competition not found",
-                    "code": ErrorCode.NOT_FOUND
-                }
-            )
-    
-    # Get rounds
-    rounds_result = await db.execute(
-        select(CompetitionRound)
-        .where(CompetitionRound.competition_id == competition_id)
-        .order_by(CompetitionRound.sequence)
+    team_count_result = await db.execute(
+        select(func.count(Team.id)).where(Team.competition_id == comp_id)
     )
-    rounds = rounds_result.scalars().all()
+    team_count = team_count_result.scalar()
     
-    response_data = competition.to_dict(include_proposition=True)
-    response_data["rounds"] = [r.to_dict() for r in rounds]
-    
-    return response_data
+    return CompetitionResponse(
+        id=comp.id,
+        title=comp.title,
+        description=comp.description,
+        problem_id=comp.problem_id,
+        start_date=comp.start_date.isoformat(),
+        memorial_deadline=comp.memorial_deadline.isoformat(),
+        oral_start_date=comp.oral_start_date.isoformat(),
+        oral_end_date=comp.oral_end_date.isoformat(),
+        max_team_size=comp.max_team_size,
+        status=comp.status.value,
+        teams_count=team_count,
+        created_by_id=comp.created_by_id
+    )
 
-
-@router.patch("/{competition_id}", response_model=CompetitionResponse)
-async def update_competition(
-    competition_id: int,
-    data: CompetitionUpdate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Update a competition.
-    Phase 5B: Admin+ can update within their institution.
-    """
-    result = await db.execute(select(Competition).where(Competition.id == competition_id))
-    competition = result.scalar_one_or_none()
-    
-    if not competition:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "success": False,
-                "error": "Not Found",
-                "message": "Competition not found",
-                "code": ErrorCode.NOT_FOUND
-            }
-        )
-    
-    # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "Only Admin, Faculty, or Super Admin can update competitions",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
-    
-    # Verify institution access
-    if not await check_institution_access(competition.institution_id, current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "You can only update competitions in your own institution",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
-    
-    # Update fields
-    if data.title is not None:
-        competition.title = data.title
-    if data.description is not None:
-        competition.description = data.description
-    if data.moot_type is not None:
-        competition.moot_type = data.moot_type
-    if data.start_date is not None:
-        competition.start_date = data.start_date
-    if data.end_date is not None:
-        competition.end_date = data.end_date
-    if data.submission_deadline is not None:
-        competition.submission_deadline = data.submission_deadline
-    if data.registration_deadline is not None:
-        competition.registration_deadline = data.registration_deadline
-    if data.proposition_text is not None:
-        competition.proposition_text = data.proposition_text
-    if data.status is not None:
-        competition.status = data.status
-    if data.is_published is not None:
-        competition.is_published = data.is_published
-    
-    competition.updated_at = datetime.utcnow()
-    await db.commit()
-    await db.refresh(competition)
-    
-    logger.info(f"Competition updated: {competition.title} by user {current_user.id}")
-    
-    return competition.to_dict()
-
-
-@router.delete("/{competition_id}", status_code=200)
-async def delete_competition(
-    competition_id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Delete a competition.
-    Phase 5B: Admin+ can delete within their institution.
-    This cascades to delete teams and rounds.
-    """
-    result = await db.execute(select(Competition).where(Competition.id == competition_id))
-    competition = result.scalar_one_or_none()
-    
-    if not competition:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "success": False,
-                "error": "Not Found",
-                "message": "Competition not found",
-                "code": ErrorCode.NOT_FOUND
-            }
-        )
-    
-    # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "Only Admin or Super Admin can delete competitions",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
-    
-    # Verify institution access
-    if not await check_institution_access(competition.institution_id, current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "You can only delete competitions in your own institution",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
-    
-    await db.delete(competition)
-    await db.commit()
-    
-    logger.info(f"Competition deleted: {competition_id} by user {current_user.id}")
-    
-    return {
-        "success": True,
-        "message": "Competition deleted successfully",
-        "competition_id": competition_id
-    }
-
-
-# ================= TEAM MANAGEMENT =================
-
-@router.post("/{competition_id}/teams", response_model=dict, status_code=201)
+@router.post("/{comp_id}/teams", response_model=dict)
 async def create_team(
-    competition_id: int,
-    data: TeamCreate,
+    comp_id: int,
+    team: TeamCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Create a team for a competition.
-    Phase 5B: Only within user's institution.
-    """
-    result = await db.execute(select(Competition).where(Competition.id == competition_id))
-    competition = result.scalar_one_or_none()
+    comp_result = await db.execute(select(Competition).where(Competition.id == comp_id))
+    comp = comp_result.scalar_one_or_none()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Competition not found")
+    if comp.status != CompetitionStatus.LIVE:
+        raise HTTPException(status_code=400, detail="Competition is not live")
     
-    if not competition:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "success": False,
-                "error": "Not Found",
-                "message": "Competition not found",
-                "code": ErrorCode.NOT_FOUND
-            }
+    existing_result = await db.execute(
+        select(TeamMember).join(Team).where(
+            TeamMember.user_id == current_user.id,
+            Team.competition_id == comp_id
         )
-    
-    # Verify institution access
-    if not await check_institution_access(competition.institution_id, current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "You can only create teams in your own institution",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
-    
-    # Check if competition is accepting registrations
-    if competition.status not in [CompetitionStatus.REGISTRATION, CompetitionStatus.ACTIVE]:
-        if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": "Bad Request",
-                    "message": "This competition is not accepting new teams",
-                    "code": ErrorCode.INVALID_INPUT
-                }
-            )
-    
-    # Create team
-    team = Team(
-        institution_id=competition.institution_id,
-        competition_id=competition_id,
-        name=data.name,
-        side=data.side,
-        status=TeamStatus.ACTIVE,
-        email=data.email,
-        phone=data.phone,
-        created_by=current_user.id
     )
+    if existing_result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="You are already in a team for this competition")
     
-    db.add(team)
+    new_team = Team(
+        competition_id=comp_id,
+        name=team.name,
+        side=team.side
+    )
+    db.add(new_team)
     await db.commit()
-    await db.refresh(team)
+    await db.refresh(new_team)
     
-    # Add members
-    for user_id in data.member_ids:
-        user_result = await db.execute(
-            select(User).where(
-                and_(User.id == user_id, User.institution_id == competition.institution_id)
-            )
-        )
-        user = user_result.scalar_one_or_none()
-        if user:
-            team.members.append(user)
-    
+    captain = TeamMember(
+        team_id=new_team.id,
+        user_id=current_user.id,
+        role=TeamRole.SPEAKER_1,
+        is_captain=True
+    )
+    db.add(captain)
     await db.commit()
     
-    logger.info(f"Team created: {team.name} for competition {competition_id} by user {current_user.id}")
-    
-    return {
-        "success": True,
-        "team": team.to_dict(include_members=True)
-    }
+    return {"message": "Team created successfully", "team_id": new_team.id, "team_name": new_team.name}
 
-
-@router.get("/{competition_id}/teams", response_model=dict)
-async def list_teams(
-    competition_id: int,
+@router.post("/{comp_id}/teams/{team_id}/join", response_model=dict)
+async def join_team(
+    comp_id: int,
+    team_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    List teams in a competition.
-    Phase 5B: Only within user's institution.
-    """
-    result = await db.execute(select(Competition).where(Competition.id == competition_id))
-    competition = result.scalar_one_or_none()
-    
-    if not competition:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "success": False,
-                "error": "Not Found",
-                "message": "Competition not found",
-                "code": ErrorCode.NOT_FOUND
-            }
-        )
-    
-    # Verify institution access
-    if not await check_institution_access(competition.institution_id, current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "success": False,
-                "error": "Forbidden",
-                "message": "You can only view teams from your own institution",
-                "code": ErrorCode.PERMISSION_DENIED
-            }
-        )
-    
-    teams_result = await db.execute(
-        select(Team).where(Team.competition_id == competition_id)
+    team_result = await db.execute(
+        select(Team).where(Team.id == team_id, Team.competition_id == comp_id)
     )
-    teams = teams_result.scalars().all()
+    team = team_result.scalar_one_or_none()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    member_count_result = await db.execute(
+        select(func.count(TeamMember.id)).where(TeamMember.team_id == team_id)
+    )
+    if member_count_result.scalar() >= team.competition.max_team_size:
+        raise HTTPException(status_code=400, detail="Team is full")
+    
+    existing_result = await db.execute(
+        select(TeamMember).join(Team).where(
+            TeamMember.user_id == current_user.id,
+            Team.competition_id == comp_id
+        )
+    )
+    if existing_result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="You are already in a team for this competition")
+    
+    new_member = TeamMember(
+        team_id=team_id,
+        user_id=current_user.id,
+        role=TeamRole.RESEARCHER_1,
+        is_captain=False
+    )
+    db.add(new_member)
+    await db.commit()
+    
+    return {"message": "Joined team successfully", "team_id": team_id}
+
+@router.post("/{comp_id}/teams/{team_id}/memorials", response_model=dict)
+async def submit_memorial(
+    comp_id: int,
+    team_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    team_result = await db.execute(
+        select(Team).where(Team.id == team_id, Team.competition_id == comp_id)
+    )
+    team = team_result.scalar_one_or_none()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    member_result = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == current_user.id,
+            TeamMember.is_captain == True
+        )
+    )
+    if not member_result.scalar_one_or_none():
+        raise HTTPException(status_code=403, detail="Only team captain can submit memorials")
+    
+    comp_result = await db.execute(select(Competition).where(Competition.id == comp_id))
+    comp = comp_result.scalar_one_or_none()
+    if datetime.now(timezone.utc) > comp.memorial_deadline.replace(tzinfo=timezone.utc):
+        raise HTTPException(status_code=400, detail="Memorial deadline has passed")
+    
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    if len(await file.read()) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+    await file.seek(0)
+    
+    file_ext = os.path.splitext(file.filename)[1]
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+    
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    memorial = MemorialSubmission(
+        team_id=team_id,
+        file_path=file_path,
+        original_filename=file.filename,
+        status=MemorialStatus.PENDING
+    )
+    db.add(memorial)
+    await db.commit()
+    await db.refresh(memorial)
+    
+    await analyze_memorial_background(memorial.id, db)
     
     return {
-        "success": True,
-        "competition_id": competition_id,
-        "teams": [team.to_dict(include_members=False) for team in teams]
+        "message": "Memorial submitted successfully. AI analysis in progress...",
+        "memorial_id": memorial.id,
+        "status": memorial.status.value
     }
+
+@router.get("/{comp_id}/teams/{team_id}/memorials", response_model=List[MemorialResponse])
+async def get_team_memorials(
+    comp_id: int,
+    team_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    member_result = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == current_user.id
+        )
+    )
+    if not member_result.scalar_one_or_none():
+        raise HTTPException(status_code=403, detail="Not a member of this team")
+    
+    result = await db.execute(
+        select(MemorialSubmission).where(MemorialSubmission.team_id == team_id)
+    )
+    memorials = result.scalars().all()
+    
+    return [{
+        "id": m.id,
+        "status": m.status.value,
+        "submitted_at": m.submitted_at.isoformat(),
+        "score_overall": m.score_overall,
+        "badges_earned": m.badges_earned.split(",") if m.badges_earned else []
+    } for m in memorials]
+
+async def analyze_memorial_background(memorial_id: int, db: AsyncSession):
+    from sqlalchemy import select
+    from backend.orm.memorial import MemorialSubmission, MemorialStatus
+    from backend.orm.team import Team
+    
+    try:
+        result = await db.execute(
+            select(MemorialSubmission).where(MemorialSubmission.id == memorial_id)
+        )
+        memorial = result.scalar_one_or_none()
+        if not memorial:
+            return
+        
+        if not os.path.exists(memorial.file_path):
+            memorial.status = MemorialStatus.REJECTED
+            memorial.ai_feedback = "File not found"
+            await db.commit()
+            return
+        
+        with open(memorial.file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()[:5000]
+        
+        team_result = await db.execute(select(Team).where(Team.id == memorial.team_id))
+        team = team_result.scalar_one_or_none()
+        side = team.side if team else "petitioner"
+        
+        ai_judge = AIJudgeService()
+        analysis = ai_judge.analyze_argument(content, side)
+        
+        scores = analysis.get("scores", analysis.get("score_breakdown", {}))
+        irac_score = scores.get("legal_accuracy", 3)
+        citation_score = scores.get("citation", 3)
+        structure_score = scores.get("etiquette", 3)
+        overall = (irac_score + citation_score + structure_score) / 3.0
+        
+        badges = []
+        behavior = analysis.get("behavior_data", {})
+        if behavior.get("has_my_lord"):
+            badges.append("Etiquette_Master")
+        if behavior.get("valid_scc_citation"):
+            badges.append("SCC_Format_Expert")
+        if not behavior.get("needs_proportionality", True):
+            badges.append("Proportionality_Pro")
+        
+        memorial.status = MemorialStatus.ACCEPTED
+        memorial.ai_feedback = analysis.get("feedback", "Analysis complete")[:1000]
+        memorial.score_irac = min(5, max(1, int(irac_score)))
+        memorial.score_citation = min(5, max(1, int(citation_score)))
+        memorial.score_structure = min(5, max(1, int(structure_score)))
+        memorial.score_overall = round(overall, 2)
+        memorial.badges_earned = ",".join(badges) if badges else None
+        memorial.processed_at = datetime.now(timezone.utc)
+        
+        await db.commit()
+        
+    except Exception as e:
+        if memorial:
+            memorial.status = MemorialStatus.REJECTED
+            memorial.ai_feedback = f"Analysis failed: {str(e)[:500]}"
+            await db.commit()
