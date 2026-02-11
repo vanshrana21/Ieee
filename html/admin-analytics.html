@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Analytics - Juris AI</title>
+    <link rel="stylesheet" href="../css/skill-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="skill-dashboard admin-dashboard">
+        <header class="dashboard-header">
+            <h1>Competition Analytics Dashboard</h1>
+            <div class="competition-selector">
+                <select id="competition-select" onchange="adminAnalyticsController.loadCompetitionData()">
+                    <option value="">Select Competition...</option>
+                </select>
+                <button class="export-btn" onclick="adminAnalyticsController.exportCSV()">
+                    📊 Export CSV
+                </button>
+            </div>
+        </header>
+
+        <!-- Overview Cards -->
+        <section class="overview-cards">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="participation-rate">--%</div>
+                    <div class="stat-label">Participation Rate</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="completion-rate">--%</div>
+                    <div class="stat-label">Completion Rate</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="avg-citation">--</div>
+                    <div class="stat-label">Avg Citation Score</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="total-participants">--</div>
+                    <div class="stat-label">Total Participants</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row -->
+        <section class="charts-row">
+            <div class="chart-card">
+                <h3>Score Distribution by Criteria</h3>
+                <div class="chart-container">
+                    <canvas id="chart-criteria"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Doctrine Mastery</h3>
+                <div class="chart-container">
+                    <canvas id="chart-doctrine"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Case Citation Heatmap -->
+        <section class="heatmap-section">
+            <h2>Most Cited Cases</h2>
+            <div id="cases-container" class="cases-container">
+                <div class="case-item">
+                    <div class="case-name">Loading...</div>
+                    <div class="case-bar-container">
+                        <div class="case-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="case-count">--</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Section -->
+        <section class="export-section">
+            <h2>Data Export</h2>
+            <div class="export-actions">
+                <button class="btn-export" onclick="adminAnalyticsController.exportCSV()">
+                    📥 Download CSV Report
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/admin-analytics-controller.js"></script>
+    <script>
+        const adminAnalyticsController = new AdminAnalyticsController();
+    </script>
+</body>
+</html>

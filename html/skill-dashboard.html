@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Dashboard - Juris AI</title>
+    <link rel="stylesheet" href="../css/skill-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="skill-dashboard">
+        <header class="dashboard-header">
+            <h1>My Skill Progress</h1>
+            <div class="period-selector">
+                <button class="period-btn" data-period="last_7_days" onclick="skillDashboardController.setPeriod('last_7_days')">7 Days</button>
+                <button class="period-btn active" data-period="last_30_days" onclick="skillDashboardController.setPeriod('last_30_days')">30 Days</button>
+                <button class="period-btn" data-period="all_time" onclick="skillDashboardController.setPeriod('all_time')">All Time</button>
+            </div>
+        </header>
+
+        <section class="insights-section">
+            <h2>Insights</h2>
+            <div id="insights-container" class="insights-container">
+                <div class="insight-card">
+                    <span class="insight-icon">💡</span>
+                    <p>Loading insights...</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="skills-grid">
+            <div class="skill-card" id="card-citation">
+                <div class="skill-header">
+                    <h3>Citation Accuracy</h3>
+                    <span class="skill-score" id="score-citation">--/5.0</span>
+                </div>
+                <div class="skill-trend">
+                    <span class="trend-arrow" id="trend-citation">→</span>
+                    <span class="trend-value" id="trendval-citation">--</span>
+                </div>
+                <div class="percentile-badge" id="percentile-citation">Top --%</div>
+                <div class="chart-container">
+                    <canvas id="chart-citation"></canvas>
+                </div>
+            </div>
+
+            <div class="skill-card" id="card-etiquette">
+                <div class="skill-header">
+                    <h3>Etiquette Compliance</h3>
+                    <span class="skill-score" id="score-etiquette">--/5.0</span>
+                </div>
+                <div class="skill-trend">
+                    <span class="trend-arrow" id="trend-etiquette">→</span>
+                    <span class="trend-value" id="trendval-etiquette">--</span>
+                </div>
+                <div class="percentile-badge" id="percentile-etiquette">Top --%</div>
+                <div class="chart-container">
+                    <canvas id="chart-etiquette"></canvas>
+                </div>
+            </div>
+
+            <div class="skill-card" id="card-reasoning">
+                <div class="skill-header">
+                    <h3>Legal Reasoning</h3>
+                    <span class="skill-score" id="score-reasoning">--/5.0</span>
+                </div>
+                <div class="skill-trend">
+                    <span class="trend-arrow" id="trend-reasoning">→</span>
+                    <span class="trend-value" id="trendval-reasoning">--</span>
+                </div>
+                <div class="percentile-badge" id="percentile-reasoning">Top --%</div>
+                <div class="chart-container">
+                    <canvas id="chart-reasoning"></canvas>
+                </div>
+            </div>
+
+            <div class="skill-card" id="card-doctrine">
+                <div class="skill-header">
+                    <h3>Doctrine Mastery</h3>
+                    <span class="skill-score" id="score-doctrine">--/5.0</span>
+                </div>
+                <div class="skill-trend">
+                    <span class="trend-arrow" id="trend-doctrine">→</span>
+                    <span class="trend-value" id="trendval-doctrine">--</span>
+                </div>
+                <div class="percentile-badge" id="percentile-doctrine">Top --%</div>
+                <div class="chart-container">
+                    <canvas id="chart-doctrine"></canvas>
+                </div>
+            </div>
+
+            <div class="skill-card" id="card-time">
+                <div class="skill-header">
+                    <h3>Time Management</h3>
+                    <span class="skill-score" id="score-time">--/5.0</span>
+                </div>
+                <div class="skill-trend">
+                    <span class="trend-arrow" id="trend-time">→</span>
+                    <span class="trend-value" id="trendval-time">--</span>
+                </div>
+                <div class="percentile-badge" id="percentile-time">Top --%</div>
+                <div class="chart-container">
+                    <canvas id="chart-time"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="weaknesses-section">
+            <h2>Areas for Improvement</h2>
+            <div id="weaknesses-container" class="weaknesses-container">
+                <p class="loading-text">Analyzing your performance...</p>
+            </div>
+        </section>
+
+        <section class="strengths-section">
+            <h2>Your Strengths</h2>
+            <div id="strengths-container" class="strengths-container">
+                <p class="loading-text">Analyzing your performance...</p>
+            </div>
+        </section>
+
+        <section class="benchmarks-section">
+            <h2>Cohort Comparison</h2>
+            <div id="benchmarks-container" class="benchmarks-container">
+                <div class="benchmark-chart">
+                    <canvas id="chart-benchmarks"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/skill-dashboard-controller.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id') || 'me';
+        const skillDashboardController = new SkillDashboardController(userId);
+    </script>
+</body>
+</html>

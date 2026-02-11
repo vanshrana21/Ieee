@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Opponent Panel - Juris AI</title>
+    <link rel="stylesheet" href="../css/ai-opponent-panel.css">
+</head>
+<body>
+    <!-- AI Opponent Control Panel -->
+    <div id="ai-opponent-panel" class="ai-opponent-panel">
+        <div class="panel-header">
+            <h3>🤖 AI Teammate</h3>
+            <div class="status-indicator" id="ai-status">
+                <span class="status-dot inactive"></span>
+                <span class="status-text">Inactive</span>
+            </div>
+        </div>
+        
+        <div class="panel-content">
+            <!-- Toggle Switch -->
+            <div class="toggle-section">
+                <label class="switch">
+                    <input type="checkbox" id="ai-toggle" onchange="aiOpponentController.toggleAI()">
+                    <span class="slider"></span>
+                </label>
+                <span class="toggle-label">Enable AI Teammate</span>
+            </div>
+
+            <!-- AI Role Selection -->
+            <div class="role-section" id="role-section">
+                <label for="ai-role">AI Role</label>
+                <select id="ai-role" onchange="aiOpponentController.updateRole()">
+                    <option value="">Select role...</option>
+                    <option value="speaker_1">Speaker 1 (Lead)</option>
+                    <option value="speaker_2">Speaker 2 (Rebuttal)</option>
+                    <option value="researcher_1">Researcher 1</option>
+                    <option value="researcher_2">Researcher 2</option>
+                </select>
+            </div>
+
+            <!-- Side Selection -->
+            <div class="side-section" id="side-section">
+                <label>Team Side</label>
+                <div class="side-buttons">
+                    <button class="side-btn petitioner" id="btn-op-petitioner" onclick="aiOpponentController.selectSide('petitioner')">
+                        Petitioner
+                    </button>
+                    <button class="side-btn respondent" id="btn-op-respondent" onclick="aiOpponentController.selectSide('respondent')">
+                        Respondent
+                    </button>
+                </div>
+            </div>
+
+            <!-- Context Input -->
+            <div class="context-section" id="context-section">
+                <label for="ai-context">Round Context (Optional)</label>
+                <textarea 
+                    id="ai-context" 
+                    placeholder="Brief summary of moot problem, previous arguments..."
+                ></textarea>
+            </div>
+
+            <!-- Active Session Info -->
+            <div class="session-info hidden" id="session-info">
+                <div class="info-row">
+                    <span class="info-label">Role:</span>
+                    <span class="info-value" id="session-role">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Side:</span>
+                    <span class="info-value" id="session-side">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Started:</span>
+                    <span class="info-value" id="session-time">-</span>
+                </div>
+                
+                <button class="btn disable" onclick="aiOpponentController.disableAI()">
+                    Disable AI Teammate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Opponent Activity Feed -->
+    <div id="ai-activity-panel" class="ai-activity-panel">
+        <h4>🤖 AI Activity</h4>
+        <div id="ai-activity-list" class="activity-list">
+            <p class="no-activity">AI teammate not active</p>
+        </div>
+    </div>
+
+    <script src="../js/ai-opponent-controller.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roundId = urlParams.get('round_id') || 1;
+        const teamId = urlParams.get('team_id') || 1;
+        const aiOpponentController = new AIOpponentController(roundId, teamId);
+    </script>
+</body>
+</html>

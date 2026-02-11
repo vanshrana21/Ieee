@@ -45,14 +45,25 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = PROJECT_ROOT / ".env"
 
-# Load environment variables from absolute path
-load_dotenv(dotenv_path=ENV_FILE)
+# Load environment variables from absolute path (override=True ensures .env takes precedence)
+load_dotenv(dotenv_path=ENV_FILE, override=True)
+
+# Log which env file was loaded
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info(f"✓ Loaded environment from: {ENV_FILE}")
+logger.info(f"✓ GEMINI_API_KEY present: {bool(os.getenv('GEMINI_API_KEY'))}")
+logger.info(f"✓ GROQ_API_KEY present: {bool(os.getenv('GROQ_API_KEY'))}")
 
 # Verify critical env vars are loaded
 if not os.getenv("GEMINI_API_KEY"):
-    logging.error(f"GEMINI_API_KEY not found. Checked: {ENV_FILE}")
-    logging.error(f"File exists: {ENV_FILE.exists()}")
+    logger.error(f"❌ GEMINI_API_KEY not found. Checked: {ENV_FILE}")
+    logger.error(f"   File exists: {ENV_FILE.exists()}")
+    logger.error("   Solution: cp .env.example .env && nano .env")
     sys.exit(1)
+
+if not os.getenv("GROQ_API_KEY"):
+    logger.warning("⚠️ GROQ_API_KEY not found - some features may be limited")
 
 # Now safe to import backend modules
 from fastapi import FastAPI, Request, status
@@ -357,3 +368,6 @@ if __name__ == "__main__":
         reload=reload,
         log_level="info"
     )
+# Phase 2: Competition Infrastructure
+from backend.routes.competitions import router as competition_router
+app.include_router(competition_router)

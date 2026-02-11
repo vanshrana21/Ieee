@@ -13,7 +13,7 @@ All endpoints:
 """
 import logging
 from typing import Dict, Any, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
@@ -759,3 +759,516 @@ async def get_dashboard_analytics(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch dashboard analytics"
         )
+
+
+# ================= PHASE 5: SKILL ANALYTICS & CERTIFICATES =================
+
+from backend.orm.user_skill_progress import UserSkillProgress, SkillType, get_skill_type_display
+from backend.orm.competition_certificate import CompetitionCertificate
+from backend.orm.cohort_benchmark import CohortBenchmark
+from backend.orm.competition import Competition
+from backend.orm.team import Team, TeamMember
+from backend.services.analytics_calculator import AnalyticsCalculator
+from backend.services.certificate_generator import get_certificate_generator
+from pydantic import BaseModel as PydanticBaseModel, Field
+from typing import List as TypingList, Optional
+
+
+class SkillHistoryItem(PydanticBaseModel):
+    date: str
+    score: float
+
+
+class SkillData(PydanticBaseModel):
+    skill_type: str
+    current_score: float
+    previous_score: Optional[float]
+    improvement: Optional[str]
+    percentile: int
+    weakness_flag: bool
+    history: TypingList[SkillHistoryItem]
+
+
+class SkillsResponse(PydanticBaseModel):
+    user_id: int
+    skills: TypingList[SkillData]
+    insights: TypingList[str]
+
+
+class BenchmarkResponse(PydanticBaseModel):
+    id: int
+    institution_id: Optional[int]
+    institution_name: str
+    course_id: Optional[int]
+    course_name: str
+    semester: str
+    skill_type: str
+    percentile_25: float
+    percentile_50: float
+    percentile_75: float
+    mean_score: float
+    sample_size: int
+    measurement_period: str
+
+
+class WeaknessItem(PydanticBaseModel):
+    skill_type: str
+    skill_display: str
+    pattern: str
+    example: str
+    remediation: str
+    frequency: str
+    current_score: float
+
+
+class StrengthItem(PydanticBaseModel):
+    skill_type: str
+    skill_display: str
+    pattern: str
+    note: str
+    current_score: float
+    percentile: int
+
+
+class WeaknessesResponse(PydanticBaseModel):
+    user_id: int
+    weaknesses: TypingList[WeaknessItem]
+    strengths: TypingList[StrengthItem]
+
+
+class CertificateGenerateRequest(PydanticBaseModel):
+    competition_id: int
+    team_id: int
+    final_rank: int = Field(..., ge=1)
+    total_score: float = Field(..., ge=0, le=5)
+
+
+class CertificateResponse(PydanticBaseModel):
+    id: int
+    user_id: int
+    user_name: Optional[str]
+    competition_id: int
+    competition_title: Optional[str]
+    team_id: int
+    team_name: Optional[str]
+    final_rank: int
+    total_score: float
+    certificate_code: str
+    issued_at: str
+    verified_count: int
+    is_revoked: bool
+    download_url: str
+
+
+class CertificateVerifyResponse(PydanticBaseModel):
+    valid: bool
+    revoked: bool
+    revoked_reason: Optional[str]
+    student_name: str
+    competition: str
+    rank: str
+    score: float
+    issued_date: str
+    verified_at: str
+
+
+class TopCitedCase(PydanticBaseModel):
+    case: str
+    count: int
+
+
+class AdminAnalyticsResponse(PydanticBaseModel):
+    competition_id: int
+    participation_rate: str
+    avg_citation_score: float
+    top_cited_cases: TypingList[TopCitedCase]
+    doctrine_mastery: dict
+    completion_rate: str
+    avg_scores_by_criteria: dict
+
+
+def _check_admin_permission_v5(current_user: User):
+    """Verify user has admin/faculty access"""
+    if current_user.role not in [
+        UserRole.ADMIN,
+        UserRole.SUPER_ADMIN,
+        UserRole.FACULTY
+    ]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin/Faculty access required"
+        )
+
+def _check_ownership_or_admin_v5(user_id: int, current_user: User):
+    """Verify user can access data (own data or admin)"""
+    if user_id != current_user.id and current_user.role not in [
+        UserRole.ADMIN,
+        UserRole.SUPER_ADMIN,
+        UserRole.FACULTY
+    ]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Can only access your own data"
+        )
+
+
+@router.get("/skills/{user_id}", response_model=SkillsResponse)
+async def get_user_skills_v5(
+    user_id: int,
+    skill_type: Optional[str] = None,
+    period: str = Query("last_30_days", pattern="^(last_7_days|last_30_days|all_time)$"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Phase 5: Get user skill progress with history and insights.
+    Users can view own data; admins can view any user.
+    """
+    _check_ownership_or_admin_v5(user_id, current_user)
+    
+    end_date = date.today()
+    if period == "last_7_days":
+        start_date = end_date - timedelta(days=7)
+    elif period == "last_30_days":
+        start_date = end_date - timedelta(days=30)
+    else:
+        start_date = date.min
+    
+    query = select(UserSkillProgress).where(
+        and_(
+            UserSkillProgress.user_id == user_id,
+            UserSkillProgress.measurement_date >= start_date,
+            UserSkillProgress.measurement_date <= end_date
+        )
+    ).order_by(desc(UserSkillProgress.measurement_date))
+    
+    if skill_type:
+        try:
+            type_enum = SkillType(skill_type)
+            query = query.where(UserSkillProgress.skill_type == type_enum)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid skill type: {skill_type}"
+            )
+    
+    result = await db.execute(query)
+    records = result.scalars().all()
+    
+    skill_groups = {}
+    for record in records:
+        if record.skill_type not in skill_groups:
+            skill_groups[record.skill_type] = []
+        skill_groups[record.skill_type].append(record)
+    
+    skills_data = []
+    for skill_type_enum, skill_records in skill_groups.items():
+        latest = skill_records[0]
+        previous = skill_records[1] if len(skill_records) > 1 else None
+        
+        improvement = None
+        if previous:
+            delta = latest.score_value - previous.score_value
+            sign = "+" if delta >= 0 else ""
+            improvement = f"{sign}{delta:.1f}"
+        
+        history = [
+            SkillHistoryItem(date=r.measurement_date.isoformat(), score=r.score_value)
+            for r in skill_records[:10]
+        ]
+        
+        skills_data.append(SkillData(
+            skill_type=skill_type_enum.value,
+            current_score=latest.score_value,
+            previous_score=previous.score_value if previous else None,
+            improvement=improvement,
+            percentile=latest.percentile_rank,
+            weakness_flag=latest.weakness_flag,
+            history=history
+        ))
+    
+    calculator = AnalyticsCalculator(db)
+    insights = await calculator.generate_personalized_insights(user_id)
+    
+    return SkillsResponse(
+        user_id=user_id,
+        skills=skills_data,
+        insights=insights
+    )
+
+
+@router.get("/benchmarks", response_model=TypingList[BenchmarkResponse])
+async def get_cohort_benchmarks_v5(
+    skill_type: Optional[str] = None,
+    institution_id: Optional[int] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Phase 5: Get cohort benchmark data for comparison.
+    Available to all authenticated users (anonymized data).
+    """
+    query = select(CohortBenchmark).order_by(desc(CohortBenchmark.updated_at))
+    
+    if skill_type:
+        try:
+            type_enum = SkillType(skill_type)
+            query = query.where(CohortBenchmark.skill_type == type_enum)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid skill type: {skill_type}"
+            )
+    
+    if institution_id:
+        query = query.where(
+            and_(
+                CohortBenchmark.institution_id == institution_id,
+                CohortBenchmark.sample_size >= 5
+            )
+        )
+    
+    result = await db.execute(query)
+    benchmarks = result.scalars().all()
+    
+    return [
+        BenchmarkResponse(
+            id=b.id,
+            institution_id=b.institution_id,
+            institution_name=b.institution.name if b.institution else "All Institutions",
+            course_id=b.course_id,
+            course_name=b.course.name if b.course else "All Courses",
+            semester=b.semester or "All Semesters",
+            skill_type=b.skill_type.value,
+            percentile_25=b.percentile_25,
+            percentile_50=b.percentile_50,
+            percentile_75=b.percentile_75,
+            mean_score=b.mean_score,
+            sample_size=b.sample_size,
+            measurement_period=b.measurement_period
+        )
+        for b in benchmarks
+    ]
+
+
+@router.get("/weaknesses/{user_id}", response_model=WeaknessesResponse)
+async def get_user_weaknesses_v5(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Phase 5: Get user weaknesses and strengths analysis.
+    Users can view own data; admins can view any user.
+    """
+    _check_ownership_or_admin_v5(user_id, current_user)
+    
+    calculator = AnalyticsCalculator(db)
+    analysis = await calculator.analyze_weaknesses(user_id)
+    
+    weaknesses = [
+        WeaknessItem(
+            skill_type=w["skill_type"],
+            skill_display=w["skill_display"],
+            pattern=w["pattern"],
+            example=w["example"],
+            remediation=w["remediation"],
+            frequency=w["frequency"],
+            current_score=w["current_score"]
+        )
+        for w in analysis["weaknesses"]
+    ]
+    
+    strengths = [
+        StrengthItem(
+            skill_type=s["skill_type"],
+            skill_display=s["skill_display"],
+            pattern=s["pattern"],
+            note=s["note"],
+            current_score=s["current_score"],
+            percentile=s.get("percentile", 0)
+        )
+        for s in analysis["strengths"]
+    ]
+    
+    return WeaknessesResponse(
+        user_id=user_id,
+        weaknesses=weaknesses,
+        strengths=strengths
+    )
+
+
+@router.post("/certificates/generate", response_model=CertificateResponse)
+async def generate_certificate_v5(
+    request: CertificateGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Phase 5: Generate competition certificate for user.
+    Users can generate for own teams; admins for any team.
+    """
+    comp_result = await db.execute(
+        select(Competition).where(Competition.id == request.competition_id)
+    )
+    competition = comp_result.scalar_one_or_none()
+    if not competition:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Competition not found"
+        )
+    
+    team_result = await db.execute(
+        select(Team).where(Team.id == request.team_id)
+    )
+    team = team_result.scalar_one_or_none()
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        member_result = await db.execute(
+            select(TeamMember).where(
+                and_(
+                    TeamMember.team_id == request.team_id,
+                    TeamMember.user_id == current_user.id
+                )
+            )
+        )
+        if not member_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Must be team member to generate certificate"
+            )
+    
+    existing = await db.execute(
+        select(CompetitionCertificate).where(
+            and_(
+                CompetitionCertificate.user_id == current_user.id,
+                CompetitionCertificate.competition_id == request.competition_id,
+                CompetitionCertificate.is_revoked == False
+            )
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Certificate already exists for this competition"
+        )
+    
+    generator = get_certificate_generator()
+    
+    competition_dates = f"{competition.start_date.strftime('%B %d')} - {competition.end_date.strftime('%B %d, %Y')}"
+    
+    certificate, pdf_path, qr_path = await generator.generate_certificate(
+        user_id=current_user.id,
+        user_name=current_user.name,
+        user_photo_path=None,
+        competition_id=request.competition_id,
+        competition_title=competition.title,
+        competition_dates=competition_dates,
+        team_id=request.team_id,
+        team_name=team.name,
+        final_rank=request.final_rank,
+        total_score=request.total_score
+    )
+    
+    db.add(certificate)
+    await db.commit()
+    await db.refresh(certificate)
+    
+    return CertificateResponse(
+        id=certificate.id,
+        user_id=certificate.user_id,
+        user_name=current_user.name,
+        competition_id=certificate.competition_id,
+        competition_title=competition.title,
+        team_id=certificate.team_id,
+        team_name=team.name,
+        final_rank=certificate.final_rank,
+        total_score=certificate.total_score,
+        certificate_code=certificate.certificate_code,
+        issued_at=certificate.issued_at.isoformat() if certificate.issued_at else None,
+        verified_count=certificate.verified_count,
+        is_revoked=certificate.is_revoked,
+        download_url=certificate.to_dict().get("download_url", "")
+    )
+
+
+@router.get("/certificates/{certificate_code}/verify", response_model=CertificateVerifyResponse)
+async def verify_certificate_v5(
+    certificate_code: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Phase 5: Verify certificate by code.
+    PUBLIC endpoint - no authentication required.
+    """
+    result = await db.execute(
+        select(CompetitionCertificate).where(
+            CompetitionCertificate.certificate_code == certificate_code
+        )
+    )
+    certificate = result.scalar_one_or_none()
+    
+    if not certificate:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Certificate not found"
+        )
+    
+    verify_data = certificate.verify()
+    await db.commit()
+    
+    return CertificateVerifyResponse(
+        valid=verify_data["valid"],
+        revoked=verify_data["revoked"],
+        revoked_reason=verify_data.get("revoked_reason"),
+        student_name=verify_data["student_name"],
+        competition=verify_data["competition"],
+        rank=verify_data["rank"],
+        score=verify_data["score"],
+        issued_date=verify_data["issued_date"],
+        verified_at=verify_data["verified_at"]
+    )
+
+
+@router.get("/admin/competition/{competition_id}", response_model=AdminAnalyticsResponse)
+async def get_competition_analytics_v5(
+    competition_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Phase 5: Get comprehensive competition analytics.
+    ADMIN/FACULTY/SUPER_ADMIN only.
+    """
+    _check_admin_permission_v5(current_user)
+    
+    comp_result = await db.execute(
+        select(Competition).where(Competition.id == competition_id)
+    )
+    competition = comp_result.scalar_one_or_none()
+    if not competition:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Competition not found"
+        )
+    
+    calculator = AnalyticsCalculator(db)
+    analytics = await calculator.calculate_competition_analytics(competition_id)
+    
+    return AdminAnalyticsResponse(
+        competition_id=competition_id,
+        participation_rate=analytics["participation_rate"],
+        avg_citation_score=analytics["avg_citation_score"],
+        top_cited_cases=[
+            TopCitedCase(case=c["case"], count=c["count"])
+            for c in analytics["top_cited_cases"]
+        ],
+        doctrine_mastery=analytics["doctrine_mastery"],
+        completion_rate=analytics["completion_rate"],
+        avg_scores_by_criteria=analytics["avg_scores_by_criteria"]
+    )

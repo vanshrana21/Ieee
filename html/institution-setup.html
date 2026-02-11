@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institution Setup - Juris AI</title>
+    <link rel="stylesheet" href="../css/institution-branding.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .setup-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 700px;
+            overflow: hidden;
+        }
+        
+        .setup-header {
+            background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%);
+            color: #D4AF37;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .setup-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .setup-header p {
+            opacity: 0.9;
+        }
+        
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+        
+        .step:last-child::after {
+            display: none;
+        }
+        
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: #666;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active .step-circle {
+            background: #8B0000;
+            color: #D4AF37;
+        }
+        
+        .step.completed .step-circle {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
+        
+        .step.active .step-label {
+            color: #8B0000;
+            font-weight: 600;
+        }
+        
+        .setup-content {
+            padding: 30px;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #8B0000;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-picker-group input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .color-picker-group input[type="text"] {
+            flex: 1;
+        }
+        
+        .logo-upload {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .logo-upload:hover {
+            border-color: #8B0000;
+            background: #fff8f8;
+        }
+        
+        .logo-upload-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .tier-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .tier-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tier-card:hover {
+            border-color: #8B0000;
+            transform: translateY(-2px);
+        }
+        
+        .tier-card.selected {
+            border-color: #8B0000;
+            background: #fff8f8;
+        }
+        
+        .tier-card h4 {
+            color: #8B0000;
+            margin-bottom: 10px;
+        }
+        
+        .tier-card .price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .tier-card .features {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .setup-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%);
+            color: #D4AF37;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            color: #F44336;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .tier-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .step::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1>🏛️ Institution Setup</h1>
+            <p>Configure your law school for the Juris AI Platform</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Details</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Branding</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Subscription</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">SSO</div>
+            </div>
+            <div class="step" data-step="5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Admins</div>
+            </div>
+        </div>
+        
+        <div class="setup-content">
+            <!-- Step 1: Institution Details -->
+            <div class="step-content active" id="step-1">
+                <h2>Institution Details</h2>
+                <p style="color: #666; margin-bottom: 20px;">Enter your law school's basic information.</p>
+                
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="inst-name" placeholder="e.g., National Law School of India University">
+                    <div class="error-message" id="error-name">Please enter the institution name</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Short Name *</label>
+                        <input type="text" id="inst-short-name" placeholder="e.g., NLSIU">
+                        <div class="error-message" id="error-short-name">Please enter a short name</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Institution Code *</label>
+                        <input type="text" id="inst-code" placeholder="e.g., NLSIU_BLR" style="text-transform: uppercase;">
+                        <div class="error-message" id="error-code">Code must be 3-20 uppercase letters/numbers/underscores</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Website</label>
+                    <input type="url" id="inst-website" placeholder="https://www.nls.ac.in">
+                </div>
+            </div>
+            
+            <!-- Step 2: Branding -->
+            <div class="step-content" id="step-2">
+                <h2>Branding & Customization</h2>
+                <p style="color: #666; margin-bottom: 20px;">Customize your institution's look and feel.</p>
+                
+                <div class="form-group">
+                    <label>Institution Logo</label>
+                    <div class="logo-upload" onclick="document.getElementById('logo-input').click()">
+                        <div class="logo-upload-icon">📤</div>
+                        <p>Click to upload logo (PNG, JPG, SVG)</p>
+                        <p style="font-size: 0.85rem; color: #999; margin-top: 5px;">Recommended: 200x200px, max 2MB</p>
+                    </div>
+                    <input type="file" id="logo-input" accept="image/*" style="display: none;">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Primary Color</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="primary-color" value="#8B0000">
+                            <input type="text" id="primary-color-hex" value="#8B0000" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Secondary Color</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="secondary-color" value="#D4AF37">
+                            <input type="text" id="secondary-color-hex" value="#D4AF37" maxlength="7">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Accent Color</label>
+                    <div class="color-picker-group">
+                        <input type="color" id="accent-color" value="#2C3E50">
+                        <input type="text" id="accent-color-hex" value="#2C3E50" maxlength="7">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Subscription -->
+            <div class="step-content" id="step-3">
+                <h2>Subscription Tier</h2>
+                <p style="color: #666; margin-bottom: 20px;">Choose the plan that fits your institution's needs.</p>
+                
+                <div class="tier-cards">
+                    <div class="tier-card" data-tier="free" onclick="selectTier(this)">
+                        <h4>Free</h4>
+                        <div class="price">$0</div>
+                        <div class="features">
+                            • Up to 50 students<br>
+                            • Basic competitions<br>
+                            • Standard support
+                        </div>
+                    </div>
+                    <div class="tier-card" data-tier="standard" onclick="selectTier(this)">
+                        <h4>Standard</h4>
+                        <div class="price">$99/mo</div>
+                        <div class="features">
+                            • Up to 200 students<br>
+                            • Advanced analytics<br>
+                            • Priority support
+                        </div>
+                    </div>
+                    <div class="tier-card selected" data-tier="premium" onclick="selectTier(this)">
+                        <h4>Premium</h4>
+                        <div class="price">$299/mo</div>
+                        <div class="features">
+                            • Up to 500 students<br>
+                            • AI coaching<br>
+                            • White labeling
+                        </div>
+                    </div>
+                    <div class="tier-card" data-tier="enterprise" onclick="selectTier(this)">
+                        <h4>Enterprise</h4>
+                        <div class="price">Custom</div>
+                        <div class="features">
+                            • Unlimited students<br>
+                            • Custom features<br>
+                            • Dedicated support
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Max Students Allowed</label>
+                    <input type="number" id="max-students" value="500" min="1">
+                </div>
+            </div>
+            
+            <!-- Step 4: SSO Configuration -->
+            <div class="step-content" id="step-4">
+                <h2>SSO Configuration</h2>
+                <p style="color: #666; margin-bottom: 20px;">Enable single sign-on for your students and faculty.</p>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px;">🔐 Google Workspace</h4>
+                    <div class="form-group">
+                        <label>Client ID</label>
+                        <input type="text" id="google-client-id" placeholder="123456.apps.googleusercontent.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret</label>
+                        <input type="password" id="google-client-secret" placeholder="GOCSPX-...">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="google-enabled"> Enable Google SSO
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                    <h4 style="margin-bottom: 15px;">🔷 Microsoft Azure AD</h4>
+                    <div class="form-group">
+                        <label>Client ID</label>
+                        <input type="text" id="microsoft-client-id" placeholder="Application (client) ID">
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret</label>
+                        <input type="password" id="microsoft-client-secret" placeholder="Client secret value">
+                    </div>
+                    <div class="form-group">
+                        <label>Tenant ID</label>
+                        <input type="text" id="microsoft-tenant-id" placeholder="Directory (tenant) ID">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="microsoft-enabled"> Enable Microsoft SSO
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 5: Admin Assignment -->
+            <div class="step-content" id="step-5">
+                <h2>Assign Administrators</h2>
+                <p style="color: #666; margin-bottom: 20px;">Select users who will manage this institution.</p>
+                
+                <div class="form-group">
+                    <label>Search Users</label>
+                    <input type="text" id="admin-search" placeholder="Search by name or email...">
+                </div>
+                
+                <div id="admin-list" style="border: 1px solid #e0e0e0; border-radius: 8px; max-height: 300px; overflow-y: auto;">
+                    <div style="padding: 15px; border-bottom: 1px solid #e0e0e0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>Dr. Rahul Sharma</strong>
+                                <p style="font-size: 0.85rem; color: #666;">rahul.sharma@nlsiu.ac.in</p>
+                            </div>
+                            <select class="admin-role-select">
+                                <option value="">No Role</option>
+                                <option value="super_admin" selected>Super Admin</option>
+                                <option value="admin">Admin</option>
+                                <option value="faculty_coordinator">Faculty Coordinator</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>Prof. Priya Patel</strong>
+                                <p style="font-size: 0.85rem; color: #666;">priya.patel@nlsiu.ac.in</p>
+                            </div>
+                            <select class="admin-role-select">
+                                <option value="">No Role</option>
+                                <option value="super_admin">Super Admin</option>
+                                <option value="admin" selected>Admin</option>
+                                <option value="faculty_coordinator">Faculty Coordinator</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="setup-actions">
+                <button class="btn btn-secondary" id="btn-prev" onclick="prevStep()" style="visibility: hidden;">
+                    ← Previous
+                </button>
+                <button class="btn btn-primary" id="btn-next" onclick="nextStep()">
+                    Next →
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        function updateSteps() {
+            // Update progress bar
+            document.querySelectorAll('.step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum === currentStep) {
+                    step.classList.add('active');
+                } else if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                    step.querySelector('.step-circle').textContent = '✓';
+                } else {
+                    step.querySelector('.step-circle').textContent = stepNum;
+                }
+            });
+            
+            // Show/hide step content
+            document.querySelectorAll('.step-content').forEach((content, index) => {
+                content.classList.toggle('active', index + 1 === currentStep);
+            });
+            
+            // Update buttons
+            document.getElementById('btn-prev').style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+            document.getElementById('btn-next').textContent = currentStep === totalSteps ? 'Complete Setup ✓' : 'Next →';
+        }
+        
+        function nextStep() {
+            if (currentStep === totalSteps) {
+                completeSetup();
+                return;
+            }
+            
+            if (validateStep(currentStep)) {
+                currentStep++;
+                updateSteps();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateSteps();
+            }
+        }
+        
+        function validateStep(step) {
+            let valid = true;
+            
+            if (step === 1) {
+                const name = document.getElementById('inst-name').value.trim();
+                const shortName = document.getElementById('inst-short-name').value.trim();
+                const code = document.getElementById('inst-code').value.trim();
+                
+                if (!name) {
+                    document.getElementById('error-name').classList.add('show');
+                    valid = false;
+                } else {
+                    document.getElementById('error-name').classList.remove('show');
+                }
+                
+                if (!shortName) {
+                    document.getElementById('error-short-name').classList.add('show');
+                    valid = false;
+                } else {
+                    document.getElementById('error-short-name').classList.remove('show');
+                }
+                
+                const codePattern = /^[A-Z0-9_]{3,20}$/;
+                if (!codePattern.test(code)) {
+                    document.getElementById('error-code').classList.add('show');
+                    valid = false;
+                } else {
+                    document.getElementById('error-code').classList.remove('show');
+                }
+            }
+            
+            return valid;
+        }
+        
+        function selectTier(card) {
+            document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            
+            // Update max students based on tier
+            const tier = card.dataset.tier;
+            const maxStudents = {
+                'free': 50,
+                'standard': 200,
+                'premium': 500,
+                'enterprise': 1000
+            };
+            document.getElementById('max-students').value = maxStudents[tier] || 500;
+        }
+        
+        function completeSetup() {
+            // Collect all data
+            const data = {
+                name: document.getElementById('inst-name').value,
+                short_name: document.getElementById('inst-short-name').value,
+                code: document.getElementById('inst-code').value,
+                website: document.getElementById('inst-website').value,
+                primary_color: document.getElementById('primary-color').value,
+                secondary_color: document.getElementById('secondary-color').value,
+                accent_color: document.getElementById('accent-color').value,
+                tier: document.querySelector('.tier-card.selected').dataset.tier,
+                max_students: document.getElementById('max-students').value
+            };
+            
+            console.log('Submitting institution setup:', data);
+            
+            // Simulate API call
+            alert('✅ Institution setup completed!\n\nInstitution "' + data.name + '" has been created successfully.\n\nStudents can now log in with SSO or at:\nhttps://juris.ai?institution=' + data.code.toLowerCase());
+            
+            // Redirect to dashboard
+            window.location.href = 'admin-institution-dashboard.html?institution=' + data.code.toLowerCase();
+        }
+        
+        // Color picker sync
+        ['primary', 'secondary', 'accent'].forEach(color => {
+            const picker = document.getElementById(color + '-color');
+            const hex = document.getElementById(color + '-color-hex');
+            
+            picker.addEventListener('input', () => {
+                hex.value = picker.value;
+            });
+            
+            hex.addEventListener('input', () => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(hex.value)) {
+                    picker.value = hex.value;
+                }
+            });
+        });
+        
+        // Initialize
+        updateSteps();
+    </script>
+</body>
+</html>

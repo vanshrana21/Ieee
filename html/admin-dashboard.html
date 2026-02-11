@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | LegalAI Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/competitions.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo">LegalAI Admin</h1>
+        </div>
+        <nav class="nav-menu">
+            <a href="./admin-dashboard.html" class="nav-item active">📊 Dashboard</a>
+            <a href="./competitions.html" class="nav-item">⚖️ Competitions</a>
+            <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h1 class="page-title">Admin Dashboard</h1>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <p class="stat-value" id="total-users">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>Active Competitions</h3>
+                <p class="stat-value" id="active-comps">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Teams</h3>
+                <p class="stat-value" id="total-teams">--</p>
+            </div>
+        </div>
+
+        <!-- Competitions Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>⚖️ Competitions Management</h2>
+                <a href="./competitions.html" class="btn-primary">Manage Competitions</a>
+            </div>
+            
+            <div id="admin-competitions-list" class="competitions-list">
+                <div class="loading">Loading competitions...</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section">
+            <h2>⚡ Quick Actions</h2>
+            <div class="action-grid">
+                <a href="./competitions.html" class="action-card">
+                    <span class="action-icon">🏆</span>
+                    <span class="action-text">Create Competition</span>
+                </a>
+                <a href="#" class="action-card" onclick="exportData()">
+                    <span class="action-icon">📊</span>
+                    <span class="action-text">Export Results</span>
+                </a>
+                <a href="#" class="action-card" onclick="viewAnalytics()">
+                    <span class="action-icon">📈</span>
+                    <span class="action-text">View Analytics</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // Check admin access
+        const userRole = localStorage.getItem('user_role');
+        if (!['admin', 'super_admin', 'faculty'].includes(userRole)) {
+            window.location.href = './dashboard-student.html';
+        }
+
+        // Load admin data
+        async function loadAdminData() {
+            try {
+                const response = await apiRequest('/api/admin/stats', { method: 'GET' });
+                if (response.success) {
+                    document.getElementById('total-users').textContent = response.data.users || 0;
+                    document.getElementById('active-comps').textContent = response.data.active_competitions || 0;
+                    document.getElementById('total-teams').textContent = response.data.teams || 0;
+                }
+            } catch (error) {
+                console.error('Failed to load admin stats:', error);
+            }
+        }
+
+        // Load competitions for admin view
+        async function loadAdminCompetitions() {
+            try {
+                const response = await apiRequest('/api/competitions', { method: 'GET' });
+                const container = document.getElementById('admin-competitions-list');
+                
+                if (response.success && response.data.length > 0) {
+                    container.innerHTML = response.data.slice(0, 5).map(comp => `
+                        <div class="competition-item">
+                            <div class="comp-info">
+                                <h4>${comp.title}</h4>
+                                <span class="status-badge ${comp.status}">${comp.status}</span>
+                            </div>
+                            <div class="comp-stats">
+                                <span>👥 ${comp.team_count} teams</span>
+                                <span>📅 ${new Date(comp.start_date).toLocaleDateString()}</span>
+                            </div>
+                            <div class="comp-actions">
+                                <a href="./competitions.html?id=${comp.id}" class="btn-secondary btn-sm">View</a>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="empty">No competitions yet. <a href="./competitions.html">Create one</a></p>';
+                }
+            } catch (error) {
+                console.error('Failed to load competitions:', error);
+            }
+        }
+
+        function exportData() {
+            alert('Export feature coming soon');
+        }
+
+        function viewAnalytics() {
+            alert('Analytics dashboard coming soon');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminData();
+            loadAdminCompetitions();
+        });
+    </script>
+</body>
+</html>
+
+<!-- Phase 2: Competition Management Section -->
+<div id="competitions-tab" class="tab-content" style="display: none;">
+    <h2>Competition Management</h2>
+    <button id="new-comp-btn" class="btn btn-primary">+ Create New Competition</button>
+    
+    <div class="comp-management-grid" id="comp-management-container">
+        <!-- Competitions loaded dynamically -->
+    </div>
+</div>
+
+<script>
+// Add to existing tab switching logic
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        // Existing tab logic...
+        if (tab.dataset.tab === 'competitions') {
+            loadAdminCompetitions();
+        }
+    });
+});
+
+async function loadAdminCompetitions() {
+    const token = getAuthToken();
+    if (!token) return;
+    
+    try {
+        const response = await fetch('/api/competitions', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load competitions');
+        
+        const competitions = await response.json();
+        renderAdminCompetitions(competitions);
+    } catch (error) {
+        console.error('Error loading competitions:', error);
+    }
+}
+
+function renderAdminCompetitions(competitions) {
+    const container = document.getElementById('comp-management-container');
+    container.innerHTML = competitions.map(comp => `
+        <div class="comp-management-card ${comp.status}">
+            <h3>${comp.title}</h3>
+            <div class="comp-meta">
+                <span>Teams: ${comp.teams_count}</span>
+                <span>Status: ${comp.status}</span>
+            </div>
+            <div class="comp-actions">
+                <button class="btn btn-secondary">Edit</button>
+                <button class="btn ${comp.status === 'draft' ? 'btn-primary' : 'btn-warning'}">
+                    ${comp.status === 'draft' ? 'Publish' : 'Archive'}
+                </button>
+                <button class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+</script>

@@ -1,0 +1,237 @@
+/*
+ * css/ai-coach-bar.css
+ * Phase 4: AI Coach Bar Styles
+ * Isolated from existing styles - NEW FILE
+ */
+
+/* ================= AI COACH BAR ================= */
+.ai-coach-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 600px;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.95) 0%, rgba(255, 152, 0, 0.95) 100%);
+    border-radius: 12px;
+    padding: 15px 20px;
+    box-shadow: 0 10px 40px rgba(255, 193, 7, 0.4);
+    z-index: 9999;
+    animation: slideUp 0.3s ease-out;
+}
+
+.ai-coach-bar.hidden {
+    display: none;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+.hint-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.hint-icon {
+    font-size: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.hint-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.hint-type {
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 2px;
+}
+
+.hint-text {
+    font-size: 0.95rem;
+    color: #000;
+    font-weight: 500;
+}
+
+/* Timer Circle */
+.hint-timer {
+    width: 30px;
+    height: 30px;
+}
+
+.timer-circle {
+    transform: rotate(-90deg);
+}
+
+.timer-bg {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.2);
+    stroke-width: 3;
+}
+
+.timer-progress {
+    fill: none;
+    stroke: #000;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s linear;
+}
+
+/* Dismiss Button */
+.hint-dismiss {
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+    color: #000;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.hint-dismiss:hover {
+    background: rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+/* ================= AI COACH SETTINGS ================= */
+.ai-coach-settings {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #FFC107;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+}
+
+.ai-coach-settings.hidden {
+    display: none;
+}
+
+.ai-coach-settings h4 {
+    margin: 0 0 20px 0;
+    color: #FFC107;
+    font-size: 1.1rem;
+}
+
+.setting-row {
+    margin-bottom: 20px;
+}
+
+.setting-row label {
+    display: block;
+    color: #a0a0a0;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.setting-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #FFC107;
+}
+
+.hint-types {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.hint-types label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.hint-types input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.setting-row input[type="range"] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.setting-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #FFC107;
+    cursor: pointer;
+}
+
+.setting-row input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #FFC107;
+    cursor: pointer;
+    border: none;
+}
+
+#dismiss-time-display {
+    display: inline-block;
+    margin-left: 10px;
+    color: #FFC107;
+    font-weight: bold;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .ai-coach-bar {
+        width: 95%;
+        bottom: 10px;
+        padding: 12px 15px;
+    }
+    
+    .hint-text {
+        font-size: 0.85rem;
+    }
+    
+    .ai-coach-settings {
+        width: 90vw;
+        padding: 20px;
+    }
+    
+    .hint-types {
+        grid-template-columns: 1fr;
+    }
+}

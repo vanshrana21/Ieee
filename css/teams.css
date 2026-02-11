@@ -1,0 +1,154 @@
+/* Teams Styles */
+
+.create-team-container {
+    max-width: 700px;
+    margin: 2rem auto;
+}
+
+.comp-info-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-left: 4px solid #3b82f6;
+}
+
+.comp-info-card h2 {
+    margin: 0 0 0.5rem 0;
+    color: #1e293b;
+}
+
+.comp-info-card p {
+    margin: 0;
+    color: #64748b;
+}
+
+.team-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 0.875rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.side-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.side-option {
+    cursor: pointer;
+}
+
+.side-option input {
+    display: none;
+}
+
+.side-label {
+    display: block;
+    padding: 1.5rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.side-label:hover {
+    border-color: #cbd5e1;
+}
+
+.side-option input:checked + .side-label {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.side-label.petitioner {
+    border-left: 4px solid #3b82f6;
+}
+
+.side-label.respondent {
+    border-left: 4px solid #8b5cf6;
+}
+
+.side-label strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+
+.side-label small {
+    display: block;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.form-info {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.form-info p {
+    margin: 0.5rem 0;
+    color: #166534;
+    font-size: 0.95rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .side-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .create-team-container {
+        margin: 1rem;
+    }
+    
+    .team-form {
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}

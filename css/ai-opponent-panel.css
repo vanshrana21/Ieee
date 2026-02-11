@@ -1,0 +1,326 @@
+/*
+ * css/ai-opponent-panel.css
+ * Phase 4: AI Opponent Panel Styles
+ * Isolated from existing styles - NEW FILE
+ */
+
+/* ================= AI OPPONENT PANEL ================= */
+.ai-opponent-panel {
+    position: fixed;
+    top: 120px;
+    right: 20px;
+    width: 300px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #9c27b0;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(156, 39, 176, 0.3);
+    z-index: 1000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #9c27b0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Status Indicator */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.active {
+    background: #4CAF50;
+    box-shadow: 0 0 8px #4CAF50;
+}
+
+.status-dot.inactive {
+    background: #666;
+}
+
+.status-text {
+    font-size: 0.75rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
+}
+
+/* ================= TOGGLE SWITCH ================= */
+.toggle-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 26px;
+    transition: 0.3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+input:checked + .slider {
+    background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-label {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* ================= FORM SECTIONS ================= */
+.role-section,
+.side-section,
+.context-section {
+    margin-bottom: 15px;
+}
+
+.role-section label,
+.side-section label,
+.context-section label {
+    display: block;
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+.role-section select,
+.context-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(156, 39, 176, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.role-section select:focus,
+.context-section textarea:focus {
+    outline: none;
+    border-color: #9c27b0;
+}
+
+.role-section select option {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.context-section textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+/* ================= SIDE BUTTONS ================= */
+.side-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.side-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.side-btn:hover {
+    border-color: rgba(156, 39, 176, 0.5);
+}
+
+.side-btn.petitioner.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.side-btn.respondent.active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-color: #f5576c;
+}
+
+/* ================= SESSION INFO ================= */
+.session-info {
+    background: rgba(156, 39, 176, 0.1);
+    border: 1px solid rgba(156, 39, 176, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.session-info.hidden {
+    display: none;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+
+.info-label {
+    color: #a0a0a0;
+}
+
+.info-value {
+    color: #fff;
+    font-weight: bold;
+}
+
+.btn.disable {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn.disable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+/* ================= AI ACTIVITY PANEL ================= */
+.ai-activity-panel {
+    position: fixed;
+    top: 350px;
+    right: 20px;
+    width: 300px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid rgba(156, 39, 176, 0.5);
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: 0 10px 40px rgba(156, 39, 176, 0.2);
+    z-index: 999;
+}
+
+.ai-activity-panel h4 {
+    margin: 0 0 15px 0;
+    color: #9c27b0;
+    font-size: 0.95rem;
+}
+
+.activity-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+
+.activity-icon {
+    font-size: 1.2rem;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 3px;
+}
+
+.activity-time {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.no-activity {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .ai-opponent-panel,
+    .ai-activity-panel {
+        width: 90vw;
+        right: 5vw;
+        left: 5vw;
+        top: auto;
+        bottom: 20px;
+    }
+    
+    .ai-activity-panel {
+        bottom: 280px;
+    }
+}

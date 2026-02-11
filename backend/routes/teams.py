@@ -35,7 +35,7 @@ router = APIRouter(prefix="/teams", tags=["Teams"])
 class InviteMemberRequest(BaseModel):
     """Request to invite a user to a team"""
     user_id: int = Field(..., description="User ID to invite")
-    role: TeamRole = Field(default=TeamRole.RESEARCHER, description="Proposed team role")
+    role: TeamRole = Field(default=TeamRole.RESEARCHER_1, description="Proposed team role")
     message: Optional[str] = Field(None, description="Optional invitation message")
 
 

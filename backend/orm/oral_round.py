@@ -1,207 +1,151 @@
 """
-backend/orm/oral_round.py
-Phase 5C: Oral round persistence models
-Replaces client-side oral round storage
+Phase 0: Virtual Courtroom Infrastructure - Oral Rounds ORM Model
+Database-first schema for moot court oral rounds with complete timer and state management.
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, Enum as SQLEnum, func, String, Text, Boolean, Index
 from sqlalchemy.orm import relationship
-from datetime import datetime
-from enum import Enum as PyEnum
+import enum
 from backend.orm.base import Base
 
 
-class RoundStage(str, PyEnum):
-    """Oral round stage"""
-    PETITIONER = "petitioner"
-    RESPONDENT = "respondent"
-    REBUTTAL = "rebuttal"
-    SURREBUTTAL = "surrebuttal"
-
-
-class RoundStatus(str, PyEnum):
-    """Oral round status"""
+class OralRoundStatus(str, enum.Enum):
+    """Oral round lifecycle states."""
     SCHEDULED = "scheduled"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    FORFEITED = "forfeited"
+    POSTPONED = "postponed"
+
+
+class SpeakerRole(str, enum.Enum):
+    """Current speaker in the courtroom."""
+    NONE = "none"
+    PETITIONER = "petitioner"
+    RESPONDENT = "respondent"
+    JUDGE = "judge"
+
+
+class RoundType(str, enum.Enum):
+    """Type of oral round segment."""
+    ORAL = "oral"
+    REBUTTAL = "rebuttal"
+    Q_AND_A = "q_and_a"
 
 
 class OralRound(Base):
     """
-    Phase 5C: Oral round session
-    Immutable after completion
+    Oral rounds table for virtual courtroom moot court competitions.
+    
+    Tracks round scheduling, team assignments, judge assignments, timer configuration,
+    and current courtroom state for real-time sync via WebSocket.
     """
     __tablename__ = "oral_rounds"
     
-    id = Column(Integer, primary_key=True, index=True)
+    # Primary key
+    id = Column(Integer, primary_key=True, autoincrement=True)
     
-    # Scoping
-    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True)
-    project_id = Column(Integer, ForeignKey("moot_projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    # Core fields - Competition and round identification
+    competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False)
+    round_number = Column(Integer, nullable=False)  # 1=quarterfinal, 2=semifinal, 3=final
+    round_type = Column(SQLEnum(RoundType), default=RoundType.ORAL, nullable=False)
     
-    # Round details
-    stage = Column(SQLEnum(RoundStage), nullable=False)
-    status = Column(SQLEnum(RoundStatus), default=RoundStatus.SCHEDULED, nullable=False)
+    # Team assignments
+    petitioner_team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    respondent_team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
     
-    # Timing
-    started_at = Column(DateTime, nullable=True)
-    ended_at = Column(DateTime, nullable=True)
-    duration_seconds = Column(Integer, nullable=True)
+    # Judge assignments
+    presiding_judge_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    co_judges_ids = Column(String(200), nullable=True)  # JSON array of judge user IDs
+    
+    # Scheduling
+    scheduled_start = Column(DateTime, nullable=False)
+    scheduled_end = Column(DateTime, nullable=False)
+    actual_start = Column(DateTime, nullable=True)
+    actual_end = Column(DateTime, nullable=True)
+    
+    # Timer configuration (seconds)
+    petitioner_time = Column(Integer, default=900)  # 15 minutes default
+    respondent_time = Column(Integer, default=900)
+    rebuttal_time = Column(Integer, default=180)  # 3 minutes per side
+    q_and_a_time = Column(Integer, default=300)  # 5 minutes per side
+    
+    # Current courtroom state
+    current_speaker = Column(SQLEnum(SpeakerRole), default=SpeakerRole.NONE)
+    time_remaining = Column(Integer, nullable=True)  # Seconds remaining for current speaker
+    is_paused = Column(Boolean, default=False)
+    is_completed = Column(Boolean, default=False)
+    status = Column(SQLEnum(OralRoundStatus), default=OralRoundStatus.SCHEDULED, nullable=False)
     
     # Metadata
-    notes = Column(Text, nullable=True)
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Immutability flag
-    is_locked = Column(Boolean, default=False, nullable=False)
-    locked_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
     
     # Relationships
-    responses = relationship("OralResponse", backref="round", lazy="selectin", cascade="all, delete-orphan")
-    bench_questions = relationship("BenchQuestion", backref="round", lazy="selectin", cascade="all, delete-orphan")
-    transcript = relationship("RoundTranscript", backref="round", lazy="selectin", uselist=False, cascade="all, delete-orphan")
+    competition = relationship("Competition", back_populates="rounds")
+    petitioner_team = relationship("Team", foreign_keys=[petitioner_team_id])
+    respondent_team = relationship("Team", foreign_keys=[respondent_team_id])
+    presiding_judge = relationship("User", foreign_keys=[presiding_judge_id])
     
-    def to_dict(self, include_content=False):
-        data = {
-            "id": self.id,
-            "institution_id": self.institution_id,
-            "project_id": self.project_id,
-            "stage": self.stage.value if self.stage else None,
-            "status": self.status.value if self.status else None,
-            "started_at": self.started_at.isoformat() if self.started_at else None,
-            "ended_at": self.ended_at.isoformat() if self.ended_at else None,
-            "duration_seconds": self.duration_seconds,
-            "notes": self.notes,
-            "is_locked": self.is_locked,
-            "locked_at": self.locked_at.isoformat() if self.locked_at else None,
-            "created_by": self.created_by,
-            "created_at": self.created_at.isoformat() if self.created_at else None
-        }
-        
-        if include_content:
-            data["responses"] = [r.to_dict() for r in self.responses] if self.responses else []
-            data["bench_questions"] = [q.to_dict() for q in self.bench_questions] if self.bench_questions else []
-        
-        return data
-
-
-class OralResponse(Base):
-    """
-    Phase 5C: Oral arguments/responses given by speakers
-    """
-    __tablename__ = "oral_responses"
+    # Related entities (defined in separate ORM files)
+    objections = relationship("OralRoundObjection", back_populates="round", cascade="all, delete-orphan")
+    transcripts = relationship("OralRoundTranscript", back_populates="round", cascade="all, delete-orphan")
+    scores = relationship("OralRoundScore", back_populates="round", cascade="all, delete-orphan")
     
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # Scoping
-    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True)
-    round_id = Column(Integer, ForeignKey("oral_rounds.id", ondelete="CASCADE"), nullable=False, index=True)
-    project_id = Column(Integer, ForeignKey("moot_projects.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Response details
-    issue_id = Column(Integer, ForeignKey("moot_issues.id", ondelete="SET NULL"), nullable=True)
-    speaker_role = Column(String(50), nullable=False)  # 'petitioner_counsel', 'respondent_counsel', etc.
-    text = Column(Text, nullable=False)
-    
-    # Timing
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    elapsed_seconds = Column(Integer, nullable=True)  # Time into the round
-    
-    # Metadata
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # Table indexes for common queries
+    __table_args__ = (
+        Index('idx_oral_rounds_competition', 'competition_id'),
+        Index('idx_oral_rounds_status', 'status'),
+        Index('idx_oral_rounds_scheduled', 'scheduled_start'),
+    )
     
     def to_dict(self):
+        """Convert round to dictionary for API responses."""
         return {
             "id": self.id,
-            "round_id": self.round_id,
-            "project_id": self.project_id,
-            "issue_id": self.issue_id,
-            "speaker_role": self.speaker_role,
-            "text": self.text,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
-            "elapsed_seconds": self.elapsed_seconds,
-            "created_by": self.created_by
+            "competition_id": self.competition_id,
+            "round_number": self.round_number,
+            "round_type": self.round_type.value if self.round_type else None,
+            "petitioner_team_id": self.petitioner_team_id,
+            "respondent_team_id": self.respondent_team_id,
+            "presiding_judge_id": self.presiding_judge_id,
+            "co_judges_ids": self.co_judges_ids,
+            "scheduled_start": self.scheduled_start.isoformat() if self.scheduled_start else None,
+            "scheduled_end": self.scheduled_end.isoformat() if self.scheduled_end else None,
+            "actual_start": self.actual_start.isoformat() if self.actual_start else None,
+            "actual_end": self.actual_end.isoformat() if self.actual_end else None,
+            "timer_config": {
+                "petitioner_time": self.petitioner_time,
+                "respondent_time": self.respondent_time,
+                "rebuttal_time": self.rebuttal_time,
+                "q_and_a_time": self.q_and_a_time
+            },
+            "current_state": {
+                "current_speaker": self.current_speaker.value if self.current_speaker else None,
+                "time_remaining": self.time_remaining,
+                "is_paused": self.is_paused,
+                "is_completed": self.is_completed,
+                "status": self.status.value if self.status else None
+            },
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
+    
+    def get_co_judges_list(self):
+        """Parse co_judges_ids JSON string to list of integers."""
+        if self.co_judges_ids:
+            import json
+            try:
+                return json.loads(self.co_judges_ids)
+            except json.JSONDecodeError:
+                return []
+        return []
+    
+    def set_co_judges_list(self, judge_ids):
+        """Serialize list of judge IDs to JSON string."""
+        import json
+        self.co_judges_ids = json.dumps(judge_ids) if judge_ids else None
 
 
-class BenchQuestion(Base):
-    """
-    Phase 5C: Questions asked by judges/bench
-    """
-    __tablename__ = "bench_questions"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # Scoping
-    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True)
-    round_id = Column(Integer, ForeignKey("oral_rounds.id", ondelete="CASCADE"), nullable=False, index=True)
-    project_id = Column(Integer, ForeignKey("moot_projects.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Question details
-    judge_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # If known
-    judge_name = Column(String(100), nullable=True)  # Display name
-    question_text = Column(Text, nullable=False)
-    
-    # Context
-    issue_id = Column(Integer, ForeignKey("moot_issues.id", ondelete="SET NULL"), nullable=True)
-    
-    # Timing
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    elapsed_seconds = Column(Integer, nullable=True)
-    
-    # Response tracking
-    was_answered = Column(Boolean, default=False)
-    answer_response_id = Column(Integer, ForeignKey("oral_responses.id"), nullable=True)
-    
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "round_id": self.round_id,
-            "project_id": self.project_id,
-            "judge_id": self.judge_id,
-            "judge_name": self.judge_name,
-            "question_text": self.question_text,
-            "issue_id": self.issue_id,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
-            "elapsed_seconds": self.elapsed_seconds,
-            "was_answered": self.was_answered,
-            "answer_response_id": self.answer_response_id
-        }
-
-
-class RoundTranscript(Base):
-    """
-    Phase 5C: Auto-generated transcript from oral responses and bench questions
-    Immutable once generated
-    """
-    __tablename__ = "round_transcripts"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # Scoping
-    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True)
-    round_id = Column(Integer, ForeignKey("oral_rounds.id", ondelete="CASCADE"), nullable=False, index=True, unique=True)
-    project_id = Column(Integer, ForeignKey("moot_projects.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Transcript content (chronological sequence)
-    transcript_items = Column(Text, nullable=False)  # JSON array of {type, speaker, text, timestamp}
-    full_text = Column(Text, nullable=False)  # Plain text version
-    
-    # Metadata
-    generated_at = Column(DateTime, default=datetime.utcnow)
-    generated_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # System or user
-    
-    # Immutability
-    is_final = Column(Boolean, default=True, nullable=False)
-    
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "round_id": self.round_id,
-            "project_id": self.project_id,
-            "transcript_items": self.transcript_items,
-            "full_text": self.full_text,
-            "generated_at": self.generated_at.isoformat() if self.generated_at else None,
-            "is_final": self.is_final
-        }
+# Aliases for backward compatibility
+RoundStatus = OralRoundStatus
+OralRoundStatusEnum = OralRoundStatus

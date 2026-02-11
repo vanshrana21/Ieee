@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Objection Modal - Juris AI</title>
+    <link rel="stylesheet" href="../css/objection-modal.css">
+</head>
+<body>
+    <!-- Objection Modal -->
+    <div id="objection-modal" class="modal">
+        <div class="modal-content objection-modal">
+            <div class="modal-header">
+                <h2>🚨 RAISE OBJECTION</h2>
+                <button class="close-btn" onclick="objectionController.closeModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Objection Type Selection -->
+                <div class="form-group">
+                    <label>Objection Type</label>
+                    <div class="objection-types">
+                        <button class="obj-btn" data-type="relevance" onclick="objectionController.selectType('relevance')">
+                            <span class="obj-name">Irrelevant</span>
+                            <span class="obj-desc">Evidence/argument not relevant</span>
+                        </button>
+                        <button class="obj-btn" data-type="hearsay" onclick="objectionController.selectType('hearsay')">
+                            <span class="obj-name">Hearsay</span>
+                            <span class="obj-desc">Out-of-court statement</span>
+                        </button>
+                        <button class="obj-btn" data-type="leading" onclick="objectionController.selectType('leading')">
+                            <span class="obj-name">Leading</span>
+                            <span class="obj-desc">Question suggests answer</span>
+                        </button>
+                        <button class="obj-btn" data-type="compound" onclick="objectionController.selectType('compound')">
+                            <span class="obj-name">Compound</span>
+                            <span class="obj-desc">Multiple questions in one</span>
+                        </button>
+                        <button class="obj-btn" data-type="argumentative" onclick="objectionController.selectType('argumentative')">
+                            <span class="obj-name">Argumentative</span>
+                            <span class="obj-desc">Counsel arguing not questioning</span>
+                        </button>
+                        <button class="obj-btn" data-type="assumes_facts" onclick="objectionController.selectType('assumes_facts')">
+                            <span class="obj-name">Assumes Facts</span>
+                            <span class="obj-desc">Not in evidence</span>
+                        </button>
+                        <button class="obj-btn" data-type="speculation" onclick="objectionController.selectType('speculation')">
+                            <span class="obj-name">Speculation</span>
+                            <span class="obj-desc">Calls for speculation</span>
+                        </button>
+                        <button class="obj-btn" data-type="opinion" onclick="objectionController.selectType('opinion')">
+                            <span class="obj-name">Opinion</span>
+                            <span class="obj-desc">Improper opinion</span>
+                        </button>
+                        <button class="obj-btn" data-type="lacks_foundation" onclick="objectionController.selectType('lacks_foundation')">
+                            <span class="obj-name">No Foundation</span>
+                            <span class="obj-desc">Lacks foundation</span>
+                        </button>
+                        <button class="obj-btn" data-type="privilege" onclick="objectionController.selectType('privilege')">
+                            <span class="obj-name">Privilege</span>
+                            <span class="obj-desc">Attorney-client privilege</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Target Information -->
+                <div class="form-group">
+                    <label for="target-speaker">Objection To (Speaker)</label>
+                    <select id="target-speaker">
+                        <option value="">Select speaker...</option>
+                        <option value="petitioner_counsel">Petitioner Lead Counsel</option>
+                        <option value="respondent_counsel">Respondent Lead Counsel</option>
+                    </select>
+                </div>
+
+                <!-- Statement Context -->
+                <div class="form-group">
+                    <label for="objection-context">Statement Being Objected To</label>
+                    <textarea id="objection-context" placeholder="Paste or type the statement that prompted this objection..."></textarea>
+                </div>
+
+                <!-- Quick Objection Button (Emergency) -->
+                <div class="emergency-objection">
+                    <button class="btn-emergency" onclick="objectionController.raiseEmergencyObjection()">
+                        ⚡ EMERGENCY OBJECTION
+                    </button>
+                    <p class="emergency-note">For time-sensitive objections. Type will be 'relevance' by default.</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="objectionController.closeModal()">Cancel</button>
+                <button class="btn primary" id="raise-objection-btn" onclick="objectionController.raiseObjection()" disabled>
+                    Raise Objection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Objections Display Panel -->
+    <div id="objections-panel" class="objections-panel">
+        <div class="panel-header">
+            <h3>⚖️ Active Objections</h3>
+            <button class="btn-refresh" onclick="objectionController.loadObjections()">🔄</button>
+        </div>
+        <div id="objections-list" class="objections-list">
+            <p class="no-objections">No objections raised</p>
+        </div>
+        <button class="btn raise-obj-btn" onclick="objectionController.openModal()">
+            🚨 Raise Objection
+        </button>
+    </div>
+
+    <!-- Judge Ruling Panel (Only for judges) -->
+    <div id="judge-ruling-panel" class="judge-ruling-panel hidden">
+        <h3>Pending Objections</h3>
+        <div id="pending-objections" class="pending-objections">
+            <p class="no-pending">No pending objections</p>
+        </div>
+    </div>
+
+    <script src="../js/objection-controller.js"></script>
+    <script>
+        // Initialize with round ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const roundId = urlParams.get('round_id') || 1;
+        const objectionController = new ObjectionController(roundId);
+    </script>
+</body>
+</html>

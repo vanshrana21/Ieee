@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Competitions - LegalAI</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        .competitions-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .page-header h1 {
+            font-size: 42px;
+            color: #16213e;
+            margin-bottom: 16px;
+        }
+        
+        .page-header p {
+            font-size: 18px;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        
+        .mode-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        
+        .mode-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
+        .mode-card.classroom:hover {
+            border-color: #667eea;
+        }
+        
+        .mode-card.online:hover {
+            border-color: #e94560;
+        }
+        
+        .mode-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 24px;
+        }
+        
+        .mode-card.classroom .mode-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .mode-card.online .mode-icon {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+        }
+        
+        .mode-card h2 {
+            font-size: 28px;
+            color: #16213e;
+            margin-bottom: 12px;
+        }
+        
+        .mode-card p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .mode-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 32px;
+        }
+        
+        .mode-features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .mode-features li::before {
+            content: "✓";
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .btn-large {
+            width: 100%;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-classroom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-classroom:hover {
+            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+        }
+        
+        .btn-online {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            color: white;
+        }
+        
+        .btn-online:hover {
+            box-shadow: 0 8px 20px rgba(233,69,96,0.4);
+        }
+        
+        .stats-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #16213e;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            color: #16213e;
+            margin: 48px 0 24px;
+            text-align: center;
+        }
+        
+        .leaderboard-preview {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .leaderboard-table th {
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .rank-1 { background: #FFD700; color: #333; }
+        .rank-2 { background: #C0C0C0; color: #333; }
+        .rank-3 { background: #CD7F32; color: white; }
+        .rank-other { background: #f0f0f0; color: #666; }
+        
+        .tier-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .tier-diamond { background: #e3f2fd; color: #1565c0; }
+        .tier-platinum { background: #f3e5f5; color: #6a1b9a; }
+        .tier-gold { background: #fff3e0; color: #ef6c00; }
+        .tier-silver { background: #eceff1; color: #546e7a; }
+        .tier-bronze { background: #efebe9; color: #6d4c41; }
+        .tier-rookie { background: #f5f5f5; color: #666; }
+        
+        .active-now {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .mode-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚖️</span>
+                <span class="logo-text">LegalAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="dashboard-student.html">Dashboard</a>
+                <a href="choose-courtroom.html">AI Practice</a>
+                <a href="live-competitions.html" class="active">Live Competitions</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="competitions-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>🏆 Live Competitions</h1>
+            <p>Compete against real law students in our Human vs Human moot court arenas. Choose your mode and test your legal skills!</p>
+        </div>
+
+        <!-- Mode Selection -->
+        <div class="mode-grid">
+            <!-- Classroom Mode Card -->
+            <div class="mode-card classroom" onclick="showJoinModal('classroom')">
+                <div class="mode-icon">🏫</div>
+                <h2>Classroom Mode</h2>
+                <p>For law students participating in teacher-led moot court sessions. Join with a session code or create your own session.</p>
+                <ul class="mode-features">
+                    <li>Teacher-led sessions</li>
+                    <li>Study phase with materials</li>
+                    <li>AI or teacher scoring</li>
+                    <li>Classroom leaderboard</li>
+                    <li>Perfect for law schools</li>
+                </ul>
+                <button class="btn-large btn-classroom" onclick="event.stopPropagation(); showJoinModal('classroom')">
+                    🏫 Enter Classroom Code
+                </button>
+            </div>
+
+            <!-- Online 1v1 Mode Card -->
+            <div class="mode-card online" onclick="startMatchmaking()">
+                <div class="mode-icon">🌐</div>
+                <h2>Online 1v1 Arena</h2>
+                <p>Get instantly matched with another law student. Real-time arguments, ELO rating system, and skill-based matchmaking.</p>
+                <ul class="mode-features">
+                    <li>Instant matchmaking</li>
+                    <li>Skill-based pairing</li>
+                    <li>ELO rating system</li>
+                    <li>Live leaderboards</li>
+                    <li>24/7 availability</li>
+                </ul>
+                <button class="btn-large btn-online" onclick="event.stopPropagation(); startMatchmaking()">
+                    ⚔️ Start Matchmaking
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-active-sessions">42</div>
+                <div class="stat-label">Active Sessions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-online-players">128</div>
+                <div class="stat-label">Players Online</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-matches-today">256</div>
+                <div class="stat-label">Matches Today</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-your-rating">1000</div>
+                <div class="stat-label">Your Rating</div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Preview -->
+        <h2 class="section-title">🏅 Top Rated Players</h2>
+        <div class="leaderboard-preview">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Rating</th>
+                        <th>Tier</th>
+                        <th>Wins</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="rank-badge rank-1">1</span></td>
+                        <td><strong>LegalEagle_Pro</strong></td>
+                        <td><strong>2,450</strong></td>
+                        <td><span class="tier-badge tier-diamond">Diamond</span></td>
+                        <td>342</td>
+                        <td><span class="active-now">● Online</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="rank-badge rank-2">2</span></td>
+                        <td><strong>MootMaster</strong></td>
+                        <td><strong>2,380</strong></td>
+                        <td><span class="tier-badge tier-diamond">Diamond</span></td>
+                        <td>298</td>
+                        <td><span class="active-now">● Online</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="rank-badge rank-3">3</span></td>
+                        <td><strong>Article21_Expert</strong></td>
+                        <td><strong>2,150</strong></td>
+                        <td><span class="tier-badge tier-platinum">Platinum</span></td>
+                        <td>256</td>
+                        <td><span style="color: #999; font-size: 12px;">2h ago</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="rank-badge rank-other">4</span></td>
+                        <td>JusticeSeeker</td>
+                        <td>1,980</td>
+                        <td><span class="tier-badge tier-platinum">Platinum</span></td>
+                        <td>189</td>
+                        <td><span class="active-now">● Online</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="rank-badge rank-other">5</span></td>
+                        <td>ConstitutionalLaw</td>
+                        <td>1,850</td>
+                        <td><span class="tier-badge tier-gold">Gold</span></td>
+                        <td>167</td>
+                        <td><span style="color: #999; font-size: 12px;">5m ago</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="text-align: center; margin-top: 16px;">
+                <a href="#" style="color: #667eea; text-decoration: none; font-weight: 600;">View Full Leaderboard →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Classroom Modal -->
+    <div id="classroom-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 40px; border-radius: 24px; max-width: 400px; width: 90%; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🏫</div>
+            <h2 style="margin-bottom: 8px;">Join Classroom</h2>
+            <p style="color: #666; margin-bottom: 24px;">Enter the 9-digit session code from your teacher</p>
+            
+            <input type="text" id="classroom-code" placeholder="JURIS-XXXX" style="width: 100%; padding: 16px; font-size: 20px; text-align: center; letter-spacing: 4px; border: 2px solid #e0e0e0; border-radius: 12px; margin-bottom: 24px; font-family: monospace;">
+            
+            <button class="btn primary" style="width: 100%; padding: 16px; font-size: 16px;" onclick="joinClassroom()">
+                Join Session
+            </button>
+            <button style="width: 100%; padding: 12px; margin-top: 12px; background: none; border: none; color: #666; cursor: pointer;" onclick="closeModal('classroom-modal')">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Matchmaking Modal -->
+    <div id="matchmaking-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 40px; border-radius: 24px; max-width: 400px; width: 90%; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px; animation: pulse 1.5s infinite;">⚔️</div>
+            <h2 style="margin-bottom: 8px;">Finding Opponent...</h2>
+            <p style="color: #666; margin-bottom: 24px;">Matching you with a worthy opponent</p>
+            
+            <div style="background: #f5f5f5; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Rating Range</div>
+                <div style="font-weight: 600;">950 - 1050</div>
+            </div>
+            
+            <div style="font-size: 14px; color: #999; margin-bottom: 24px;">
+                Estimated wait: <span id="wait-time">30-60</span> seconds
+            </div>
+            
+            <button class="btn secondary" style="width: 100%; padding: 16px;" onclick="cancelMatchmaking()">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let matchmakingTimer = null;
+        
+        function showJoinModal(mode) {
+            if (mode === 'classroom') {
+                document.getElementById('classroom-modal').style.display = 'flex';
+                document.getElementById('classroom-code').focus();
+            }
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function joinClassroom() {
+            const code = document.getElementById('classroom-code').value.trim().toUpperCase();
+            if (!code || code.length < 9) {
+                alert('Please enter a valid session code');
+                return;
+            }
+            
+            // Redirect to classroom
+            window.location.href = `classroom-mode.html?code=${code}`;
+        }
+        
+        function startMatchmaking() {
+            document.getElementById('matchmaking-modal').style.display = 'flex';
+            
+            // Simulate matchmaking
+            let waitTime = 30;
+            matchmakingTimer = setInterval(() => {
+                waitTime--;
+                document.getElementById('wait-time').textContent = waitTime;
+                
+                if (waitTime <= 0) {
+                    clearInterval(matchmakingTimer);
+                    // Redirect to match
+                    window.location.href = 'online-1v1.html?match_id=MATCH-12345';
+                }
+            }, 1000);
+            
+            // Auto-redirect after 3 seconds for demo
+            setTimeout(() => {
+                clearInterval(matchmakingTimer);
+                window.location.href = 'online-1v1.html?match_id=MATCH-12345';
+            }, 3000);
+        }
+        
+        function cancelMatchmaking() {
+            clearInterval(matchmakingTimer);
+            closeModal('matchmaking-modal');
+        }
+        
+        // Close modals on backdrop click
+        document.getElementById('classroom-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'classroom-modal') closeModal('classroom-modal');
+        });
+        
+        document.getElementById('matchmaking-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'matchmaking-modal') cancelMatchmaking();
+        });
+        
+        // Enter key on classroom code
+        document.getElementById('classroom-code')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') joinClassroom();
+        });
+        
+        // Format classroom code input
+        document.getElementById('classroom-code')?.addEventListener('input', (e) => {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            if (value.length > 10) value = value.slice(0, 10);
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

@@ -22,7 +22,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 class EnrollmentRequest(BaseModel):
     """Request schema for course enrollment"""
-    course_id: int
+    course_name: str  # Frontend sends name like "BA LLB (5 Year Integrated)"
     current_semester: int
 
 
@@ -67,20 +67,35 @@ async def enroll_in_course(
     Enroll user in a course and set current semester.
     
     Args:
-        enrollment: Course ID and starting semester
+        enrollment: Course name (from frontend) and starting semester
     
     Returns:
         Updated user profile
     """
-    # Validate course exists
-    course_stmt = select(Course).where(Course.id == enrollment.course_id)
+    # Normalize course name from frontend
+    # Frontend sends: "BA LLB (5 Year Integrated)"
+    # Database has: "BA LLB", "BBA LLB", "LLB"
+    normalized_name = enrollment.course_name.strip()
+    
+    # Remove parenthetical descriptions like "(5 Year Integrated)"
+    if "(" in normalized_name:
+        normalized_name = normalized_name.split("(")[0].strip()
+    
+    # Case-insensitive lookup
+    course_stmt = select(Course).where(Course.name.ilike(normalized_name))
     course_result = await db.execute(course_stmt)
     course = course_result.scalar_one_or_none()
     
     if not course:
+        # Log available courses for debugging
+        all_courses_stmt = select(Course)
+        all_courses_result = await db.execute(all_courses_stmt)
+        available_courses = [c.name for c in all_courses_result.scalars().all()]
+        logger.warning(f"Course not found: '{normalized_name}' (original: '{enrollment.course_name}'). Available: {available_courses}")
+        
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
+            detail=f"Course '{enrollment.course_name}' not found. Available courses: {', '.join(available_courses)}"
         )
     
     # Validate semester is within course range
@@ -91,7 +106,7 @@ async def enroll_in_course(
         )
     
     # Update user enrollment
-    current_user.course_id = enrollment.course_id
+    current_user.course_id = course.id
     current_user.current_semester = enrollment.current_semester
     
     await db.commit()

@@ -10,7 +10,7 @@ from typing import Optional, List
 
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Text
 
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class AIOralSession(Base):

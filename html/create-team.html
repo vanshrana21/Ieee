@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Team - Juris AI</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/teams.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>👥 Create Team</h1>
+            <div id="user-info"></div>
+        </header>
+        
+        <div class="team-form-container">
+            <form id="create-team-form">
+                <input type="text" id="team-name" placeholder="Team Name (e.g., Team Puttaswamy)" required>
+                
+                <div class="side-selection">
+                    <label>
+                        <input type="radio" name="side" value="petitioner" checked>
+                        <div class="side-card petitioner">
+                            <h3>Petitioner</h3>
+                            <p>Challenge the law</p>
+                        </div>
+                    </label>
+                    <label>
+                        <input type="radio" name="side" value="respondent">
+                        <div class="side-card respondent">
+                            <h3>Respondent</h3>
+                            <p>Defend the law</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Create Team</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
+    <script src="../js/team-controller.js"></script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+/*
+ * css/institution-branding.css
+ * Phase 6: Dynamic institution branding with CSS variables
+ * Injected via JavaScript based on institution settings
+ */
+
+/* ================= CSS VARIABLES (Dynamically set by JS) ================= */
+:root {
+  --institution-primary: #8B0000;
+  --institution-secondary: #D4AF37;
+  --institution-accent: #2C3E50;
+  --institution-text-on-primary: #D4AF37;
+  --institution-text-on-secondary: #8B0000;
+}
+
+/* ================= BUTTONS ================= */
+.btn-primary {
+  background: var(--institution-primary) !important;
+  color: var(--institution-text-on-primary) !important;
+  border: none !important;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--institution-primary) 0%, #5c0000 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+}
+
+.btn-secondary {
+  background: var(--institution-secondary) !important;
+  color: var(--institution-text-on-secondary) !important;
+  border: 2px solid var(--institution-primary) !important;
+}
+
+.btn-secondary:hover {
+  background: var(--institution-primary) !important;
+  color: var(--institution-secondary) !important;
+}
+
+/* ================= NAVIGATION ================= */
+.navbar {
+  background: linear-gradient(135deg, var(--institution-primary) 0%, #5c0000 100%) !important;
+}
+
+.navbar-brand {
+  color: var(--institution-secondary) !important;
+}
+
+.navbar-nav .nav-link {
+  color: var(--institution-secondary) !important;
+}
+
+.navbar-nav .nav-link:hover {
+  color: white !important;
+}
+
+/* ================= CARDS ================= */
+.card {
+  border-left: 4px solid var(--institution-primary) !important;
+}
+
+.card-header {
+  background: linear-gradient(135deg, var(--institution-primary) 0%, #5c0000 100%) !important;
+  color: var(--institution-secondary) !important;
+}
+
+.card-header h3,
+.card-header h4 {
+  color: var(--institution-secondary) !important;
+}
+
+/* ================= FORMS ================= */
+.form-control:focus,
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--institution-primary) !important;
+  box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25) !important;
+}
+
+.form-group label {
+  color: var(--institution-primary) !important;
+}
+
+/* ================= PROGRESS BARS ================= */
+.progress-bar {
+  background: linear-gradient(90deg, var(--institution-primary) 0%, var(--institution-secondary) 100%) !important;
+}
+
+/* ================= TABLES ================= */
+.table th {
+  background: var(--institution-primary) !important;
+  color: var(--institution-secondary) !important;
+}
+
+.table tr:hover {
+  background: rgba(139, 0, 0, 0.05) !important;
+}
+
+/* ================= BADGES ================= */
+.badge-primary {
+  background: var(--institution-primary) !important;
+  color: var(--institution-secondary) !important;
+}
+
+.badge-secondary {
+  background: var(--institution-secondary) !important;
+  color: var(--institution-primary) !important;
+}
+
+.badge-accent {
+  background: var(--institution-accent) !important;
+  color: white !important;
+}
+
+/* ================= ALERTS ================= */
+.alert-primary {
+  background: rgba(139, 0, 0, 0.1) !important;
+  border-color: var(--institution-primary) !important;
+  color: var(--institution-primary) !important;
+}
+
+.alert-secondary {
+  background: rgba(212, 175, 55, 0.1) !important;
+  border-color: var(--institution-secondary) !important;
+  color: #8B6914 !important;
+}
+
+/* ================= LINKS ================= */
+a {
+  color: var(--institution-primary) !important;
+}
+
+a:hover {
+  color: #5c0000 !important;
+}
+
+/* ================= TABS ================= */
+.nav-tabs .nav-link.active {
+  background: var(--institution-primary) !important;
+  color: var(--institution-secondary) !important;
+  border-color: var(--institution-primary) !important;
+}
+
+/* ================= MODALS ================= */
+.modal-header {
+  background: linear-gradient(135deg, var(--institution-primary) 0%, #5c0000 100%) !important;
+  color: var(--institution-secondary) !important;
+}
+
+.modal-header h5 {
+  color: var(--institution-secondary) !important;
+}
+
+/* ================= STEPPER/WIZARD ================= */
+.step.active .step-circle {
+  background: var(--institution-primary) !important;
+  color: var(--institution-secondary) !important;
+}
+
+.step.completed .step-circle {
+  background: #4CAF50 !important;
+  color: white !important;
+}
+
+/* ================= UPLOAD ZONE ================= */
+.upload-zone:hover {
+  border-color: var(--institution-primary) !important;
+  background: rgba(139, 0, 0, 0.02) !important;
+}
+
+.upload-zone.drag-over {
+  border-color: var(--institution-primary) !important;
+  background: rgba(139, 0, 0, 0.05) !important;
+}
+
+/* ================= STAT CARDS ================= */
+.stat-card {
+  border-left-color: var(--institution-primary) !important;
+}
+
+.stat-card h3 {
+  color: var(--institution-primary) !important;
+}
+
+.stat-card .subscription-badge {
+  background: var(--institution-secondary) !important;
+  color: var(--institution-text-on-secondary) !important;
+}
+
+/* ================= ACTIVITY FEED ================= */
+.activity-item:hover {
+  background: rgba(139, 0, 0, 0.02) !important;
+}
+
+.activity-icon {
+  background: rgba(139, 0, 0, 0.1) !important;
+  color: var(--institution-primary) !important;
+}
+
+/* ================= COMPETITION CARDS ================= */
+.competition-card {
+  border-left-color: var(--institution-accent) !important;
+}
+
+.competition-status.active {
+  background: rgba(76, 175, 80, 0.1) !important;
+  color: #4CAF50 !important;
+}
+
+.competition-status.upcoming {
+  background: rgba(255, 152, 0, 0.1) !important;
+  color: #FF9800 !important;
+}
+
+/* ================= USAGE BAR ================= */
+.usage-bar-fill {
+  background: linear-gradient(90deg, var(--institution-primary) 0%, var(--institution-secondary) 100%) !important;
+}
+
+/* ================= TIER CARDS ================= */
+.tier-card.selected {
+  border-color: var(--institution-primary) !important;
+  background: rgba(139, 0, 0, 0.02) !important;
+}
+
+.tier-card h4 {
+  color: var(--institution-primary) !important;
+}
+
+/* ================= MAPPING ROWS ================= */
+.mapping-status.matched {
+  background: rgba(76, 175, 80, 0.1) !important;
+  color: #4CAF50 !important;
+}
+
+.mapping-status.manual {
+  background: rgba(255, 152, 0, 0.1) !important;
+  color: #FF9800 !important;
+}
+
+/* ================= ERROR LOG ================= */
+.error-log-section {
+  background: rgba(244, 67, 54, 0.05) !important;
+}
+
+.btn-download-errors {
+  background: #F44336 !important;
+  color: white !important;
+}
+
+/* ================= LOADING STATES ================= */
+.loading {
+  color: var(--institution-primary) !important;
+}
+
+.spinner {
+  border-color: var(--institution-primary) !important;
+  border-top-color: transparent !important;
+}
+
+/* ================= FOCUS STATES ================= */
+*:focus-visible {
+  outline: 2px solid var(--institution-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ================= SELECTION ================= */
+::selection {
+  background: rgba(139, 0, 0, 0.2) !important;
+  color: var(--institution-primary) !important;
+}
+
+/* ================= SCROLLBAR ================= */
+::-webkit-scrollbar-thumb {
+  background: var(--institution-primary) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5c0000 !important;
+}

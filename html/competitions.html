@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competitions - Juris AI</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/competitions.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>🏆 Moot Court Competitions</h1>
+            <div id="user-info"></div>
+        </header>
+        
+        <div class="competition-controls">
+            <button id="create-comp-btn" class="btn btn-primary" style="display: none;">+ Create Competition</button>
+            <select id="status-filter">
+                <option value="all">All Competitions</option>
+                <option value="live">Live</option>
+                <option value="draft">Draft</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+        
+        <div id="competitions-container" class="competition-grid">
+            <!-- Competitions loaded dynamically -->
+        </div>
+        
+        <div id="create-comp-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Create New Competition</h2>
+                <form id="create-comp-form">
+                    <input type="text" id="comp-title" placeholder="Competition Title" required>
+                    <textarea id="comp-desc" placeholder="Problem Statement" required></textarea>
+                    <select id="comp-problem">
+                        <option value="1">Aadhaar Mandatory for NFSA Food Grains</option>
+                        <option value="2">Digital Privacy vs National Security</option>
+                        <option value="3">AI Regulation and Fundamental Rights</option>
+                    </select>
+                    <input type="datetime-local" id="comp-start" required>
+                    <input type="datetime-local" id="comp-memorial-deadline" required>
+                    <input type="datetime-local" id="comp-oral-start" required>
+                    <input type="datetime-local" id="comp-oral-end" required>
+                    <button type="submit" class="btn btn-primary">Create Competition</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
+    <script src="../js/competition-controller.js"></script>
+</body>
+</html>

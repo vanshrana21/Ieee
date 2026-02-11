@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moot Project - Virtual Courtroom</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/memorial-upload.css">
+    <style>
+        /* Moot Project Page Styles */
+        .moot-project-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .project-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .project-title {
+            font-size: 32px;
+            margin: 0 0 16px 0;
+        }
+        
+        .project-meta {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .project-meta span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Workflow Section Cards */
+        .workflow-section {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            border-left: 4px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .workflow-section.active {
+            border-left-color: #667eea;
+            box-shadow: 0 6px 24px rgba(102,126,234,0.15);
+        }
+        
+        .workflow-section.completed {
+            border-left-color: #4CAF50;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .section-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        
+        .workflow-section.active .section-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .workflow-section:not(.active) .section-icon {
+            background: #f5f5f5;
+        }
+        
+        .section-title h3 {
+            font-size: 22px;
+            color: #16213e;
+            margin: 0 0 4px 0;
+        }
+        
+        .section-title p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-badge.scheduled {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .status-badge.in-progress {
+            background: #ffebee;
+            color: #c62828;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-badge.completed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-badge.processing {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Courtroom Info */
+        .courtroom-info {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .courtroom-info p {
+            margin: 8px 0;
+            color: #666;
+        }
+        
+        .courtroom-info strong {
+            color: #16213e;
+        }
+        
+        /* Join Courtroom Button */
+        .courtroom-btn {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+        
+        .courtroom-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .modal-close:hover {
+            background: #f5f5f5;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #16213e;
+            margin-bottom: 8px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .project-header {
+                padding: 24px;
+            }
+            
+            .project-title {
+                font-size: 24px;
+            }
+            
+            .workflow-section {
+                padding: 24px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚖️</span>
+                <span class="logo-text">LegalAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="dashboard-student.html">Dashboard</a>
+                <a href="moot-court.html">Moot Court</a>
+                <a href="competitions.html">Competitions</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="moot-project-container">
+        <!-- Project Header -->
+        <div class="project-header">
+            <h1 class="project-title">Privacy v. State of India</h1>
+            <div class="project-meta">
+                <span>👥 Petitioner: Team Puttaswamy</span>
+                <span>👥 Respondent: Team Maneka</span>
+                <span>📅 Created: Feb 10, 2026</span>
+                <span>🏛️ Supreme Court Simulation</span>
+            </div>
+        </div>
+
+        <!-- Legal Issues Section -->
+        <div class="workflow-section completed" id="legal-issues-section">
+            <div class="section-header">
+                <div class="section-icon">⚖️</div>
+                <div class="section-title">
+                    <h3>Legal Issues</h3>
+                    <p>Define the constitutional questions for debate</p>
+                </div>
+            </div>
+            <div class="issues-list">
+                <div class="issue-item">
+                    <strong>Issue 1:</strong> Whether privacy is a fundamental right under Article 21?
+                </div>
+                <div class="issue-item">
+                    <strong>Issue 2:</strong> Whether the proportionality test applies to data protection laws?
+                </div>
+                <div class="issue-item">
+                    <strong>Issue 3:</strong> Whether the basic structure doctrine protects privacy rights?
+                </div>
+            </div>
+        </div>
+
+        <!-- Memorial Submission Section -->
+        <div class="workflow-section" id="memorial-section" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon">📄</div>
+                <div class="section-title">
+                    <h3>Submit Memorial</h3>
+                    <p>Upload your team's written submission (PDF, max 50 pages)</p>
+                </div>
+            </div>
+            
+            <button class="btn primary" id="upload-memorial-btn">
+                📤 Upload Memorial
+            </button>
+            
+            <div class="memorial-status" id="memorial-status" style="display: none; margin-top: 20px;">
+                <div class="status-badge processing" style="display: none;">
+                    ⏳ Processing...
+                </div>
+                <div class="status-badge completed" style="display: none;">
+                    ✅ Memorial Submitted & Analyzed
+                </div>
+                <div class="status-badge failed" style="display: none;">
+                    ❌ Failed - Retry
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Oral Round Section -->
+        <div class="workflow-section" id="schedule-section" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon">📅</div>
+                <div class="section-title">
+                    <h3>Schedule Oral Round</h3>
+                    <p>Set date/time for your virtual courtroom session</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="round-datetime">Scheduled Date & Time</label>
+                <input type="datetime-local" id="round-datetime" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="round-duration">Duration (minutes)</label>
+                <select id="round-duration" class="form-control">
+                    <option value="30">30 minutes</option>
+                    <option value="45" selected>45 minutes</option>
+                    <option value="60">60 minutes</option>
+                </select>
+            </div>
+            
+            <button class="btn primary" id="schedule-round-btn">
+                📅 Schedule Oral Round
+            </button>
+        </div>
+
+        <!-- Join Courtroom Section -->
+        <div class="workflow-section" id="courtroom-section" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon">🏛️</div>
+                <div class="section-title">
+                    <h3>Join Virtual Courtroom</h3>
+                    <p>Your oral round is scheduled for <span id="scheduled-time-display">--</span></p>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <span class="status-badge scheduled" style="display: none;">📅 Scheduled</span>
+                <span class="status-badge in-progress" style="display: none;">🔴 In Progress</span>
+                <span class="status-badge completed" style="display: none;">✅ Completed</span>
+            </div>
+            
+            <button class="courtroom-btn" id="join-courtroom-btn">
+                ⚖️ Enter Courtroom
+            </button>
+            
+            <div class="courtroom-info">
+                <p><strong>Participants:</strong> <span id="participant-count">0</span> joined</p>
+                <p><strong>Timer:</strong> <span id="courtroom-timer-status">Not started</span></p>
+                <p><strong>Features:</strong> Real-time timer • Objection handling • AI transcription • Judge scoring</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memorial Upload Modal -->
+    <div class="modal-overlay" id="memorial-upload-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-memorial-modal">✕</button>
+            <div id="memorial-upload-container">
+                <!-- Memorial upload content will be loaded here -->
+                <div style="padding: 40px; text-align: center;">
+                    <p>Loading upload interface...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/memorial-upload-controller.js"></script>
+    <script src="../js/moot-project-workflow.js"></script>
+    <script>
+        // Initialize workflow when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get project ID from URL or use default
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('project_id') || '1';
+            
+            // Initialize workflow controller
+            const workflow = new MootProjectWorkflow(parseInt(projectId), {
+                apiBaseUrl: '/api',
+                onStateChange: (state) => {
+                    console.log('Workflow state updated:', state);
+                },
+                onMemorialComplete: (response) => {
+                    console.log('Memorial upload complete:', response);
+                    alert('Memorial uploaded successfully! AI analysis in progress...');
+                },
+                onScheduleComplete: (response) => {
+                    console.log('Round scheduled:', response);
+                    alert(`Round scheduled for ${new Date(response.scheduled_start).toLocaleString()}`);
+                }
+            });
+            
+            workflow.initialize();
+            
+            // Store reference for debugging
+            window.mootWorkflow = workflow;
+        });
+    </script>
+</body>
+</html>

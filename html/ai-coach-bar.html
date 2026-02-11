@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Coach Bar - Juris AI</title>
+    <link rel="stylesheet" href="../css/ai-coach-bar.css">
+</head>
+<body>
+    <!-- AI Coach Hint Bar (Fixed Bottom) -->
+    <div id="ai-coach-bar" class="ai-coach-bar hidden">
+        <div class="hint-container">
+            <span class="hint-icon">💡</span>
+            <div class="hint-content">
+                <span class="hint-type" id="hint-type">Citation</span>
+                <span class="hint-text" id="hint-text">Cite Puttaswamy as (2017) 10 SCC 1</span>
+            </div>
+            <div class="hint-timer">
+                <svg class="timer-circle" viewBox="0 0 36 36">
+                    <path class="timer-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="timer-progress" id="timer-progress" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+            </div>
+            <button class="hint-dismiss" onclick="aiCoachController.dismissHint()">×</button>
+        </div>
+    </div>
+
+    <!-- AI Coach Settings (Hidden by default, shown in settings) -->
+    <div id="ai-coach-settings" class="ai-coach-settings hidden">
+        <h4>AI Coach Settings</h4>
+        <div class="setting-row">
+            <label>Enable AI Coach</label>
+            <input type="checkbox" id="coach-enabled" checked onchange="aiCoachController.toggleEnabled()">
+        </div>
+        <div class="setting-row">
+            <label>Hint Types</label>
+            <div class="hint-types">
+                <label><input type="checkbox" id="hint-citation" checked> Citation</label>
+                <label><input type="checkbox" id="hint-etiquette" checked> Etiquette</label>
+                <label><input type="checkbox" id="hint-doctrine" checked> Doctrine</label>
+                <label><input type="checkbox" id="hint-structure" checked> Structure</label>
+            </div>
+        </div>
+        <div class="setting-row">
+            <label>Auto-dismiss (seconds)</label>
+            <input type="range" id="dismiss-time" min="5" max="20" value="10" onchange="aiCoachController.updateDismissTime()">
+            <span id="dismiss-time-display">10s</span>
+        </div>
+    </div>
+
+    <script src="../js/ai-coach-controller.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roundId = urlParams.get('round_id') || 1;
+        const teamId = urlParams.get('team_id') || 1;
+        const aiCoachController = new AICoachController(roundId, teamId);
+    </script>
+</body>
+</html>
