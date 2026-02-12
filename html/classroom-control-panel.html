@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Control Panel | LegalAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-bg: #0E0E10;
+      --secondary-bg: #151518;
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --accent-gold: #C6A75E;
+      --muted-gold: #9C8446;
+      --text-primary: #F5F5F5;
+      --text-secondary: #B8B8B8;
+      --danger: #C75C5C;
+      --success: #4CAF50;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--primary-bg);
+      color: var(--text-primary);
+      font-family: 'Inter', 'SF Pro', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    .main-nav {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 300ms ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-gold);
+    }
+
+    /* Header */
+    .session-header {
+      background: linear-gradient(135deg, rgba(198, 167, 94, 0.15) 0%, rgba(156, 132, 70, 0.05) 100%);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 2rem 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .session-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      margin-bottom: 0.5rem;
+    }
+
+    .session-code-display {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      letter-spacing: 4px;
+      color: var(--accent-gold);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .status-preparing { color: var(--text-secondary); }
+    .status-study { color: var(--accent-gold); }
+    .status-moot { 
+      color: var(--success); 
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 2rem;
+      padding: 2rem 0;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--accent-gold);
+    }
+
+    /* Timer Section */
+    .timer-display {
+      font-family: 'Playfair Display', serif;
+      font-size: 72px;
+      text-align: center;
+      color: var(--accent-gold);
+      text-shadow: 0 0 30px rgba(198, 167, 94, 0.3);
+      margin: 1rem 0;
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 300ms ease;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent-gold);
+    }
+
+    .btn.primary {
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      color: white;
+      border: none;
+    }
+
+    .btn.primary:hover {
+      box-shadow: 0 4px 15px rgba(198, 167, 94, 0.3);
+    }
+
+    .btn.danger {
+      background: rgba(199, 92, 92, 0.2);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Phase Controls */
+    .phase-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .phase-btn {
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 300ms ease;
+      text-align: center;
+    }
+
+    .phase-btn:hover:not(:disabled) {
+      border-color: var(--accent-gold);
+      color: var(--text-primary);
+    }
+
+    .phase-btn.active {
+      background: linear-gradient(135deg, rgba(198, 167, 94, 0.2) 0%, rgba(156, 132, 70, 0.1) 100%);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    .phase-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Participants List */
+    .participant-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .participant-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .participant-item:last-child {
+      border-bottom: none;
+    }
+
+    .participant-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .role-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .role-petitioner { background: rgba(198, 167, 94, 0.15); color: var(--accent-gold); }
+    .role-respondent { background: rgba(199, 92, 92, 0.15); color: var(--danger); }
+    .role-observer { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .status-dot.offline {
+      background: var(--text-secondary);
+    }
+
+    /* Arguments Feed */
+    .arguments-feed {
+      max-height: 300px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .argument-item {
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      border-left: 3px solid var(--accent-gold);
+    }
+
+    .argument-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 14px;
+    }
+
+    .argument-author {
+      color: var(--accent-gold);
+      font-weight: 500;
+    }
+
+    .argument-time {
+      color: var(--text-secondary);
+    }
+
+    .argument-text {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* AI Judge Panel */
+    .ai-feedback {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-gold);
+    }
+
+    .ai-feedback p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .session-title {
+        font-size: 24px;
+      }
+
+      .session-code-display {
+        font-size: 28px;
+      }
+
+      .timer-display {
+        font-size: 48px;
+      }
+
+      .container {
+        padding: 0 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span>⚖️</span>
+        <span>LegalAI</span>
+      </a>
+      <div class="nav-links">
+        <a href="dashboard-student.html">Dashboard</a>
+        <a href="live-competitions.html">Live Competitions</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Session Header -->
+  <header class="session-header">
+    <div class="container">
+      <div class="header-content">
+        <div>
+          <h1 class="session-title" id="session-topic">Loading...</h1>
+          <div class="session-code-display" id="session-code">JURIS-XXXX</div>
+        </div>
+        <div style="text-align: right;">
+          <span class="status-badge status-preparing" id="session-status">Preparing</span>
+          <div style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 14px;">
+            <span id="participant-count">0</span> participants
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="main-grid">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Timer Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">⏱️ Timer Control</h2>
+            <span id="current-phase">Phase: Preparation</span>
+          </div>
+          <div class="timer-display" id="timer">15:00</div>
+          <div class="timer-controls">
+            <button class="btn primary" onclick="startTimer()">▶️ Start</button>
+            <button class="btn" onclick="pauseTimer()">⏸️ Pause</button>
+            <button class="btn" onclick="resetTimer()">🔄 Reset</button>
+            <button class="btn danger" onclick="forceEndPhase()">⏭️ End Phase</button>
+          </div>
+        </div>
+
+        <!-- Phase Controls -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🎛️ Phase Controls</h2>
+          </div>
+          <div class="phase-controls">
+            <button class="phase-btn" id="btn-preparing" onclick="changePhase('preparing')">Preparing</button>
+            <button class="phase-btn" id="btn-study" onclick="changePhase('study')">Study</button>
+            <button class="phase-btn" id="btn-moot" onclick="changePhase('moot')">Moot</button>
+            <button class="phase-btn" id="btn-scoring" onclick="changePhase('scoring')">Scoring</button>
+            <button class="phase-btn" id="btn-completed" onclick="changePhase('completed')">Complete</button>
+          </div>
+        </div>
+
+        <!-- Arguments Feed -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📝 Live Arguments</h2>
+          </div>
+          <div class="arguments-feed" id="arguments-feed">
+            <p style="color: var(--text-secondary); text-align: center;">Waiting for arguments...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column (Sidebar) -->
+      <div class="right-column">
+        <!-- Participants -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">👥 Participants</h2>
+          </div>
+          <ul class="participant-list" id="participant-list">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+        <!-- AI Judge -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🤖 AI Judge</h2>
+          </div>
+          <div class="ai-feedback" id="ai-feedback">
+            <p>AI Judge is ready. Waiting for arguments to provide feedback.</p>
+          </div>
+        </div>
+
+        <!-- Scoring -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📊 Quick Actions</h2>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button class="btn primary" onclick="assignRoles()">🎭 Auto-Assign Roles</button>
+            <button class="btn" onclick="exportResults()">📥 Export Results</button>
+            <button class="btn danger" onclick="endSession()">🚫 End Session</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // State
+    let currentPhase = 'preparing';
+    let timeRemaining = 900; // 15 minutes
+    let timerInterval = null;
+    let participants = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      const session = JSON.parse(localStorage.getItem('teacher_session') || '{}');
+      if (session.code) {
+        document.getElementById('session-code').textContent = session.code;
+        document.getElementById('session-topic').textContent = session.topic || 'Untitled Session';
+        timeRemaining = (session.prepTime || 15) * 60;
+        updateTimerDisplay();
+      }
+
+      updatePhaseButtons();
+      loadParticipants();
+    });
+
+    // Timer functions
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      document.getElementById('timer').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (timeRemaining > 0) {
+          timeRemaining--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          alert('Timer expired!');
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      const session = JSON.parse(localStorage.getItem('teacher_session') || '{}');
+      if (currentPhase === 'study') {
+        timeRemaining = (session.prepTime || 15) * 60;
+      } else if (currentPhase === 'moot') {
+        timeRemaining = (session.oralTime || 10) * 60;
+      }
+      updateTimerDisplay();
+    }
+
+    function forceEndPhase() {
+      pauseTimer();
+      alert('Phase ended. You can now transition to the next phase.');
+    }
+
+    // Phase management
+    function changePhase(phase) {
+      currentPhase = phase;
+      
+      // Update UI
+      updatePhaseButtons();
+      document.getElementById('current-phase').textContent = `Phase: ${phase.charAt(0).toUpperCase() + phase.slice(1)}`;
+      
+      // Update status badge
+      const statusBadge = document.getElementById('session-status');
+      statusBadge.className = `status-badge status-${phase}`;
+      statusBadge.textContent = phase.charAt(0).toUpperCase() + phase.slice(1);
+
+      // Reset timer for new phase
+      resetTimer();
+
+      console.log('Phase changed to:', phase);
+    }
+
+    function updatePhaseButtons() {
+      document.querySelectorAll('.phase-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`btn-${currentPhase}`)?.classList.add('active');
+    }
+
+    // Participants
+    function loadParticipants() {
+      // Placeholder - in production, fetch from API
+      participants = [
+        { id: 1, name: 'Student 1', role: 'petitioner', online: true },
+        { id: 2, name: 'Student 2', role: 'respondent', online: true },
+      ];
+      renderParticipants();
+    }
+
+    function renderParticipants() {
+      const list = document.getElementById('participant-list');
+      document.getElementById('participant-count').textContent = participants.length;
+
+      if (participants.length === 0) {
+        list.innerHTML = '<li class="participant-item"><span style="color: var(--text-secondary);">No participants yet</span></li>';
+        return;
+      }
+
+      list.innerHTML = participants.map(p => `
+        <li class="participant-item">
+          <div class="participant-info">
+            <span class="status-dot ${p.online ? '' : 'offline'}"></span>
+            <span>${p.name}</span>
+          </div>
+          <span class="role-badge role-${p.role}">${p.role}</span>
+        </li>
+      `).join('');
+    }
+
+    function assignRoles() {
+      // Auto-assign Petitioner/Respondent to first two participants
+      if (participants.length >= 1) participants[0].role = 'petitioner';
+      if (participants.length >= 2) participants[1].role = 'respondent';
+      for (let i = 2; i < participants.length; i++) {
+        participants[i].role = 'observer';
+      }
+      renderParticipants();
+      alert('Roles assigned!');
+    }
+
+    function exportResults() {
+      alert('Results exported! (placeholder)');
+    }
+
+    function endSession() {
+      if (confirm('Are you sure you want to end this session? All participants will be disconnected.')) {
+        localStorage.removeItem('teacher_session');
+        window.location.href = 'classroom-role-selection.html';
+      }
+    }
+
+    // Simulate incoming arguments
+    setInterval(() => {
+      const feed = document.getElementById('arguments-feed');
+      if (feed.children.length > 0 && feed.children[0].tagName === 'P') {
+        feed.innerHTML = ''; // Clear "waiting" message
+      }
+      
+      // In production, this would come from WebSocket
+      // Placeholder for demo
+    }, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classroom Mode - Select Role | LegalAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-bg: #0E0E10;
+      --secondary-bg: #151518;
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --accent-gold: #C6A75E;
+      --muted-gold: #9C8446;
+      --text-primary: #F5F5F5;
+      --text-secondary: #B8B8B8;
+      --danger: #C75C5C;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #1a1a1d 0%, var(--primary-bg) 60%);
+      color: var(--text-primary);
+      font-family: 'Inter', 'SF Pro', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Navigation */
+    .main-nav {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 300ms ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-gold);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 120px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-section::before {
+      content: '⚖️';
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 150px;
+      opacity: 0.03;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin-bottom: 2rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.125rem;
+      transition: all 300ms ease;
+    }
+
+    .back-link:hover {
+      color: var(--accent-gold);
+      transform: translateX(-4px);
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 56px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .hero-underline {
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      margin: 1.5rem auto 2rem;
+      border-radius: 2px;
+    }
+
+    .hero-subtitle {
+      font-size: 20px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+      font-weight: 300;
+    }
+
+    /* Role Cards Section */
+    .roles-section {
+      padding: 60px 0 120px;
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      .role-grid {
+        grid-template-columns: 1fr 1fr;
+        max-width: 100%;
+      }
+    }
+
+    .role-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 50px 40px;
+      transition: all 300ms ease;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      opacity: 0;
+      transition: opacity 300ms ease;
+    }
+
+    .role-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      border-color: rgba(198, 167, 94, 0.3);
+    }
+
+    .role-card:hover::before {
+      opacity: 1;
+    }
+
+    .role-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 0 30px rgba(198, 167, 94, 0.3));
+    }
+
+    .role-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      line-height: 1.3;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .role-description {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      font-weight: 300;
+    }
+
+    .role-features {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    .role-features li {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .role-features li::before {
+      content: '✓';
+      color: var(--accent-gold);
+      font-weight: bold;
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+    }
+
+    .role-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 16px 32px;
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      transition: all 200ms ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .role-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      z-index: -1;
+      transition: all 300ms ease;
+    }
+
+    .role-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(198, 167, 94, 0.3);
+    }
+
+    .role-button:hover::before {
+      left: 100%;
+    }
+
+    /* Join Form */
+    .join-form {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 500px;
+      margin: 40px auto 0;
+    }
+
+    .join-form h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      margin-bottom: 1.5rem;
+      color: var(--accent-gold);
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 2px;
+      font-family: 'Playfair Display', serif;
+      text-transform: uppercase;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-section h1, .hero-underline, .hero-subtitle {
+      animation: fadeInUp 500ms ease forwards;
+    }
+
+    .role-card {
+      animation: fadeInUp 500ms ease forwards;
+      opacity: 0;
+    }
+
+    .role-card:nth-child(1) { animation-delay: 200ms; }
+    .role-card:nth-child(2) { animation-delay: 300ms; }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 36px;
+      }
+
+      .hero-section {
+        padding: 80px 0 40px;
+      }
+
+      .role-title {
+        font-size: 24px;
+      }
+
+      .role-card {
+        padding: 30px 20px;
+      }
+
+      .container {
+        padding: 0 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span>⚖️</span>
+        <span>LegalAI</span>
+      </a>
+      <div class="nav-links">
+        <a href="dashboard-student.html">Dashboard</a>
+        <a href="live-competitions.html">Live Competitions</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <a href="live-competitions.html" class="back-link">← Back to Live Competitions</a>
+      
+      <h1>Classroom Mode</h1>
+      <div class="hero-underline"></div>
+      <p class="hero-subtitle">Join teacher-led moot court sessions. Select your role to enter the virtual courtroom.</p>
+    </div>
+  </section>
+
+  <!-- Role Selection -->
+  <section class="roles-section">
+    <div class="container">
+      <div class="role-grid">
+        <!-- Teacher Card -->
+        <div class="role-card" onclick="selectRole('teacher')">
+          <div class="role-icon">👨‍🏫</div>
+          <h2 class="role-title">I'm a Teacher</h2>
+          <p class="role-description">Create and manage classroom sessions, assign roles, and control the moot court flow.</p>
+          
+          <ul class="role-features">
+            <li>Create sessions with unique codes</li>
+            <li>Assign Petitioner/Respondent roles</li>
+            <li>Control timer and phase transitions</li>
+            <li>Submit scores and feedback</li>
+          </ul>
+          
+          <a href="classroom-create-session.html" class="role-button">Create Session →</a>
+        </div>
+        
+        <!-- Student Card -->
+        <div class="role-card" onclick="selectRole('student')">
+          <div class="role-icon">👨‍🎓</div>
+          <h2 class="role-title">I'm a Student</h2>
+          <p class="role-description">Join a classroom session using your teacher's session code. Get assigned as Petitioner or Respondent.</p>
+          
+          <ul class="role-features">
+            <li>Join with session code (JURIS-XXXX)</li>
+            <li>Auto-assigned Petitioner/Respondent</li>
+            <li>Study case materials</li>
+            <li>Submit arguments in real-time</li>
+          </ul>
+          
+          <div class="join-form">
+            <h3>Join Session</h3>
+            <div class="form-group">
+              <label class="form-label">Session Code</label>
+              <input type="text" id="session-code-input" class="form-input" placeholder="JURIS-XXXX" maxlength="12">
+            </div>
+            <button class="role-button" onclick="joinSession()">Enter Courtroom →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Session code formatting
+    document.getElementById('session-code-input').addEventListener('input', function(e) {
+      let value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+      if (value.length > 12) value = value.slice(0, 12);
+      e.target.value = value;
+    });
+
+    function selectRole(role) {
+      localStorage.setItem('classroom_role', role);
+    }
+
+    // API Configuration - points to backend server
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'http://localhost:8000'
+      : ''; // Production: use relative URL
+
+    function joinSession() {
+      const code = document.getElementById('session-code-input').value.trim().toUpperCase();
+      const joinBtn = document.querySelector('.role-button');
+      
+      if (!code || code.length < 6) {
+        alert('Please enter a valid session code (e.g., JURIS-A7B9C2)');
+        return;
+      }
+      
+      joinBtn.disabled = true;
+      joinBtn.textContent = 'Joining...';
+      
+      const url = `${API_BASE}/api/classroom/sessions/join`;
+      console.log('Calling:', url);
+      
+      fetch(url, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
+        body: JSON.stringify({ session_code: code })
+      })
+      .then(async (response) => {
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Join successful:', data);
+          localStorage.setItem('classroom_role', 'student');
+          localStorage.setItem('classroom_session_code', code);
+          localStorage.setItem('classroom_session', JSON.stringify(data));
+          window.location.href = `classroom-student-view.html?session_id=${data.session_id}`;
+        } else {
+          const errorData = await response.json();
+          console.error('Join failed:', errorData);
+          alert(errorData.detail || 'Failed to join session. Please check the code and try again.');
+          joinBtn.disabled = false;
+          joinBtn.textContent = 'Enter Courtroom →';
+        }
+      })
+      .catch((err) => {
+        console.error('Network error:', err);
+        alert('Network error. Please check your connection and try again.');
+        joinBtn.disabled = false;
+        joinBtn.textContent = 'Enter Courtroom →';
+      });
+    }
+
+    // Check for stored session code (reconnection)
+    document.addEventListener('DOMContentLoaded', function() {
+      const storedCode = localStorage.getItem('classroom_session_code');
+      if (storedCode) {
+        document.getElementById('session-code-input').value = storedCode;
+      }
+    });
+  </script>
+</body>
+</html>

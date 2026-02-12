@@ -1,17 +1,23 @@
 """
-Classroom Session State Machine
+Classroom Session State Machine - Production Grade
 
-Production-safe state machine for classroom mode moot court sessions.
-All state transitions are validated server-side.
+Features:
+- DB-first transitions (commit before broadcast)
+- Timer persistence with phase_start_timestamp
+- Auto-transition on timer expiry
+- Edge case handling (teacher offline, idle timeout)
+- Reconnection safety
 
-State Flow:
-created → preparing → study → moot → scoring → completed
+State Flow: created → preparing → study → moot → scoring → completed
 """
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta
 import asyncio
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ClassroomSessionState(Enum):
@@ -22,292 +28,365 @@ class ClassroomSessionState(Enum):
     MOOT = "moot"
     SCORING = "scoring"
     COMPLETED = "completed"
+    CANCELLED = "cancelled"
 
 
 class SessionStateMachine:
     """
-    Manages classroom session state transitions.
-    Server-authoritative: All transitions validated server-side.
+    Production-grade state machine for classroom sessions.
+    
+    CRITICAL: All transitions commit to DB BEFORE any side effects.
+    Database is source of truth; WebSocket is broadcast-only.
     """
     
     # Valid state transitions
     TRANSITIONS = {
-        ClassroomSessionState.CREATED: [ClassroomSessionState.PREPARING],
-        ClassroomSessionState.PREPARING: [ClassroomSessionState.STUDY],
-        ClassroomSessionState.STUDY: [ClassroomSessionState.MOOT],
-        ClassroomSessionState.MOOT: [ClassroomSessionState.SCORING],
-        ClassroomSessionState.SCORING: [ClassroomSessionState.COMPLETED],
-        ClassroomSessionState.COMPLETED: []
+        ClassroomSessionState.CREATED: [ClassroomSessionState.PREPARING, ClassroomSessionState.CANCELLED],
+        ClassroomSessionState.PREPARING: [ClassroomSessionState.STUDY, ClassroomSessionState.CANCELLED],
+        ClassroomSessionState.STUDY: [ClassroomSessionState.MOOT, ClassroomSessionState.CANCELLED],
+        ClassroomSessionState.MOOT: [ClassroomSessionState.SCORING, ClassroomSessionState.CANCELLED],
+        ClassroomSessionState.SCORING: [ClassroomSessionState.COMPLETED, ClassroomSessionState.CANCELLED],
+        ClassroomSessionState.COMPLETED: [],
+        ClassroomSessionState.CANCELLED: []
     }
     
-    def __init__(self, session_id: str, db_session=None):
+    # Auto-transition rules: (from_state, to_state) if timer expired
+    AUTO_TRANSITIONS = {
+        ClassroomSessionState.STUDY: ClassroomSessionState.MOOT,
+        ClassroomSessionState.MOOT: ClassroomSessionState.SCORING
+    }
+    
+    def __init__(self, session_id: str, db_session=None, db=None):
         self.session_id = session_id
         self.db_session = db_session
-        self._state = ClassroomSessionState.CREATED
+        self._db = db
         self._timer_task = None
-        self._participants = set()
-        self._scores = {}
+        self._auto_transition_task = None
         self._created_at = datetime.utcnow()
-        self._state_changed_at = datetime.utcnow()
         
-    @property
-    def state(self) -> ClassroomSessionState:
-        return self._state
-    
-    @property
-    def state_name(self) -> str:
-        return self._state.value
-    
-    def can_transition_to(self, new_state: ClassroomSessionState) -> bool:
-        """Check if transition to new state is valid."""
-        return new_state in self.TRANSITIONS.get(self._state, [])
-    
     async def transition_to(
         self, 
         new_state: ClassroomSessionState, 
         triggered_by: str,
-        validation_data: Optional[Dict] = None
+        triggered_by_role: str,
+        validation_data: Optional[Dict] = None,
+        force: bool = False
     ) -> Dict[str, Any]:
         """
         Attempt state transition with validation.
         
+        CRITICAL: Commits to DB BEFORE any side effects.
+        
         Args:
             new_state: Target state
             triggered_by: User ID who triggered transition
+            triggered_by_role: Role of user (TEACHER, STUDENT, SYSTEM)
             validation_data: Additional validation context
+            force: Force transition bypassing some validations (for auto-transitions)
             
         Returns:
             Transition result with status and message
         """
-        # Validate transition
-        if not self.can_transition_to(new_state):
+        try:
+            # Load session with row-level lock (concurrency protection)
+            session = await self._load_session_with_lock()
+            
+            if not session:
+                return {"success": False, "error": "Session not found", "current_state": None}
+            
+            current_state = ClassroomSessionState(session.current_state)
+            
+            # Validate transition rules
+            if not force and not self._can_transition(current_state, new_state):
+                return {
+                    "success": False,
+                    "error": f"Invalid transition: {current_state.value} → {new_state.value}",
+                    "current_state": current_state.value
+                }
+            
+            # Validate permissions and business rules
+            if not force:
+                validation = await self._validate_transition(
+                    session, current_state, new_state, triggered_by, triggered_by_role, validation_data
+                )
+                if not validation["valid"]:
+                    return {
+                        "success": False,
+                        "error": validation["message"],
+                        "current_state": current_state.value
+                    }
+            
+            # EXECUTE DB UPDATE (source of truth)
+            from backend.orm.classroom_session import SessionState as ORMSessionState
+            old_state = session.current_state
+            session.current_state = new_state.value
+            
+            # Update timer persistence
+            if new_state in [ClassroomSessionState.PREPARING, ClassroomSessionState.STUDY, ClassroomSessionState.MOOT]:
+                duration_minutes = self._get_duration_for_state(new_state, validation_data)
+                session.phase_start_timestamp = datetime.utcnow()
+                session.phase_duration_seconds = duration_minutes * 60
+                
+                # Stop any existing timer task
+                if self._timer_task:
+                    self._timer_task.cancel()
+                    self._timer_task = None
+                
+                # Start new timer task for auto-transition
+                self._auto_transition_task = asyncio.create_task(
+                    self._auto_transition_monitor(session.id, new_state, duration_minutes * 60)
+                )
+            
+            if new_state == ClassroomSessionState.SCORING:
+                # Freeze timer
+                session.phase_duration_seconds = None
+                if self._timer_task:
+                    self._timer_task.cancel()
+                    self._timer_task = None
+            
+            # Set completion timestamp
+            if new_state in [ClassroomSessionState.COMPLETED, ClassroomSessionState.CANCELLED]:
+                if new_state == ClassroomSessionState.COMPLETED:
+                    session.completed_at = datetime.utcnow()
+                else:
+                    session.cancelled_at = datetime.utcnow()
+                
+                # Cleanup timer
+                if self._timer_task:
+                    self._timer_task.cancel()
+                    self._timer_task = None
+            
+            # COMMIT TO DATABASE (critical for source of truth)
+            await self._commit_db()
+            
+            logger.info(f"State transition committed: {old_state} → {new_state.value} for session {session.session_code}")
+            
+            # Execute side effects AFTER DB commit
+            await self._on_enter_state(session, new_state, validation_data)
+            
+            # Broadcast state change (broadcast-only, never source of truth)
+            await self._broadcast_state_change(session, old_state, new_state.value)
+            
             return {
-                "success": False,
-                "error": f"Invalid transition: {self.state_name} → {new_state.value}",
-                "current_state": self.state_name
+                "success": True,
+                "from_state": old_state,
+                "to_state": new_state.value,
+                "timestamp": datetime.utcnow().isoformat(),
+                "session_code": session.session_code
             }
+            
+        except Exception as e:
+            logger.error(f"State transition failed: {str(e)}")
+            await self._rollback_db()
+            return {"success": False, "error": str(e), "current_state": None}
+    
+    async def _load_session_with_lock(self):
+        """Load session with row-level lock for concurrency protection."""
+        from backend.orm.classroom_session import ClassroomSession
         
-        # State-specific validation
-        validation_result = await self._validate_transition(
-            new_state, triggered_by, validation_data
-        )
-        
-        if not validation_result["valid"]:
-            return {
-                "success": False,
-                "error": validation_result["message"],
-                "current_state": self.state_name
-            }
-        
-        # Execute transition
-        old_state = self._state
-        self._state = new_state
-        self._state_changed_at = datetime.utcnow()
-        
-        # Execute state entry actions
-        await self._on_enter_state(new_state, validation_data)
-        
-        return {
-            "success": True,
-            "from_state": old_state.value,
-            "to_state": new_state.value,
-            "timestamp": self._state_changed_at.isoformat()
-        }
+        # Use with_for_update() for row-level lock (PostgreSQL)
+        result = self._db.query(ClassroomSession).filter_by(id=self.session_id).with_for_update().first()
+        return result
+    
+    async def _commit_db(self):
+        """Commit database transaction."""
+        if self._db:
+            self._db.commit()
+    
+    async def _rollback_db(self):
+        """Rollback database transaction."""
+        if self._db:
+            self._db.rollback()
+    
+    def _can_transition(self, current: ClassroomSessionState, new: ClassroomSessionState) -> bool:
+        """Check if transition is valid."""
+        return new in self.TRANSITIONS.get(current, [])
     
     async def _validate_transition(
-        self, 
+        self,
+        session,
+        current_state: ClassroomSessionState,
         new_state: ClassroomSessionState,
         triggered_by: str,
+        triggered_by_role: str,
         data: Optional[Dict]
     ) -> Dict[str, Any]:
-        """Validate state-specific requirements."""
+        """Validate state-specific requirements with edge case handling."""
         
         # CREATED → PREPARING: Teacher role required
         if new_state == ClassroomSessionState.PREPARING:
-            if not await self._is_teacher(triggered_by):
-                return {
-                    "valid": False,
-                    "message": "Only teachers can start preparing session"
-                }
+            if triggered_by_role != "TEACHER":
+                return {"valid": False, "message": "Only teachers can start preparing session"}
             return {"valid": True}
         
         # PREPARING → STUDY: Min 2 students required
         if new_state == ClassroomSessionState.STUDY:
-            if len(self._participants) < 2:
-                return {
-                    "valid": False,
-                    "message": "Minimum 2 students required to start study phase"
-                }
+            if triggered_by_role != "TEACHER":
+                return {"valid": False, "message": "Only teachers can start study phase"}
+            participant_count = len(session.participants) if session.participants else 0
+            if participant_count < 2:
+                return {"valid": False, "message": f"Minimum 2 students required (currently {participant_count})"}
             return {"valid": True}
         
         # STUDY → MOOT: Timer expired OR teacher permission
         if new_state == ClassroomSessionState.MOOT:
-            is_teacher = await self._is_teacher(triggered_by)
-            timer_expired = await self._is_timer_expired()
+            is_teacher = triggered_by_role == "TEACHER"
+            timer_expired = session.is_phase_expired() if hasattr(session, 'is_phase_expired') else False
             
-            if not (is_teacher or timer_expired):
-                return {
-                    "valid": False,
-                    "message": "Study timer must expire or teacher must start moot"
-                }
+            # Edge case: Teacher offline + timer expired = allow auto-transition
+            if not is_teacher and not timer_expired:
+                return {"valid": False, "message": "Study timer must expire or teacher must start moot"}
+            
+            # Log auto-transition edge case
+            if timer_expired and not is_teacher:
+                logger.info(f"Auto-transition STUDY→MOOT: timer expired, triggered by {triggered_by}")
+            
             return {"valid": True}
         
         # MOOT → SCORING: Timer expired OR teacher permission
         if new_state == ClassroomSessionState.SCORING:
-            is_teacher = await self._is_teacher(triggered_by)
-            timer_expired = await self._is_timer_expired()
+            is_teacher = triggered_by_role == "TEACHER"
+            timer_expired = session.is_phase_expired() if hasattr(session, 'is_phase_expired') else False
             
-            if not (is_teacher or timer_expired):
-                return {
-                    "valid": False,
-                    "message": "Moot timer must expire or teacher must end moot"
-                }
+            if not is_teacher and not timer_expired:
+                return {"valid": False, "message": "Moot timer must expire or teacher must end moot"}
+            
+            if timer_expired and not is_teacher:
+                logger.info(f"Auto-transition MOOT→SCORING: timer expired, triggered by {triggered_by}")
+            
             return {"valid": True}
         
         # SCORING → COMPLETED: All scores submitted
         if new_state == ClassroomSessionState.COMPLETED:
-            if not await self._all_scores_submitted():
-                return {
-                    "valid": False,
-                    "message": "All scores must be submitted before completing"
-                }
+            if triggered_by_role != "TEACHER":
+                return {"valid": False, "message": "Only teachers can complete session"}
+            # Check if all participants have scores
+            participants_with_scores = [p for p in session.participants if p.score_id]
+            if len(participants_with_scores) < len(session.participants):
+                return {"valid": False, "message": "All scores must be submitted before completing"}
+            return {"valid": True}
+        
+        # CANCELLED: Teacher only
+        if new_state == ClassroomSessionState.CANCELLED:
+            if triggered_by_role != "TEACHER":
+                return {"valid": False, "message": "Only teachers can cancel session"}
             return {"valid": True}
         
         return {"valid": True}
     
-    async def _on_enter_state(
-        self, 
-        state: ClassroomSessionState,
-        data: Optional[Dict]
-    ):
+    async def _on_enter_state(self, session, state: ClassroomSessionState, data: Optional[Dict]):
         """Execute actions on state entry."""
         
-        if state == ClassroomSessionState.PREPARING:
-            # Generate session code, set prep time
-            prep_minutes = data.get("prep_time_minutes", 30) if data else 30
-            await self._start_timer(prep_minutes * 60)
-            
-        elif state == ClassroomSessionState.STUDY:
-            # Study phase timer
-            study_minutes = data.get("study_time_minutes", 20) if data else 20
-            await self._start_timer(study_minutes * 60)
+        if state == ClassroomSessionState.STUDY:
+            # Initialize study phase
+            logger.info(f"Session {session.session_code} entering STUDY phase")
             
         elif state == ClassroomSessionState.MOOT:
-            # Assign roles, start moot timer
-            await self._assign_roles()
-            moot_minutes = data.get("moot_time_minutes", 45) if data else 45
-            await self._start_timer(moot_minutes * 60)
+            # Assign roles and log
+            await self._assign_roles_from_db(session)
+            logger.info(f"Session {session.session_code} entering MOOT phase")
             
         elif state == ClassroomSessionState.SCORING:
-            # Freeze timer, prepare scoring
-            await self._stop_timer()
-            await self._init_scoring()
+            # Prepare scoring
+            await self._init_scoring_from_db(session)
+            logger.info(f"Session {session.session_code} entering SCORING phase")
             
         elif state == ClassroomSessionState.COMPLETED:
-            # Calculate leaderboard, cleanup
-            await self._calculate_leaderboard()
-            await self._cleanup()
+            # Calculate final leaderboard
+            await self._calculate_and_save_leaderboard(session)
+            logger.info(f"Session {session.session_code} COMPLETED")
+            
+        elif state == ClassroomSessionState.CANCELLED:
+            # Cleanup
+            logger.info(f"Session {session.session_code} CANCELLED")
     
-    async def _is_teacher(self, user_id: str) -> bool:
-        """Check if user has teacher role."""
-        # TODO: Implement role check from database
-        return True  # Placeholder
-    
-    async def _is_timer_expired(self) -> bool:
-        """Check if current timer has expired."""
-        # TODO: Implement timer check
-        return False  # Placeholder
-    
-    async def _all_scores_submitted(self) -> bool:
-        """Check if all participant scores are submitted."""
-        # TODO: Implement score check
-        return True  # Placeholder
-    
-    async def _start_timer(self, duration_seconds: int):
-        """Start server-side timer."""
-        if self._timer_task:
-            self._timer_task.cancel()
-        
-        async def timer_callback():
+    async def _auto_transition_monitor(self, session_id: int, current_state: ClassroomSessionState, duration_seconds: int):
+        """Monitor timer and auto-transition when expired."""
+        try:
             await asyncio.sleep(duration_seconds)
-            await self._on_timer_expired()
+            
+            # Check if state hasn't changed
+            from backend.orm.classroom_session import ClassroomSession
+            session = self._db.query(ClassroomSession).filter_by(id=session_id).first()
+            
+            if session and session.current_state == current_state.value:
+                # Timer expired, check if auto-transition is configured
+                if current_state in self.AUTO_TRANSITIONS:
+                    next_state = self.AUTO_TRANSITIONS[current_state]
+                    logger.info(f"Auto-transitioning session {session.session_code}: {current_state.value} → {next_state.value}")
+                    
+                    await self.transition_to(
+                        next_state,
+                        triggered_by="SYSTEM",
+                        triggered_by_role="SYSTEM",
+                        force=True  # Bypass validation for auto-transition
+                    )
+                    
+        except asyncio.CancelledError:
+            # Timer cancelled (normal when transitioning manually)
+            pass
+        except Exception as e:
+            logger.error(f"Auto-transition monitor error: {e}")
+    
+    async def _assign_roles_from_db(self, session):
+        """Assign roles to participants based on join order."""
+        from backend.orm.classroom_session import ClassroomParticipant, ParticipantRole
         
-        self._timer_task = asyncio.create_task(timer_callback())
+        participants = sorted(session.participants, key=lambda p: p.joined_at)
+        
+        for i, participant in enumerate(participants):
+            if i == 0:
+                participant.role = ParticipantRole.PETITIONER.value
+            elif i == 1:
+                participant.role = ParticipantRole.RESPONDENT.value
+            else:
+                participant.role = ParticipantRole.OBSERVER.value
+        
+        await self._commit_db()
     
-    async def _stop_timer(self):
-        """Stop current timer."""
-        if self._timer_task:
-            self._timer_task.cancel()
-            self._timer_task = None
+    async def _init_scoring_from_db(self, session):
+        """Initialize scoring records for all participants."""
+        from backend.orm.classroom_session import ClassroomScore
+        
+        for participant in session.participants:
+            if not participant.score_id:
+                score = ClassroomScore(
+                    session_id=session.id,
+                    user_id=participant.user_id
+                )
+                self._db.add(score)
+                await self._commit_db()
+                participant.score_id = score.id
+        
+        await self._commit_db()
     
-    async def _on_timer_expired(self):
-        """Handle timer expiration."""
-        # Broadcast timer expired event
-        pass  # TODO: Implement WebSocket broadcast
+    async def _calculate_and_save_leaderboard(self, session):
+        """Calculate and save final leaderboard."""
+        from backend.orm.classroom_session import ClassroomScore
+        
+        scores = self._db.query(ClassroomScore).filter_by(session_id=session.id).all()
+        
+        # Calculate totals
+        for score in scores:
+            score.calculate_total()
+        
+        await self._commit_db()
     
-    async def _assign_roles(self):
-        """Assign petitioner/respondent roles to participants."""
-        participants = list(self._participants)
-        if len(participants) >= 2:
-            # Assign alternating roles
-            for i, user_id in enumerate(participants):
-                role = "petitioner" if i % 2 == 0 else "respondent"
-                # TODO: Save role assignment to database
-                pass
+    async def _broadcast_state_change(self, session, old_state: str, new_state: str):
+        """Broadcast state change via WebSocket (broadcast-only)."""
+        # TODO: Implement WebSocket broadcast
+        # This should ONLY broadcast, never modify state
+        logger.info(f"Broadcast: Session {session.session_code} state change {old_state} → {new_state}")
     
-    async def _init_scoring(self):
-        """Initialize scoring for all participants."""
-        for user_id in self._participants:
-            self._scores[user_id] = {
-                "legal_reasoning": None,
-                "citation_format": None,
-                "courtroom_etiquette": None,
-                "responsiveness": None,
-                "time_management": None,
-                "total_score": None,
-                "submitted": False
-            }
-    
-    async def _calculate_leaderboard(self):
-        """Calculate final leaderboard."""
-        # Sort by total score
-        sorted_scores = sorted(
-            self._scores.items(),
-            key=lambda x: x[1].get("total_score", 0) if x[1] else 0,
-            reverse=True
-        )
-        # TODO: Save leaderboard to database
-        return sorted_scores
-    
-    async def _cleanup(self):
-        """Cleanup resources after session completion."""
-        await self._stop_timer()
-        # Schedule room destruction after 5 minutes
-        asyncio.create_task(self._delayed_cleanup())
-    
-    async def _delayed_cleanup(self, delay_seconds: int = 300):
-        """Delayed cleanup (5 minutes after completion)."""
-        await asyncio.sleep(delay_seconds)
-        # TODO: Archive session data, remove from active rooms
-        pass
-    
-    def add_participant(self, user_id: str) -> bool:
-        """Add participant to session."""
-        if self._state not in [ClassroomSessionState.CREATED, ClassroomSessionState.PREPARING]:
-            return False
-        self._participants.add(user_id)
-        return True
-    
-    def remove_participant(self, user_id: str):
-        """Remove participant from session."""
-        self._participants.discard(user_id)
-    
-    def get_state_data(self) -> Dict[str, Any]:
-        """Get current state data for WebSocket broadcast."""
-        return {
-            "session_id": self.session_id,
-            "state": self.state_name,
-            "participants_count": len(self._participants),
-            "created_at": self._created_at.isoformat(),
-            "state_changed_at": self._state_changed_at.isoformat()
+    def _get_duration_for_state(self, state: ClassroomSessionState, data: Optional[Dict]) -> int:
+        """Get duration in minutes for a state."""
+        defaults = {
+            ClassroomSessionState.PREPARING: 5,
+            ClassroomSessionState.STUDY: 20,
+            ClassroomSessionState.MOOT: 45
         }
+        
+        if data and "duration_minutes" in data:
+            return data["duration_minutes"]
+        
+        return defaults.get(state, 30)

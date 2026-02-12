@@ -33,6 +33,8 @@ from backend.routes import ba_llb
 from backend.routes import test_kanoon
 from backend.routes import debug_super_kanoon
 from backend.routes import debate
+from backend.routes import classroom
+from backend.routes.classroom import router as classroom_router
 
 
 # ============================================
@@ -302,9 +304,9 @@ app.include_router(submissions.router, prefix="/api")
 app.include_router(slots.router, prefix="/api")
 
 # Phase 5C: Moot Project Persistence (Replaces localStorage)
-from backend.routes import moot_projects, oral_rounds, moot_evaluations
+from backend.routes import moot_projects, moot_evaluations
 app.include_router(moot_projects.router, prefix="/api")
-app.include_router(oral_rounds.router, prefix="/api")
+#app.include_router(oral_rounds.router, prefix="/api")
 app.include_router(moot_evaluations.router, prefix="/api")
 
 # Phase 5D: Competition Workflow, Deadlines & Submission Locking
@@ -340,6 +342,9 @@ app.include_router(results.router, prefix="/api")
 # Phase 2 MVP: AI Moot Court Practice Mode
 from backend.routes.ai_moot import ai_moot_router
 app.include_router(ai_moot_router, prefix="/api")
+
+# Phase 7: Classroom Mode (Moot Court Classroom Sessions)
+app.include_router(classroom_router, prefix="/api")
 
 # DEBUG: Log all registered routes on startup
 from fastapi.routing import APIRoute

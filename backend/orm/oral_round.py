@@ -2,7 +2,7 @@
 Phase 0: Virtual Courtroom Infrastructure - Oral Rounds ORM Model
 Database-first schema for moot court oral rounds with complete timer and state management.
 """
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, Enum as SQLEnum, func, String, Text, Boolean, Index
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, Enum as SQLEnum, func, String, Text, Boolean, Index, JSON
 from sqlalchemy.orm import relationship
 import enum
 from backend.orm.base import Base
@@ -44,6 +44,9 @@ class OralRound(Base):
     # Primary key
     id = Column(Integer, primary_key=True, autoincrement=True)
     
+    # Foreign key to MootProject (required for relationship)
+    moot_project_id = Column(Integer, ForeignKey("moot_projects.id"), nullable=False, index=True)
+    
     # Core fields - Competition and round identification
     competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False)
     round_number = Column(Integer, nullable=False)  # 1=quarterfinal, 2=semifinal, 3=final
@@ -81,6 +84,7 @@ class OralRound(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
     
     # Relationships
+    moot_project = relationship("MootProject", back_populates="oral_rounds")
     competition = relationship("Competition", back_populates="rounds")
     petitioner_team = relationship("Team", foreign_keys=[petitioner_team_id])
     respondent_team = relationship("Team", foreign_keys=[respondent_team_id])
@@ -88,7 +92,6 @@ class OralRound(Base):
     
     # Related entities (defined in separate ORM files)
     objections = relationship("OralRoundObjection", back_populates="round", cascade="all, delete-orphan")
-    transcripts = relationship("OralRoundTranscript", back_populates="round", cascade="all, delete-orphan")
     scores = relationship("OralRoundScore", back_populates="round", cascade="all, delete-orphan")
     
     # Table indexes for common queries
@@ -149,3 +152,54 @@ class OralRound(Base):
 # Aliases for backward compatibility
 RoundStatus = OralRoundStatus
 OralRoundStatusEnum = OralRoundStatus
+
+
+# ================= LEGACY COMPATIBILITY MODELS =================
+# These models are restored to maintain backward compatibility
+# with faculty monitoring and progress calculation modules.
+# Do NOT remove unless full oral round refactor is completed.
+
+from sqlalchemy import JSON
+
+
+class OralResponse(Base):
+    __tablename__ = "oral_responses"
+
+    id = Column(Integer, primary_key=True)
+    round_id = Column(Integer, ForeignKey("oral_rounds.id"), nullable=False)
+    content = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "round_id": self.round_id,
+            "content": self.content,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class RoundTranscript(Base):
+    __tablename__ = "round_transcripts"
+
+    id = Column(Integer, primary_key=True)
+    round_id = Column(Integer, ForeignKey("oral_rounds.id"), nullable=False)
+    transcript_data = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "round_id": self.round_id,
+            "transcript_data": self.transcript_data,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+# === RELATIONSHIP BINDING (post-definition to avoid registry issues) ===
+
+OralRound.transcripts = relationship(
+    "OralRoundTranscript",
+    back_populates="round",
+    cascade="all, delete-orphan"
+)

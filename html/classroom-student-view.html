@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classroom Session | LegalAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-bg: #0E0E10;
+      --secondary-bg: #151518;
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --accent-gold: #C6A75E;
+      --muted-gold: #9C8446;
+      --text-primary: #F5F5F5;
+      --text-secondary: #B8B8B8;
+      --danger: #C75C5C;
+      --success: #4CAF50;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--primary-bg);
+      color: var(--text-primary);
+      font-family: 'Inter', 'SF Pro', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    .main-nav {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+    }
+
+    /* Header */
+    .session-header {
+      background: linear-gradient(135deg, rgba(198, 167, 94, 0.15) 0%, rgba(156, 132, 70, 0.05) 100%);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1.5rem 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .session-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .role-petitioner { background: rgba(198, 167, 94, 0.15); color: var(--accent-gold); }
+    .role-respondent { background: rgba(199, 92, 92, 0.15); color: var(--danger); }
+    .role-observer { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 2rem;
+      padding: 2rem 0;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--accent-gold);
+    }
+
+    /* Timer */
+    .timer-display {
+      font-family: 'Playfair Display', serif;
+      font-size: 64px;
+      text-align: center;
+      color: var(--accent-gold);
+      text-shadow: 0 0 30px rgba(198, 167, 94, 0.3);
+      margin: 1rem 0;
+    }
+
+    .phase-indicator {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 1rem;
+    }
+
+    /* Argument Area */
+    .argument-section {
+      margin-top: 1.5rem;
+    }
+
+    .argument-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 16px;
+      resize: vertical;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .argument-textarea:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    .argument-textarea::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+
+    .argument-textarea:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .char-count {
+      text-align: right;
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 0.5rem;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 200ms ease;
+      margin-top: 1rem;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(198, 167, 94, 0.3);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Study Materials */
+    .material-item {
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+    }
+
+    .material-item h4 {
+      color: var(--accent-gold);
+      margin-bottom: 0.5rem;
+      font-size: 16px;
+    }
+
+    .material-item p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .articles-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .articles-list li {
+      padding: 0.5rem 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .articles-list li:last-child {
+      border-bottom: none;
+    }
+
+    /* Chat */
+    .chat-messages {
+      height: 200px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .chat-message {
+      padding: 0.75rem;
+      background: rgba(198, 167, 94, 0.1);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .chat-message .author {
+      color: var(--accent-gold);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-message .text {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+    }
+
+    .chat-input button {
+      padding: 0.75rem 1rem;
+      background: var(--accent-gold);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* Reconnection Banner */
+    .reconnect-banner {
+      display: none;
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(198, 167, 94, 0.2);
+      border: 1px solid var(--accent-gold);
+      border-radius: 8px;
+      padding: 1rem 2rem;
+      z-index: 1000;
+    }
+
+    .reconnect-banner.show {
+      display: block;
+      animation: slideDown 300ms ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translate(-50%, -20px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    /* Observer Notice */
+    .observer-notice {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .observer-notice p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .timer-display {
+        font-size: 48px;
+      }
+
+      .container {
+        padding: 0 1rem;
+      }
+
+      .card {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Reconnection Banner -->
+  <div class="reconnect-banner" id="reconnect-banner">
+    <span style="color: var(--accent-gold);">↻ Reconnected to session</span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span>⚖️</span>
+        <span>LegalAI</span>
+      </a>
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span>Connected</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Session Header -->
+  <header class="session-header">
+    <div class="container">
+      <div class="header-content">
+        <div>
+          <h1 class="session-title" id="session-topic">Loading session...</h1>
+          <div style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 14px;">
+            Session Code: <span id="session-code">JURIS-XXXX</span>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span class="role-badge" id="role-badge">Loading...</span>
+          <div style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 14px;" id="phase-display">
+            Phase: Preparing
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="main-grid">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Timer Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">⏱️ Session Timer</h2>
+          </div>
+          <div class="phase-indicator" id="phase-indicator">Preparing Phase</div>
+          <div class="timer-display" id="timer">15:00</div>
+          <p style="text-align: center; color: var(--text-secondary); font-size: 14px;">
+            Waiting for teacher to start the session
+          </p>
+        </div>
+
+        <!-- Argument Submission (hidden for observers) -->
+        <div class="card" id="argument-card">
+          <div class="card-header">
+            <h2 class="card-title">📝 Submit Your Argument</h2>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 1rem;">
+            Present your legal arguments with case citations and reasoning.
+          </p>
+          <textarea class="argument-textarea" id="argument-text" placeholder="Type your argument here..." maxlength="5000"></textarea>
+          <div class="char-count" id="char-count">0 / 5000 characters</div>
+          <button class="submit-btn" id="submit-btn" onclick="submitArgument()">
+            📤 Submit to Court
+          </button>
+        </div>
+
+        <!-- Observer Notice (shown only for observers) -->
+        <div class="observer-notice" id="observer-notice" style="display: none;">
+          <p>👁️ You are participating as an <strong>Observer</strong>. You can view the session but cannot submit arguments.</p>
+        </div>
+      </div>
+
+      <!-- Right Column (Sidebar) -->
+      <div class="right-column">
+        <!-- Study Materials -->
+        <div class="card" id="materials-card">
+          <div class="card-header">
+            <h2 class="card-title">📚 Study Materials</h2>
+          </div>
+          <div class="material-item">
+            <h4>📄 Case Brief</h4>
+            <p id="case-brief">Loading case details...</p>
+          </div>
+          <div class="material-item">
+            <h4>⚖️ Relevant Laws</h4>
+            <ul class="articles-list" id="articles-list">
+              <li>Loading...</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Chat -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">💬 Discussion</h2>
+          </div>
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-message">
+              <div class="author">System</div>
+              <div class="text">Welcome to the classroom session!</div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <input type="text" id="chat-input" placeholder="Type a message..." maxlength="200">
+            <button onclick="sendChat()">Send</button>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">⚡ Quick Actions</h2>
+          </div>
+          <button class="submit-btn" style="background: rgba(255,255,255,0.1);" onclick="leaveSession()">
+            🚪 Leave Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // State
+    let userRole = 'observer';
+    let currentPhase = 'preparing';
+    let timeRemaining = 900;
+    let timerInterval = null;
+    let canSubmitArguments = false;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check for session code in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionCode = urlParams.get('code') || localStorage.getItem('classroom_session_code');
+      
+      if (sessionCode) {
+        document.getElementById('session-code').textContent = sessionCode;
+        localStorage.setItem('classroom_session_code', sessionCode);
+      }
+
+      // Get role from localStorage or URL
+      userRole = localStorage.getItem('classroom_role') || urlParams.get('role') || 'observer';
+      updateRoleUI();
+
+      // Load session data
+      loadSessionData();
+
+      // Show reconnection banner if applicable
+      if (localStorage.getItem('classroom_reconnected')) {
+        document.getElementById('reconnect-banner').classList.add('show');
+        localStorage.removeItem('classroom_reconnected');
+        setTimeout(() => {
+          document.getElementById('reconnect-banner').classList.remove('show');
+        }, 3000);
+      }
+    });
+
+    function updateRoleUI() {
+      const badge = document.getElementById('role-badge');
+      badge.textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+      badge.className = `role-badge role-${userRole}`;
+
+      // Show/hide argument submission based on role
+      if (userRole === 'observer') {
+        document.getElementById('argument-card').style.display = 'none';
+        document.getElementById('observer-notice').style.display = 'block';
+        canSubmitArguments = false;
+      } else {
+        document.getElementById('argument-card').style.display = 'block';
+        document.getElementById('observer-notice').style.display = 'none';
+        canSubmitArguments = true;
+      }
+    }
+
+    // FIX 3: Load session data from backend with server-calculated timer
+    async function loadSessionData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('session_id');
+      const sessionCode = urlParams.get('code') || localStorage.getItem('classroom_session_code');
+      
+      if (!sessionId && !sessionCode) {
+        console.error('No session ID or code provided');
+        return;
+      }
+      
+      try {
+        // Fetch session state from backend (server-calculated remaining_time)
+        const endpoint = sessionId 
+          ? `/api/classroom/sessions/${sessionId}/state`
+          : `/api/classroom/sessions/by-code/${sessionCode}/state`;
+        
+        const response = await fetch(endpoint, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          }
+        });
+        
+        if (response.ok) {
+          const session = await response.json();
+          
+          // FIX 3: Use server-calculated remaining_time (survives refresh/restart)
+          if (session.remaining_time !== undefined) {
+            timeRemaining = session.remaining_time;
+            updateTimerDisplay();
+            
+            // Start countdown from server value
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+              if (timeRemaining > 0) {
+                timeRemaining--;
+                updateTimerDisplay();
+              } else {
+                clearInterval(timerInterval);
+                // Timer expired - backend handles auto-transition
+              }
+            }, 1000);
+          }
+          
+          // Update UI with session data
+          if (session.topic) {
+            document.getElementById('session-topic').textContent = session.topic;
+          }
+          if (session.current_state) {
+            currentPhase = session.current_state;
+            document.getElementById('phase-indicator').textContent = 
+              currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1) + ' Phase';
+          }
+          if (session.role) {
+            userRole = session.role;
+            updateRoleUI();
+          }
+          
+          // Update case materials
+          if (session.case_title) {
+            document.getElementById('case-brief').textContent = session.case_title;
+          }
+          
+          // Store for reconnection safety
+          localStorage.setItem('classroom_session', JSON.stringify(session));
+        } else {
+          // Session not found or error - redirect back
+          console.error('Failed to load session:', await response.text());
+          alert('Session not found or has ended. Redirecting...');
+          window.location.href = 'classroom-role-selection.html';
+        }
+      } catch (err) {
+        console.error('Error loading session:', err);
+        // Fallback to localStorage for demo/development
+        loadFromLocalStorage();
+      }
+    }
+    
+    // Fallback for demo purposes
+    function loadFromLocalStorage() {
+      const session = JSON.parse(localStorage.getItem('classroom_session') || '{}');
+      
+      if (session.topic) {
+        document.getElementById('session-topic').textContent = session.topic;
+      }
+      
+      if (session.remaining_time !== undefined) {
+        timeRemaining = session.remaining_time;
+        updateTimerDisplay();
+      } else if (session.prepTime) {
+        timeRemaining = session.prepTime * 60;
+        updateTimerDisplay();
+      }
+      
+      document.getElementById('case-brief').textContent = 
+        session.topic || 'Aadhaar biometric data collection challenge under Article 21';
+    }
+
+    // Timer
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      document.getElementById('timer').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Character count
+    document.getElementById('argument-text')?.addEventListener('input', function() {
+      const len = this.value.length;
+      document.getElementById('char-count').textContent = `${len} / 5000 characters`;
+    });
+
+    // Submit argument
+    function submitArgument() {
+      if (!canSubmitArguments) {
+        alert('Observers cannot submit arguments');
+        return;
+      }
+
+      const text = document.getElementById('argument-text').value.trim();
+      if (text.length < 10) {
+        alert('Argument too short. Please provide at least 10 characters.');
+        return;
+      }
+
+      // In production, send to API
+      console.log('Submitting argument:', { role: userRole, text: text });
+      
+      // Clear input
+      document.getElementById('argument-text').value = '';
+      document.getElementById('char-count').textContent = '0 / 5000 characters';
+      
+      alert('Argument submitted successfully!');
+    }
+
+    // Chat
+    function sendChat() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      
+      if (!text) return;
+
+      const messages = document.getElementById('chat-messages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'chat-message';
+      msgDiv.innerHTML = `
+        <div class="author">You (${userRole})</div>
+        <div class="text">${text}</div>
+      `;
+      messages.appendChild(msgDiv);
+      messages.scrollTop = messages.scrollHeight;
+
+      input.value = '';
+    }
+
+    // Leave session
+    function leaveSession() {
+      if (confirm('Are you sure you want to leave this session?')) {
+        localStorage.removeItem('classroom_session_code');
+        localStorage.removeItem('classroom_role');
+        window.location.href = 'classroom-role-selection.html';
+      }
+    }
+
+    // Handle page unload (disconnect tracking)
+    window.addEventListener('beforeunload', function() {
+      // In production, notify server of disconnect
+      // For now, just mark for reconnection detection
+      localStorage.setItem('classroom_last_disconnect', Date.now().toString());
+    });
+
+    // Check for reconnection on load
+    const lastDisconnect = localStorage.getItem('classroom_last_disconnect');
+    if (lastDisconnect && (Date.now() - parseInt(lastDisconnect)) < 60000) {
+      // Reconnected within 60 seconds
+      localStorage.setItem('classroom_reconnected', 'true');
+    }
+  </script>
+</body>
+</html>

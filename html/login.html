@@ -87,6 +87,37 @@
     <script src="../js/error-handler.js"></script>
     <script src="../js/login.js"></script>
     <script src="../js/storage-service.js"></script>
+    
+    <!-- Login Form Handler -->
+    <script>
+        // API Configuration - points to backend server
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? 'http://localhost:8000'
+          : ''; // Production: use relative URL
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Basic validation
+            if (!email || !password) {
+                alert('Please enter both email and password');
+                return;
+            }
+            
+            // Simulate authentication (replace with real auth API call)
+            // In production: const response = await fetch(`${API_BASE}/api/auth/login`, {...})
+            
+            // Store auth token
+            localStorage.setItem('auth_token', 'demo_token_' + Date.now());
+            localStorage.setItem('user_email', email);
+            
+            // Redirect to dashboard
+            window.location.href = 'dashboard-student.html';
+        });
+    </script>
 </body>
 
 </html>

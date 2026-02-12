@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Classroom Session | LegalAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-bg: #0E0E10;
+      --secondary-bg: #151518;
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --accent-gold: #C6A75E;
+      --muted-gold: #9C8446;
+      --text-primary: #F5F5F5;
+      --text-secondary: #B8B8B8;
+      --danger: #C75C5C;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #1a1a1d 0%, var(--primary-bg) 60%);
+      color: var(--text-primary);
+      font-family: 'Inter', 'SF Pro', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Navigation */
+    .main-nav {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 80px 0 40px;
+      text-align: center;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin-bottom: 1.5rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.125rem;
+      transition: all 300ms ease;
+    }
+
+    .back-link:hover {
+      color: var(--accent-gold);
+      transform: translateX(-4px);
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    /* Form Section */
+    .form-section {
+      padding: 40px 0 80px;
+    }
+
+    .form-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 40px;
+    }
+
+    .form-card::before {
+      content: '';
+      display: block;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      margin: -40px -40px 30px;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 16px;
+      transition: all 300ms ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* AI Judge Toggle */
+    .ai-judge-section {
+      background: rgba(198, 167, 94, 0.1);
+      border: 1px solid var(--accent-gold);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .ai-judge-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .ai-judge-header h3 {
+      font-family: 'Playfair Display', serif;
+      color: var(--accent-gold);
+      font-size: 18px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .toggle-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 300ms ease;
+    }
+
+    .toggle-option:hover,
+    .toggle-option.active {
+      border-color: var(--accent-gold);
+      background: rgba(198, 167, 94, 0.1);
+    }
+
+    .toggle-option input[type="radio"] {
+      accent-color: var(--accent-gold);
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      padding: 1.25rem;
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 200ms ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(198, 167, 94, 0.3);
+    }
+
+    /* Session Code Display */
+    .session-code-display {
+      display: none;
+      background: linear-gradient(135deg, rgba(198, 167, 94, 0.2) 0%, rgba(156, 132, 70, 0.1) 100%);
+      border: 2px solid var(--accent-gold);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .session-code-display.show {
+      display: block;
+      animation: fadeIn 500ms ease;
+    }
+
+    .session-code-label {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 0.5rem;
+    }
+
+    .session-code-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px;
+      letter-spacing: 4px;
+      color: var(--accent-gold);
+      margin: 1rem 0;
+    }
+
+    .session-code-instructions {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 1rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 32px;
+      }
+
+      .form-card {
+        padding: 30px 20px;
+      }
+
+      .form-card::before {
+        margin: -30px -20px 20px;
+      }
+
+      .container {
+        padding: 0 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span>⚖️</span>
+        <span>LegalAI</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <a href="classroom-role-selection.html" class="back-link">← Back to Role Selection</a>
+      <h1>Create Session</h1>
+      <p class="hero-subtitle">Set up your classroom moot court session</p>
+    </div>
+  </section>
+
+  <!-- Form Section -->
+  <section class="form-section">
+    <div class="container">
+      <div class="form-card">
+        <form id="create-session-form">
+          <!-- Topic -->
+          <div class="form-group">
+            <label class="form-label">Moot Topic</label>
+            <input type="text" class="form-input" id="topic" placeholder="e.g., Right to Privacy vs National Security" required>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" id="category">
+              <option value="constitutional">Constitutional Law</option>
+              <option value="criminal">Criminal Law</option>
+              <option value="cyber">Cyber Law</option>
+              <option value="civil">Civil Law</option>
+              <option value="corporate">Corporate Law</option>
+            </select>
+          </div>
+
+          <!-- Timer Settings -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Study Phase (minutes)</label>
+              <input type="number" class="form-input" id="prep-time" value="15" min="5" max="60">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Moot Phase (minutes)</label>
+              <input type="number" class="form-input" id="oral-time" value="10" min="5" max="60">
+            </div>
+          </div>
+
+          <!-- AI Judge -->
+          <div class="ai-judge-section">
+            <div class="ai-judge-header">
+              <span>🤖</span>
+              <h3>AI Judge Configuration</h3>
+            </div>
+            <div class="toggle-group">
+              <label class="toggle-option active">
+                <input type="radio" name="ai-judge" value="hybrid" checked>
+                <span>Hybrid (AI + Teacher)</span>
+              </label>
+              <label class="toggle-option">
+                <input type="radio" name="ai-judge" value="on">
+                <span>AI Only</span>
+              </label>
+              <label class="toggle-option">
+                <input type="radio" name="ai-judge" value="off">
+                <span>Teacher Only</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="submit-btn">Create Session →</button>
+        </form>
+
+        <!-- Session Code Display (hidden initially) -->
+        <div class="session-code-display" id="session-code-display">
+          <div class="session-code-label">SESSION CODE</div>
+          <div class="session-code-value" id="generated-code">JURIS-XXXX</div>
+          <div class="session-code-instructions">
+            Share this code with your students to join<br>
+            Maximum 40 participants allowed
+          </div>
+          <button class="submit-btn" style="margin-top: 1.5rem;" onclick="goToControlPanel()">
+            Go to Control Panel →
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Toggle selection
+    document.querySelectorAll('.toggle-option').forEach(option => {
+      option.addEventListener('click', function() {
+        document.querySelectorAll('.toggle-option').forEach(o => o.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Form submission
+    document.getElementById('create-session-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const topic = document.getElementById('topic').value.trim();
+      const category = document.getElementById('category').value;
+      const prepTime = document.getElementById('prep-time').value;
+      const oralTime = document.getElementById('oral-time').value;
+      const aiJudge = document.querySelector('input[name="ai-judge"]:checked').value;
+      
+      // Generate random session code
+      const code = 'JURIS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      // Store session data
+      const sessionData = {
+        code: code,
+        topic: topic,
+        category: category,
+        prepTime: prepTime,
+        oralTime: oralTime,
+        aiJudge: aiJudge,
+        createdAt: new Date().toISOString()
+      };
+      localStorage.setItem('teacher_session', JSON.stringify(sessionData));
+      
+      // Show session code
+      document.getElementById('generated-code').textContent = code;
+      document.getElementById('session-code-display').classList.add('show');
+      document.getElementById('create-session-form').style.display = 'none';
+      
+      // Log to console (replace with API call)
+      console.log('Creating session:', sessionData);
+    });
+
+    function goToControlPanel() {
+      window.location.href = 'classroom-control-panel.html';
+    }
+  </script>
+</body>
+</html>

@@ -10,6 +10,11 @@ from dotenv import load_dotenv
 
 # Import Base from orm.base to avoid circular imports
 from backend.orm.base import Base
+import backend.orm  # force load all models
+
+
+# Import all ORM models to ensure registry is complete
+import backend.orm  # ensures all models are registered
 
 load_dotenv()
 
