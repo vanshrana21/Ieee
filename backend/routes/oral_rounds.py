@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, desc
 
 from backend.database import get_db
-from backend.orm.oral_round import OralRound, OralResponse, BenchQuestion, RoundTranscript, RoundStage, RoundStatus
+from backend.orm.oral_round import OralRound, BenchQuestion, RoundTranscript, RoundStage, RoundStatus
 from backend.orm.moot_project import MootProject
 from backend.orm.user import User, UserRole
 from backend.rbac import get_current_user

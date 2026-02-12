@@ -1,471 +1,619 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classroom Mode - Virtual Courtroom</title>
-    <link rel="stylesheet" href="../css/dashboard.css">
-    <style>
-        .classroom-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .session-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .session-code {
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            margin: 16px 0;
-            font-family: monospace;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .status-created { background: #e3f2fd; color: #1565c0; }
-        .status-preparing { background: #fff3e0; color: #ef6c00; }
-        .status-study { background: #e8f5e9; color: #2e7d32; }
-        .status-moot { background: #ffebee; color: #c62828; animation: pulse 2s infinite; }
-        .status-scoring { background: #f3e5f5; color: #6a1b9a; }
-        .status-completed { background: #eceff1; color: #455a64; }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 24px;
-        }
-        
-        .courtroom-panel {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-        
-        .timer-display {
-            font-size: 72px;
-            font-weight: 700;
-            text-align: center;
-            color: #16213e;
-            font-family: monospace;
-            margin: 32px 0;
-        }
-        
-        .timer-controls {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .role-indicator {
-            display: flex;
-            justify-content: space-around;
-            margin: 24px 0;
-        }
-        
-        .role-card {
-            text-align: center;
-            padding: 20px 40px;
-            border-radius: 12px;
-            background: #f5f5f5;
-        }
-        
-        .role-card.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .argument-area {
-            margin-top: 24px;
-        }
-        
-        .argument-input {
-            width: 100%;
-            min-height: 150px;
-            padding: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 16px;
-            resize: vertical;
-        }
-        
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .sidebar-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-        
-        .participant-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .participant-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .participant-item:last-child {
-            border-bottom: none;
-        }
-        
-        .role-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .role-petitioner { background: #e3f2fd; color: #1565c0; }
-        .role-respondent { background: #ffebee; color: #c62828; }
-        .role-observer { background: #f5f5f5; color: #666; }
-        
-        .chat-messages {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
-        
-        .chat-input {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .chat-input input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        
-        .teacher-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .study-materials {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .material-item {
-            padding: 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-        
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classroom Mode - Virtual Courtroom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-bg: #0E0E10;
+      --secondary-bg: #151518;
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --accent-gold: #C6A75E;
+      --muted-gold: #9C8446;
+      --text-primary: #F5F5F5;
+      --text-secondary: #B8B8B8;
+      --danger: #C75C5C;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--primary-bg);
+      color: var(--text-primary);
+      font-family: 'Inter', 'SF Pro', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    .main-nav {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 300ms ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-gold);
+    }
+
+    /* Typography */
+    h1, h2, h3 {
+      font-family: 'Playfair Display', serif;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    .classroom-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Session Header */
+    .session-header {
+      background: linear-gradient(135deg, rgba(198, 167, 94, 0.1) 0%, rgba(156, 132, 70, 0.05) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .session-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+    }
+
+    .session-code {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      margin: 1rem 0;
+      font-family: 'Playfair Display', serif;
+      color: var(--accent-gold);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .status-preparing { color: var(--text-secondary); }
+    .status-moot { color: var(--accent-gold); animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Courtroom Panel */
+    .courtroom-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    .timer-display {
+      font-size: 72px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--accent-gold);
+      font-family: 'Playfair Display', serif;
+      margin: 2rem 0;
+      text-shadow: 0 0 30px rgba(198, 167, 94, 0.3);
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 300ms ease;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent-gold);
+    }
+
+    .btn.primary {
+      background: linear-gradient(90deg, var(--accent-gold) 0%, var(--muted-gold) 100%);
+      color: white;
+      border: none;
+    }
+
+    .btn.primary:hover {
+      box-shadow: 0 4px 15px rgba(198, 167, 94, 0.3);
+    }
+
+    .role-indicator {
+      display: flex;
+      justify-content: space-around;
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+    }
+
+    .role-card {
+      text-align: center;
+      padding: 1.5rem 2rem;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      transition: all 300ms ease;
+    }
+
+    .role-card.active {
+      background: linear-gradient(135deg, rgba(198, 167, 94, 0.2) 0%, rgba(156, 132, 70, 0.1) 100%);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 20px rgba(198, 167, 94, 0.15);
+    }
+
+    .argument-area {
+      margin-top: 2rem;
+    }
+
+    .argument-input {
+      width: 100%;
+      min-height: 150px;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 16px;
+      resize: vertical;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .argument-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .argument-input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .sidebar-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .sidebar-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: var(--accent-gold);
+    }
+
+    .participant-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .participant-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    .participant-item:last-child {
+      border-bottom: none;
+    }
+
+    .role-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(198, 167, 94, 0.15);
+      color: var(--accent-gold);
+    }
+
+    .material-item {
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .material-item strong {
+      color: var(--text-primary);
+    }
+
+    .chat-messages {
+      height: 200px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+    }
+
+    .teacher-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    #ai-feedback {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--accent-gold);
+    }
+  </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="main-nav">
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <span class="logo-icon">⚖️</span>
-                <span class="logo-text">LegalAI</span>
-            </a>
-            <div class="nav-links">
-                <a href="dashboard-student.html">Dashboard</a>
-                <a href="live-competitions.html">Live Competitions</a>
-            </div>
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span>⚖️</span>
+        <span>LegalAI</span>
+      </a>
+      <div class="nav-links">
+        <a href="dashboard-student.html">Dashboard</a>
+        <a href="live-competitions.html">Live Competitions</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="classroom-container">
+    <!-- Session Header -->
+    <div class="session-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1 style="font-size: 2rem;">🏫 Classroom Moot Arena</h1>
+          <p id="session-topic" style="color: var(--text-secondary); margin-top: 0.5rem;">Topic: Right to Privacy vs National Security</p>
         </div>
-    </nav>
-
-    <div class="classroom-container">
-        <!-- Session Header -->
-        <div class="session-header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1>🏫 Classroom Moot Arena</h1>
-                    <p id="session-topic">Topic: Right to Privacy vs National Security</p>
-                </div>
-                <div style="text-align: right;">
-                    <span class="status-badge status-preparing" id="session-status">Preparing</span>
-                </div>
-            </div>
-            
-            <div style="margin-top: 24px;">
-                <p style="opacity: 0.9; font-size: 14px;">SESSION CODE</p>
-                <div class="session-code" id="session-code">JURIS-7421</div>
-                <p style="opacity: 0.8; font-size: 14px;">Share this code with students to join</p>
-            </div>
+        <div style="text-align: right;">
+          <span class="status-badge status-preparing" id="session-status">Preparing</span>
         </div>
-
-        <div class="main-grid">
-            <!-- Main Courtroom Panel -->
-            <div class="courtroom-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>⚖️ Virtual Courtroom</h2>
-                    <div id="current-phase">Phase: Preparation</div>
-                </div>
-
-                <!-- Timer -->
-                <div class="timer-display" id="timer">30:00</div>
-                
-                <!-- Timer Controls (Teacher Only) -->
-                <div class="timer-controls" id="timer-controls" style="display: none;">
-                    <button class="btn primary" id="start-timer">▶️ Start</button>
-                    <button class="btn secondary" id="pause-timer">⏸️ Pause</button>
-                    <button class="btn secondary" id="reset-timer">🔄 Reset</button>
-                    <button class="btn danger" id="end-phase">⏭️ End Phase</button>
-                </div>
-
-                <!-- Role Indicators -->
-                <div class="role-indicator">
-                    <div class="role-card active" id="petitioner-card">
-                        <div style="font-size: 32px;">👔</div>
-                        <div style="font-weight: 600;">PETITIONER</div>
-                        <div style="font-size: 14px; opacity: 0.8;" id="petitioner-name">Team Alpha</div>
-                    </div>
-                    <div style="font-size: 24px; color: #999;">VS</div>
-                    <div class="role-card" id="respondent-card">
-                        <div style="font-size: 32px;">👔</div>
-                        <div style="font-weight: 600;">RESPONDENT</div>
-                        <div style="font-size: 14px; opacity: 0.8;" id="respondent-name">Team Beta</div>
-                    </div>
-                </div>
-
-                <!-- Argument Area -->
-                <div class="argument-area">
-                    <h3>📝 Submit Your Argument</h3>
-                    <textarea class="argument-input" id="argument-text" placeholder="Present your legal arguments here... Include relevant case citations, constitutional provisions, and logical reasoning."></textarea>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                        <span id="char-count">0/5000 characters</span>
-                        <button class="btn primary" id="submit-argument">📤 Submit Argument</button>
-                    </div>
-                </div>
-
-                <!-- Arguments History -->
-                <div style="margin-top: 32px;">
-                    <h3>📜 Arguments Log</h3>
-                    <div id="arguments-log" style="max-height: 300px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">
-                        <p style="color: #999; text-align: center;">No arguments submitted yet</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- Participants -->
-                <div class="sidebar-card">
-                    <h3>👥 Participants (<span id="participant-count">0</span>)</h3>
-                    <ul class="participant-list" id="participant-list">
-                        <li class="participant-item">
-                            <span>👨‍⚖️</span>
-                            <span>Teacher</span>
-                            <span class="role-badge role-observer">Host</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Study Materials -->
-                <div class="sidebar-card" id="study-materials-card">
-                    <h3>📚 Study Materials</h3>
-                    <div class="study-materials">
-                        <div class="material-item">
-                            <strong>📄 Case Brief</strong>
-                            <p style="font-size: 14px; color: #666; margin: 4px 0;">Privacy v. State of India</p>
-                        </div>
-                        <div class="material-item">
-                            <strong>⚖️ Relevant Laws</strong>
-                            <p style="font-size: 14px; color: #666; margin: 4px 0;">Article 21, IT Act 2000</p>
-                        </div>
-                        <div class="material-item">
-                            <strong>📊 Precedents</strong>
-                            <p style="font-size: 14px; color: #666; margin: 4px 0;">Puttaswamy, Maneka Gandhi</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chat -->
-                <div class="sidebar-card">
-                    <h3>💬 Discussion</h3>
-                    <div class="chat-messages" id="chat-messages">
-                        <p style="color: #999; font-size: 14px;">Welcome to the classroom session!</p>
-                    </div>
-                    <div class="chat-input">
-                        <input type="text" id="chat-message" placeholder="Type a message...">
-                        <button class="btn primary" id="send-chat">Send</button>
-                    </div>
-                </div>
-
-                <!-- Teacher Controls -->
-                <div class="sidebar-card" id="teacher-controls-card" style="display: none;">
-                    <h3>🎛️ Teacher Controls</h3>
-                    <div class="teacher-controls">
-                        <button class="btn primary" id="start-study">📖 Start Study Phase</button>
-                        <button class="btn primary" id="start-moot">⚖️ Start Moot</button>
-                        <button class="btn secondary" id="assign-roles">🎭 Assign Roles</button>
-                        <button class="btn danger" id="end-session">🚪 End Session</button>
-                    </div>
-                </div>
-
-                <!-- AI Judge Panel -->
-                <div class="sidebar-card" id="ai-judge-card">
-                    <h3>🤖 AI Judge</h3>
-                    <p style="font-size: 14px; color: #666; margin-bottom: 12px;">AI Judge is enabled for this session</p>
-                    <div id="ai-feedback" style="background: #f5f5f5; padding: 12px; border-radius: 8px; font-size: 14px;">
-                        Waiting for arguments...
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
+      
+      <div style="margin-top: 1.5rem;">
+        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 0.5rem;">SESSION CODE</p>
+        <div class="session-code" id="session-code">JURIS-7421</div>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 0.5rem;">Share this code with students to join</p>
+      </div>
     </div>
 
-    <script>
-        // Get session ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('session_id') || '1';
-        const sessionCode = urlParams.get('code') || 'JURIS-7421';
+    <div class="main-grid">
+      <!-- Main Courtroom Panel -->
+      <div class="courtroom-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="font-size: 1.5rem;">⚖️ Virtual Courtroom</h2>
+          <div id="current-phase" style="color: var(--text-secondary);">Phase: Preparation</div>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-display" id="timer">30:00</div>
         
-        // State
-        let currentState = 'preparing';
-        let isTeacher = false; // Will be determined by auth
-        let timeRemaining = 1800; // 30 minutes in seconds
-        let timerInterval = null;
-        
-        // DOM elements
-        const sessionCodeEl = document.getElementById('session-code');
-        const sessionStatusEl = document.getElementById('session-status');
-        const timerEl = document.getElementById('timer');
-        const timerControls = document.getElementById('timer-controls');
-        const teacherControls = document.getElementById('teacher-controls-card');
-        const argumentText = document.getElementById('argument-text');
-        const charCount = document.getElementById('char-count');
-        
-        // Initialize
-        sessionCodeEl.textContent = sessionCode;
-        
-        // Check if teacher (placeholder - replace with actual auth)
-        function checkRole() {
-            // TODO: Check user role from auth
-            isTeacher = true; // Placeholder
-            if (isTeacher) {
-                timerControls.style.display = 'flex';
-                teacherControls.style.display = 'block';
-            }
+        <!-- Timer Controls (Teacher Only) -->
+        <div class="timer-controls" id="timer-controls" style="display: none;">
+          <button class="btn primary" id="start-timer">▶️ Start</button>
+          <button class="btn" id="pause-timer">⏸️ Pause</button>
+          <button class="btn" id="reset-timer">🔄 Reset</button>
+        </div>
+
+        <!-- Role Indicators -->
+        <div class="role-indicator">
+          <div class="role-card active" id="petitioner-card">
+            <div style="font-size: 24px; margin-bottom: 0.5rem;">👔</div>
+            <div style="font-weight: 600;">PETITIONER</div>
+            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 0.25rem;" id="petitioner-name">Team Alpha</div>
+          </div>
+          <div style="font-size: 20px; color: var(--text-secondary);">VS</div>
+          <div class="role-card" id="respondent-card">
+            <div style="font-size: 24px; margin-bottom: 0.5rem;">👔</div>
+            <div style="font-weight: 600;">RESPONDENT</div>
+            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 0.25rem;" id="respondent-name">Team Beta</div>
+          </div>
+        </div>
+
+        <!-- Argument Area -->
+        <div class="argument-area">
+          <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent-gold);">📝 Submit Your Argument</h3>
+          <textarea class="argument-input" id="argument-text" placeholder="Present your legal arguments here... Include relevant case citations, constitutional provisions, and logical reasoning."></textarea>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+            <span id="char-count" style="color: var(--text-secondary); font-size: 14px;">0/5000 characters</span>
+            <button class="btn primary" id="submit-argument">📤 Submit Argument</button>
+          </div>
+        </div>
+
+        <!-- Arguments History -->
+        <div style="margin-top: 2rem;">
+          <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent-gold);">📜 Arguments Log</h3>
+          <div id="arguments-log" style="max-height: 200px; overflow-y: auto; background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 1rem;">
+            <p style="color: var(--text-secondary); text-align: center;">No arguments submitted yet</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Participants -->
+        <div class="sidebar-card">
+          <h3>👥 Participants (<span id="participant-count">0</span>)</h3>
+          <ul class="participant-list" id="participant-list">
+            <li class="participant-item">
+              <span>👨‍⚖️</span>
+              <span>Teacher</span>
+              <span class="role-badge">Host</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Study Materials -->
+        <div class="sidebar-card" id="study-materials-card">
+          <h3>📚 Study Materials</h3>
+          <div class="study-materials">
+            <div class="material-item">
+              <strong>📄 Case Brief</strong>
+              <p style="font-size: 14px; margin-top: 0.25rem;">Privacy v. State of India</p>
+            </div>
+            <div class="material-item">
+              <strong>⚖️ Relevant Laws</strong>
+              <p style="font-size: 14px; margin-top: 0.25rem;">Article 21, IT Act 2000</p>
+            </div>
+            <div class="material-item">
+              <strong>📊 Precedents</strong>
+              <p style="font-size: 14px; margin-top: 0.25rem;">Puttaswamy, Maneka Gandhi</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat -->
+        <div class="sidebar-card">
+          <h3>💬 Discussion</h3>
+          <div class="chat-messages" id="chat-messages">
+            <p>Welcome to the classroom session!</p>
+          </div>
+          <div class="chat-input">
+            <input type="text" id="chat-message" placeholder="Type a message...">
+            <button class="btn primary" id="send-chat">Send</button>
+          </div>
+        </div>
+
+        <!-- Teacher Controls -->
+        <div class="sidebar-card" id="teacher-controls-card" style="display: none;">
+          <h3>🎛️ Teacher Controls</h3>
+          <div class="teacher-controls">
+            <button class="btn primary" id="start-study">📖 Start Study Phase</button>
+            <button class="btn primary" id="start-moot">⚖️ Start Moot</button>
+            <button class="btn" id="assign-roles">🎭 Assign Roles</button>
+          </div>
+        </div>
+
+        <!-- AI Judge Panel -->
+        <div class="sidebar-card" id="ai-judge-card">
+          <h3>🤖 AI Judge</h3>
+          <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 1rem;">AI Judge is enabled for this session</p>
+          <div id="ai-feedback">Waiting for arguments...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get session ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id') || '1';
+    const sessionCode = urlParams.get('code') || 'JURIS-7421';
+    
+    // State
+    let currentState = 'preparing';
+    let isTeacher = false;
+    let timeRemaining = 1800;
+    let timerInterval = null;
+    
+    // DOM elements
+    const sessionCodeEl = document.getElementById('session-code');
+    const sessionStatusEl = document.getElementById('session-status');
+    const timerEl = document.getElementById('timer');
+    const timerControls = document.getElementById('timer-controls');
+    const teacherControls = document.getElementById('teacher-controls-card');
+    const argumentText = document.getElementById('argument-text');
+    const charCount = document.getElementById('char-count');
+    
+    // Initialize
+    sessionCodeEl.textContent = sessionCode;
+    
+    // Check if teacher (placeholder)
+    function checkRole() {
+      isTeacher = true;
+      if (isTeacher) {
+        timerControls.style.display = 'flex';
+        teacherControls.style.display = 'block';
+      }
+    }
+    
+    checkRole();
+    
+    // Timer functions
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (timeRemaining > 0) {
+          timeRemaining--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          alert('Time is up!');
         }
-        
-        checkRole();
-        
-        // Timer functions
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-        
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if (timeRemaining > 0) {
-                    timeRemaining--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    // Timer expired
-                    alert('Time is up!');
-                }
-            }, 1000);
-        }
-        
-        function pauseTimer() {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-        }
-        
-        function resetTimer() {
-            pauseTimer();
-            timeRemaining = 1800;
-            updateTimerDisplay();
-        }
-        
-        // Event listeners
-        document.getElementById('start-timer')?.addEventListener('click', startTimer);
-        document.getElementById('pause-timer')?.addEventListener('click', pauseTimer);
-        document.getElementById('reset-timer')?.addEventListener('click', resetTimer);
-        
-        // Character count
-        argumentText?.addEventListener('input', () => {
-            const len = argumentText.value.length;
-            charCount.textContent = `${len}/5000 characters`;
-        });
-        
-        // Submit argument
-        document.getElementById('submit-argument')?.addEventListener('click', () => {
-            const text = argumentText.value.trim();
-            if (text.length < 10) {
-                alert('Argument too short. Minimum 10 characters.');
-                return;
-            }
-            // TODO: Submit via WebSocket
-            console.log('Submitting argument:', text);
-            argumentText.value = '';
-            charCount.textContent = '0/5000 characters';
-        });
-        
-        // Chat
-        document.getElementById('send-chat')?.addEventListener('click', () => {
-            const input = document.getElementById('chat-message');
-            const message = input.value.trim();
-            if (message) {
-                const chatMessages = document.getElementById('chat-messages');
-                const msgEl = document.createElement('div');
-                msgEl.style.cssText = 'margin-bottom: 8px; padding: 8px; background: #e3f2fd; border-radius: 8px;';
-                msgEl.innerHTML = `<strong>You:</strong> ${message}`;
-                chatMessages.appendChild(msgEl);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                input.value = '';
-            }
-        });
-        
-        // Initialize display
-        updateTimerDisplay();
-        
-        console.log('Classroom Mode initialized. Session:', sessionId);
-    </script>
+      }, 1000);
+    }
+    
+    function pauseTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+    
+    function resetTimer() {
+      pauseTimer();
+      timeRemaining = 1800;
+      updateTimerDisplay();
+    }
+    
+    // Event listeners
+    document.getElementById('start-timer')?.addEventListener('click', startTimer);
+    document.getElementById('pause-timer')?.addEventListener('click', pauseTimer);
+    document.getElementById('reset-timer')?.addEventListener('click', resetTimer);
+    
+    // Character count
+    argumentText?.addEventListener('input', () => {
+      const len = argumentText.value.length;
+      charCount.textContent = `${len}/5000 characters`;
+    });
+    
+    // Submit argument
+    document.getElementById('submit-argument')?.addEventListener('click', () => {
+      const text = argumentText.value.trim();
+      if (text.length < 10) {
+        alert('Argument too short. Minimum 10 characters.');
+        return;
+      }
+      console.log('Submitting argument:', text);
+      argumentText.value = '';
+      charCount.textContent = '0/5000 characters';
+    });
+    
+    // Chat
+    document.getElementById('send-chat')?.addEventListener('click', () => {
+      const input = document.getElementById('chat-message');
+      const message = input.value.trim();
+      if (message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const msgEl = document.createElement('div');
+        msgEl.style.cssText = 'margin-bottom: 8px; padding: 8px; background: rgba(198, 167, 94, 0.1); border-radius: 8px;';
+        msgEl.innerHTML = `<strong>You:</strong> ${message}`;
+        chatMessages.appendChild(msgEl);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        input.value = '';
+      }
+    });
+    
+    // Initialize display
+    updateTimerDisplay();
+    
+    console.log('Classroom Mode initialized. Session:', sessionId);
+  </script>
 </body>
 </html>

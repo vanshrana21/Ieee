@@ -168,12 +168,20 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
+// API Configuration - points to backend server
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : ''; // Production: use relative URL
+
 async function loadAdminCompetitions() {
     const token = getAuthToken();
     if (!token) return;
     
     try {
-        const response = await fetch('/api/competitions', {
+        const url = `${API_BASE}/api/competitions`;
+        console.log('Calling:', url);
+        
+        const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
