@@ -202,7 +202,7 @@ class BulkUploadService:
                 name=name,
                 hashed_password=get_password_hash(temp_password),
                 institution_id=institution_id,
-                role=UserRole.STUDENT,
+                role=UserRole.student,
                 is_active=True
             )
             

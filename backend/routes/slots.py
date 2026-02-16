@@ -206,7 +206,7 @@ async def generate_slots_bulk_endpoint(
     Admin+ only.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Verify competition access
@@ -218,7 +218,7 @@ async def generate_slots_bulk_endpoint(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Generate slots
@@ -284,7 +284,7 @@ async def create_slot(
     Create a single time slot.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Verify competition
@@ -296,7 +296,7 @@ async def create_slot(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check for conflicts
@@ -361,7 +361,7 @@ async def get_slot_calendar(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Get slots in date range
@@ -416,7 +416,7 @@ async def list_available_slots(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     slots = await get_available_slots(
@@ -476,11 +476,11 @@ async def book_slot(
         raise HTTPException(status_code=404, detail="Team not found")
     
     # Check permissions
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         # Must be team member
         if current_user.id not in [m.id for m in team.members]:
             raise HTTPException(status_code=403, detail="You are not a member of this team")
-    elif current_user.role in [UserRole.ADMIN, UserRole.FACULTY]:
+    elif current_user.role in [UserRole.teacher, UserRole.teacher]:
         # Must be same institution
         if current_user.institution_id != slot.institution_id:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -549,7 +549,7 @@ async def cancel_booking(
         raise HTTPException(status_code=400, detail="Slot is not booked")
     
     # Check permissions
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         # Must be booked by their team
         team_result = await db.execute(
             select(Team).where(Team.id == slot.booked_by_team_id)
@@ -557,7 +557,7 @@ async def cancel_booking(
         team = team_result.scalar_one_or_none()
         if not team or current_user.id not in [m.id for m in team.members]:
             raise HTTPException(status_code=403, detail="You can only cancel your own team's booking")
-    elif current_user.role in [UserRole.ADMIN, UserRole.FACULTY]:
+    elif current_user.role in [UserRole.teacher, UserRole.teacher]:
         if current_user.institution_id != slot.institution_id:
             raise HTTPException(status_code=403, detail="Access denied")
     
@@ -608,7 +608,7 @@ async def list_slots(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query

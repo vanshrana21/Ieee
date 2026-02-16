@@ -131,7 +131,7 @@ def check_scheduling_enabled():
 async def create_courtroom(
     request: CreateCourtroomRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Create a new courtroom for a tournament.
@@ -204,7 +204,7 @@ async def list_courtrooms(
 async def create_schedule_day(
     request: CreateScheduleDayRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Create a new schedule day.
@@ -276,7 +276,7 @@ async def get_schedule_day(
 async def lock_schedule_day(
     schedule_day_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Lock a schedule day (DRAFT → LOCKED).
@@ -319,7 +319,7 @@ async def lock_schedule_day(
 async def freeze_schedule_day(
     schedule_day_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Freeze a schedule day (LOCKED → FROZEN).
@@ -404,7 +404,7 @@ async def add_time_slot(
     schedule_day_id: UUID,
     request: CreateTimeSlotRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Add a time slot to a schedule day.
@@ -455,7 +455,7 @@ async def add_time_slot(
 async def assign_match(
     request: AssignMatchRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Assign a match to a courtroom, time slot, and optionally a judge.
@@ -590,7 +590,7 @@ async def get_match_assignment(
 async def confirm_assignment(
     assignment_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Confirm a match assignment (ASSIGNED → CONFIRMED).

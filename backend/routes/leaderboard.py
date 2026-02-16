@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/sessions", tags=["leaderboard"])
 
 def _is_faculty(user: User) -> bool:
     """Check if user has faculty or admin role."""
-    return user.role in (UserRole.FACULTY, UserRole.ADMIN)
+    return user.role in (UserRole.teacher, UserRole.teacher)
 
 
 def _make_error_response(error: str, message: str, details: Optional[dict] = None) -> dict:
@@ -321,7 +321,7 @@ async def verify_leaderboard_integrity(
         Integrity status with detailed verification results
     """
     # Verify admin authorization
-    if current_user.role != UserRole.ADMIN:
+    if current_user.role != UserRole.teacher:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=_make_error_response("FORBIDDEN", "Only admins can verify leaderboard integrity")

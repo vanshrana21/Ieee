@@ -12,12 +12,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class UserRole(str, Enum):
-    """User roles in the courtroom system."""
+class CourtroomRole(str, Enum):
+    """Participant roles in the courtroom simulation system.
+    
+    These are distinct from UserRole (teacher/student) and represent
+    a user's role within a specific courtroom session.
+    """
     JUDGE = "judge"
     PETITIONER = "petitioner"
     RESPONDENT = "respondent"
-    ADMIN = "admin"
     OBSERVER = "observer"
 
 
@@ -55,53 +58,53 @@ class CourtroomAction(str, Enum):
 
 
 # Permission matrix: action -> allowed roles
-PERMISSION_MATRIX: Dict[CourtroomAction, Set[UserRole]] = {
-    # Timer controls - Judges and Admins only
-    CourtroomAction.START_TIMER: {UserRole.JUDGE, UserRole.ADMIN},
-    CourtroomAction.PAUSE_TIMER: {UserRole.JUDGE, UserRole.ADMIN},
-    CourtroomAction.RESUME_TIMER: {UserRole.JUDGE, UserRole.ADMIN},
-    CourtroomAction.RESET_TIMER: {UserRole.JUDGE, UserRole.ADMIN},
+PERMISSION_MATRIX: Dict[CourtroomAction, Set[CourtroomRole]] = {
+    # Timer controls - Judges only (teachers in the system)
+    CourtroomAction.START_TIMER: {CourtroomRole.JUDGE},
+    CourtroomAction.PAUSE_TIMER: {CourtroomRole.JUDGE},
+    CourtroomAction.RESUME_TIMER: {CourtroomRole.JUDGE},
+    CourtroomAction.RESET_TIMER: {CourtroomRole.JUDGE},
     
     # Objections - Teams raise, Judges rule
-    CourtroomAction.RAISE_OBJECTION: {UserRole.PETITIONER, UserRole.RESPONDENT},
-    CourtroomAction.RULE_ON_OBJECTION: {UserRole.JUDGE, UserRole.ADMIN},
+    CourtroomAction.RAISE_OBJECTION: {CourtroomRole.PETITIONER, CourtroomRole.RESPONDENT},
+    CourtroomAction.RULE_ON_OBJECTION: {CourtroomRole.JUDGE},
     
-    # Scoring - Judges and Admins only
-    CourtroomAction.SUBMIT_SCORE: {UserRole.JUDGE, UserRole.ADMIN},
-    CourtroomAction.VIEW_DRAFT_SCORES: {UserRole.JUDGE, UserRole.ADMIN},
+    # Scoring - Judges only
+    CourtroomAction.SUBMIT_SCORE: {CourtroomRole.JUDGE},
+    CourtroomAction.VIEW_DRAFT_SCORES: {CourtroomRole.JUDGE},
     CourtroomAction.VIEW_SUBMITTED_SCORES: {
-        UserRole.JUDGE, UserRole.ADMIN, 
-        UserRole.PETITIONER, UserRole.RESPONDENT
+        CourtroomRole.JUDGE, 
+        CourtroomRole.PETITIONER, CourtroomRole.RESPONDENT
     },
     
     # Recording - All participants
     CourtroomAction.START_RECORDING: {
-        UserRole.JUDGE, UserRole.PETITIONER, 
-        UserRole.RESPONDENT, UserRole.ADMIN
+        CourtroomRole.JUDGE, CourtroomRole.PETITIONER, 
+        CourtroomRole.RESPONDENT
     },
     CourtroomAction.STOP_RECORDING: {
-        UserRole.JUDGE, UserRole.PETITIONER, 
-        UserRole.RESPONDENT, UserRole.ADMIN
+        CourtroomRole.JUDGE, CourtroomRole.PETITIONER, 
+        CourtroomRole.RESPONDENT
     },
     
     # Transcripts - Judges control, all view live
-    CourtroomAction.FINALIZE_TRANSCRIPT: {UserRole.JUDGE, UserRole.ADMIN},
+    CourtroomAction.FINALIZE_TRANSCRIPT: {CourtroomRole.JUDGE},
     CourtroomAction.VIEW_LIVE_TRANSCRIPT: {
-        UserRole.JUDGE, UserRole.ADMIN,
-        UserRole.PETITIONER, UserRole.RESPONDENT,
-        UserRole.OBSERVER
+        CourtroomRole.JUDGE,
+        CourtroomRole.PETITIONER, CourtroomRole.RESPONDENT,
+        CourtroomRole.OBSERVER
     },
     
     # AI Opponent - Team captains only (simplified: team members)
-    CourtroomAction.ENABLE_AI_OPPONENT: {UserRole.PETITIONER, UserRole.RESPONDENT},
+    CourtroomAction.ENABLE_AI_OPPONENT: {CourtroomRole.PETITIONER, CourtroomRole.RESPONDENT},
     
-    # Round management - Judges and Admins only
-    CourtroomAction.CHANGE_SPEAKER: {UserRole.JUDGE, UserRole.ADMIN},
-    CourtroomAction.COMPLETE_ROUND: {UserRole.JUDGE, UserRole.ADMIN},
+    # Round management - Judges only
+    CourtroomAction.CHANGE_SPEAKER: {CourtroomRole.JUDGE},
+    CourtroomAction.COMPLETE_ROUND: {CourtroomRole.JUDGE},
 }
 
 
-def has_permission(user_role: UserRole, action: CourtroomAction) -> bool:
+def has_permission(user_role: CourtroomRole, action: CourtroomAction) -> bool:
     """
     Check if a user role has permission to perform an action.
     
@@ -118,7 +121,7 @@ def has_permission(user_role: UserRole, action: CourtroomAction) -> bool:
 
 def can_perform_action(
     user_id: int,
-    user_role: UserRole,
+    user_role: CourtroomRole,
     action: CourtroomAction,
     round_id: int,
     round_data: Optional[dict] = None
@@ -147,18 +150,18 @@ def can_perform_action(
     # Round-specific checks
     if round_data:
         # Judges must be assigned to round
-        if user_role == UserRole.JUDGE:
+        if user_role == CourtroomRole.JUDGE:
             presiding = round_data.get("presiding_judge_id")
             co_judges = round_data.get("co_judges_ids", [])
             if user_id != presiding and user_id not in co_judges:
                 return False
         
         # Teams must match their side
-        if user_role == UserRole.PETITIONER:
+        if user_role == CourtroomRole.PETITIONER:
             if user_id != round_data.get("petitioner_team_id"):
                 return False
         
-        if user_role == UserRole.RESPONDENT:
+        if user_role == CourtroomRole.RESPONDENT:
             if user_id != round_data.get("respondent_team_id"):
                 return False
     

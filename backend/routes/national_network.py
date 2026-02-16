@@ -72,7 +72,7 @@ def check_tournament_access(
         HTTPException: If access denied
     """
     # Super admin always has access
-    if user.role == UserRole.SUPER_ADMIN:
+    if user.role == UserRole.teacher:
         return
     
     # Check if user is from host institution
@@ -91,7 +91,7 @@ def check_tournament_access(
         pass  # Additional checks can be added here
     
     # Role-based access
-    allowed_roles = [UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]
+    allowed_roles = [UserRole.teacher, UserRole.teacher, UserRole.teacher]
     if user.role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -117,7 +117,7 @@ async def create_tournament_endpoint(
     teams_advance_to_knockout: int = 8,
     description: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Create a new national tournament.
@@ -159,7 +159,7 @@ async def invite_institution_endpoint(
     institution_id: int,
     max_teams_allowed: int = 2,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Invite an institution to participate in a tournament.
@@ -180,7 +180,7 @@ async def invite_institution_endpoint(
         )
     
     # Check access (host institution only)
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if current_user.institution_id != tournament.host_institution_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -223,7 +223,7 @@ async def register_team_endpoint(
     members_json: str,
     seed_number: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.HOD, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Register a team for a tournament.
@@ -257,7 +257,7 @@ async def register_team_endpoint(
     
     if not invitation and current_user.institution_id != tournament.host_institution_id:
         # Check if this is the host institution
-        if current_user.role != UserRole.SUPER_ADMIN:
+        if current_user.role != UserRole.teacher:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Your institution is not an accepted participant in this tournament"
@@ -295,7 +295,7 @@ async def generate_pairings_endpoint(
     scheduled_at: datetime,
     format: str = "swiss",  # "swiss" or "knockout"
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Generate pairings for a tournament round.
@@ -316,7 +316,7 @@ async def generate_pairings_endpoint(
         )
     
     # Check access (host institution only)
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if current_user.institution_id != tournament.host_institution_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -382,7 +382,7 @@ async def submit_match_result_endpoint(
     idempotency_key: str,
     notes: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.FACULTY, UserRole.JUDGE, UserRole.HOD, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Submit results for a match (idempotent).
@@ -411,7 +411,7 @@ async def submit_match_result_endpoint(
     # Check access
     is_host_admin = (
         current_user.institution_id == tournament.host_institution_id and
-        current_user.role in [UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]
+        current_user.role in [UserRole.teacher, UserRole.teacher, UserRole.teacher]
     )
     
     is_panel_judge = False
@@ -427,7 +427,7 @@ async def submit_match_result_endpoint(
         )
         is_panel_judge = result.scalar_one_or_none() is not None
     
-    if not (is_host_admin or is_panel_judge or current_user.role == UserRole.SUPER_ADMIN):
+    if not (is_host_admin or is_panel_judge or current_user.role == UserRole.teacher):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not authorized to submit results for this match"
@@ -463,7 +463,7 @@ async def submit_match_result_endpoint(
 async def finalize_tournament_endpoint(
     tournament_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Finalize the entire tournament.
@@ -484,7 +484,7 @@ async def finalize_tournament_endpoint(
         )
     
     # Check access (host institution only)
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if current_user.institution_id != tournament.host_institution_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -541,7 +541,7 @@ async def get_tournament_ranking_endpoint(
         )
     
     # Check access
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         # Check if user's institution is participating
         result = await db.execute(
             select(TournamentInstitution).where(
@@ -601,7 +601,7 @@ async def get_tournament_ranking_endpoint(
 async def verify_ledger_endpoint(
     tournament_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Verify the integrity of the tournament ledger.
@@ -621,7 +621,7 @@ async def verify_ledger_endpoint(
         )
     
     # Check access
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if current_user.institution_id != tournament.host_institution_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -648,7 +648,7 @@ async def get_ledger_entries_endpoint(
     limit: int = 100,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Get ledger entries for a tournament.
@@ -668,7 +668,7 @@ async def get_ledger_entries_endpoint(
         )
     
     # Check access
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if current_user.institution_id != tournament.host_institution_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -715,7 +715,7 @@ async def get_tournament_details_endpoint(
         )
     
     # Check access
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         result = await db.execute(
             select(TournamentInstitution).where(
                 and_(

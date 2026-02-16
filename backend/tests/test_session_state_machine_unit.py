@@ -57,7 +57,7 @@ async def faculty_user(db_session: AsyncSession) -> User:
         email="faculty@test.com",
         full_name="Test Faculty",
         hashed_password="hashed",
-        role=UserRole.FACULTY,
+        role=UserRole.teacher,
         is_active=True
     )
     db_session.add(user)
@@ -73,7 +73,7 @@ async def student_user(db_session: AsyncSession) -> User:
         email="student@test.com",
         full_name="Test Student",
         hashed_password="hashed",
-        role=UserRole.STUDENT,
+        role=UserRole.student,
         is_active=True
     )
     db_session.add(user)

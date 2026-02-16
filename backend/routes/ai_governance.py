@@ -36,7 +36,7 @@ async def require_admin_or_super(
     Phase 8: Only Admin and Super Admin can view AI governance audit logs.
     Faculty cannot access AI governance data.
     """
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(
             status_code=403,
             detail="Access denied. AI governance audit requires Admin or Super Admin role."
@@ -205,7 +205,7 @@ async def get_ai_usage_logs(
     query = select(AIUsageLog)
     
     # Institution filtering
-    if current_user.role == UserRole.ADMIN:
+    if current_user.role == UserRole.teacher:
         # Admin can only see their own institution
         query = query.where(AIUsageLog.institution_id == current_user.institution_id)
     elif institution_id:
@@ -239,7 +239,7 @@ async def get_ai_usage_logs(
     
     # Get total count
     count_query = select(func.count(AIUsageLog.id))
-    if current_user.role == UserRole.ADMIN:
+    if current_user.role == UserRole.teacher:
         count_query = count_query.where(AIUsageLog.institution_id == current_user.institution_id)
     elif institution_id:
         count_query = count_query.where(AIUsageLog.institution_id == institution_id)
@@ -262,7 +262,7 @@ async def get_ai_usage_logs(
             "has_more": (offset + limit) < total_count,
         },
         "filters": {
-            "institution_id": institution_id if current_user.role == UserRole.SUPER_ADMIN else current_user.institution_id,
+            "institution_id": institution_id if current_user.role == UserRole.teacher else current_user.institution_id,
             "feature": feature,
             "was_blocked": was_blocked,
             "days": days,
@@ -288,7 +288,7 @@ async def get_ai_usage_stats(
     
     # Base query conditions
     base_conditions = [AIUsageLog.timestamp >= cutoff_date]
-    if current_user.role == UserRole.ADMIN:
+    if current_user.role == UserRole.teacher:
         base_conditions.append(AIUsageLog.institution_id == current_user.institution_id)
     elif institution_id:
         base_conditions.append(AIUsageLog.institution_id == institution_id)
@@ -339,7 +339,7 @@ async def get_ai_usage_stats(
             "by_feature": feature_stats,
         },
         "period_days": days,
-        "institution_id": institution_id if current_user.role == UserRole.SUPER_ADMIN else current_user.institution_id,
+        "institution_id": institution_id if current_user.role == UserRole.teacher else current_user.institution_id,
         "compliance_notes": [
             "All AI usage is logged for governance purposes",
             "No prompts or responses are stored",
@@ -376,7 +376,7 @@ async def get_blocked_attempts(
     )
     
     # Institution filtering
-    if current_user.role == UserRole.ADMIN:
+    if current_user.role == UserRole.teacher:
         query = query.where(AIUsageLog.institution_id == current_user.institution_id)
     elif institution_id:
         query = query.where(AIUsageLog.institution_id == institution_id)

@@ -208,7 +208,7 @@ class SSOService:
             name=name,
             hashed_password=get_password_hash(random_password),
             institution_id=institution_id,
-            role=UserRole.STUDENT,  # Default role for SSO users
+            role=UserRole.student,  # Default role for SSO users
             is_active=True
         )
         

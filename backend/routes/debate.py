@@ -403,7 +403,7 @@ async def ai_coach(
     Phase 5A: Protected - STUDENTS only
     """
     # RBAC Check: Only students can access AI Coach
-    if current_user.role != UserRole.STUDENT:
+    if current_user.role != UserRole.student:
         raise HTTPException(
             status_code=403,
             detail={
@@ -469,7 +469,7 @@ async def ai_review(
     Phase 5A: Protected - STUDENTS only
     """
     # RBAC Check: Only students can access AI Review
-    if current_user.role != UserRole.STUDENT:
+    if current_user.role != UserRole.student:
         raise HTTPException(
             status_code=403,
             detail={
@@ -547,7 +547,7 @@ async def counter_argument(
     Phase 5A: Protected - STUDENTS only
     """
     # RBAC Check: Only students can access Counter-Argument Simulator
-    if current_user.role != UserRole.STUDENT:
+    if current_user.role != UserRole.student:
         raise HTTPException(
             status_code=403,
             detail={
@@ -610,7 +610,7 @@ async def judge_assist(
     Phase 5A: Protected - JUDGES, FACULTY, ADMIN, SUPER_ADMIN
     """
     # RBAC Check: Only judges and above can access Judge Assist
-    allowed_roles = [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    allowed_roles = [UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]
     if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=403,
@@ -708,7 +708,7 @@ async def bench_questions(
     Phase 5A: Protected - JUDGES, FACULTY, ADMIN, SUPER_ADMIN
     """
     # RBAC Check: Only judges and above can access Bench Questions
-    allowed_roles = [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    allowed_roles = [UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]
     if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=403,
@@ -795,7 +795,7 @@ async def feedback_suggest(
     Phase 5A: Protected - JUDGES, FACULTY, ADMIN, SUPER_ADMIN
     """
     # RBAC Check: Only judges and above can access Feedback Suggest
-    allowed_roles = [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    allowed_roles = [UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]
     if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=403,

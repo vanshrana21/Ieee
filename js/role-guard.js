@@ -1,17 +1,19 @@
 /**
  * role-guard.js
- * Phase 2: Role Separation & Routing Sanity
+ * PHASE 1: Role & Permission Freeze - Frontend Role Guard
  * 
  * PURPOSE:
  * - Enforce role-based access control on frontend
- * - Prevent students from accessing lawyer pages
- * - Prevent lawyers from accessing student pages
+ * - Prevent students from accessing teacher pages
+ * - Prevent teachers from accessing student pages
  * - Redirect mismatched users to their correct dashboard
  * 
  * RULES:
- * - A student should NEVER see lawyer UI
- * - A lawyer should NEVER see student UI
+ * - A student should NEVER see teacher UI
+ * - A teacher should NEVER see student UI
  * - Direct URL tampering must fail safely
+ * 
+ * SUPPORTED ROLES: teacher, student (ONLY)
  */
 
 (function() {
@@ -33,10 +35,12 @@
         'tutor.html'
     ];
 
-    const LAWYER_PAGES = [
-        'dashboard-lawyer.html',
-        'dashboard.html',
-        'settings-lawyer.html',
+    const TEACHER_PAGES = [
+        'faculty-dashboard.html',
+        'faculty-project.html',
+        'classroom-create-session.html',
+        'classroom-control-panel.html',
+        'institution-setup.html',
         'settings.html'
     ];
 
@@ -48,13 +52,13 @@
     ];
 
     const ROLE_DASHBOARDS = {
-        student: '/html/dashboard-student.html',
-        lawyer: '/html/dashboard-lawyer.html'
+        teacher: '/html/faculty-dashboard.html',
+        student: '/html/dashboard-student.html'
     };
 
     const ROLE_SETTINGS = {
-        student: '/html/settings-student.html',
-        lawyer: '/html/settings-lawyer.html'
+        teacher: '/html/settings.html',
+        student: '/html/settings-student.html'
     };
 
     function getToken() {
@@ -87,8 +91,8 @@
         return STUDENT_PAGES.some(p => page.includes(p.toLowerCase()));
     }
 
-    function isLawyerPage(page) {
-        return LAWYER_PAGES.some(p => page.includes(p.toLowerCase()));
+    function isTeacherPage(page) {
+        return TEACHER_PAGES.some(p => page.includes(p.toLowerCase()));
     }
 
     function isSharedPage(page) {
@@ -144,15 +148,15 @@
             return false;
         }
 
-        if (role === 'student' && isLawyerPage(currentPage)) {
-            console.warn('[RoleGuard] Student attempted to access lawyer page:', currentPage);
+        if (role === 'student' && isTeacherPage(currentPage)) {
+            console.warn('[RoleGuard] Student attempted to access teacher page:', currentPage);
             redirectTo(ROLE_DASHBOARDS.student);
             return false;
         }
 
-        if (role === 'lawyer' && isStudentPage(currentPage)) {
-            console.warn('[RoleGuard] Lawyer attempted to access student page:', currentPage);
-            redirectTo(ROLE_DASHBOARDS.lawyer);
+        if (role === 'teacher' && isStudentPage(currentPage)) {
+            console.warn('[RoleGuard] Teacher attempted to access student page:', currentPage);
+            redirectTo(ROLE_DASHBOARDS.teacher);
             return false;
         }
 
@@ -180,8 +184,14 @@
         return requireRole('student');
     }
 
+    function requireTeacher() {
+        return requireRole('teacher');
+    }
+
+    // DEPRECATED: Use requireTeacher instead
     function requireLawyer() {
-        return requireRole('lawyer');
+        console.warn('[RoleGuard] requireLawyer() is deprecated. Use requireTeacher() instead.');
+        return requireTeacher();
     }
 
     function updateSidebarForRole() {
@@ -201,10 +211,10 @@
         }
 
         if (role === 'student') {
-            sidebar.querySelectorAll('[data-role="lawyer"]').forEach(el => {
+            sidebar.querySelectorAll('[data-role="teacher"]').forEach(el => {
                 el.style.display = 'none';
             });
-        } else if (role === 'lawyer') {
+        } else if (role === 'teacher') {
             sidebar.querySelectorAll('[data-role="student"]').forEach(el => {
                 el.style.display = 'none';
             });
@@ -231,7 +241,7 @@
         validateAccess,
         requireRole,
         requireStudent,
-        requireLawyer,
+        requireTeacher,
         getUserRole,
         isAuthenticated,
         getDashboardForRole,
@@ -239,7 +249,7 @@
         updateSidebarForRole,
         
         STUDENT_PAGES,
-        LAWYER_PAGES,
+        TEACHER_PAGES,
         SHARED_PAGES
     };
 

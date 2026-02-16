@@ -332,19 +332,18 @@ app.include_router(rankings.router, prefix="/api")
 from backend.routes import teams
 app.include_router(teams.router, prefix="/api")
 
-# Phase 7: Faculty Oversight & Academic Monitoring
-from backend.routes import faculty
-app.include_router(faculty.router, prefix="/api")
-
 # Phase 8: AI Governance, Safety & Explainability Layer
 from backend.routes import ai_governance
 app.include_router(ai_governance.router, prefix="/api")
 
-# Phase 9: Judging, Evaluation & Competition Scoring
-from backend.routes import judge, evaluation_admin, results
-app.include_router(judge.router, prefix="/api")
+# Phase 9: Evaluation & Competition Scoring
+from backend.routes import evaluation_admin, results
 app.include_router(evaluation_admin.router, prefix="/api")
 app.include_router(results.router, prefix="/api")
+
+# Phase 3: Score Integrity & Locking System
+from backend.routes import score_finalization
+app.include_router(score_finalization.router, prefix="/api")
 
 # Phase 2 MVP: AI Moot Court Practice Mode
 from backend.routes.ai_moot import ai_moot_router

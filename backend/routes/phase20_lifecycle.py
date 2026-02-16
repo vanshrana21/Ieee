@@ -96,7 +96,7 @@ def check_lifecycle_enabled():
 async def create_lifecycle(
     tournament_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Create lifecycle record for tournament.
@@ -133,7 +133,7 @@ async def create_lifecycle(
 async def get_lifecycle(
     tournament_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Get lifecycle status for tournament.
@@ -166,7 +166,7 @@ async def transition_status(
     tournament_id: UUID,
     request: TransitionRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Transition tournament to new lifecycle status.
@@ -226,7 +226,7 @@ async def transition_status(
 async def verify_standings_integrity(
     tournament_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher]))
 ):
     """
     Verify integrity of final standings hash.
@@ -277,7 +277,7 @@ async def verify_standings_integrity(
 async def get_standings_hash(
     tournament_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Get final standings hash for tournament.
@@ -306,7 +306,7 @@ async def check_operation(
     tournament_id: UUID,
     operation: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.JUDGE]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Check if an operation is allowed on tournament.
@@ -339,7 +339,7 @@ async def check_operation(
 async def get_lifecycle_guards(
     tournament_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Get active lifecycle guards for tournament.

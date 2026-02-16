@@ -133,7 +133,7 @@ async def create_round(
     tournament_id: str,
     request: CreateRoundRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Create a new round. Admin/Judge only."""
     round_obj = await RoundService.create_round(
@@ -159,7 +159,7 @@ async def assign_matches(
     round_id: str,
     request: AssignMatchesRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Assign matches to a round. Admin/Judge only."""
     matches_config = [
@@ -194,7 +194,7 @@ async def assign_matches(
 async def start_round(
     round_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Start a round (SCHEDULED → LIVE). Admin/Judge only."""
     round_obj = await RoundService.start_round(
@@ -213,7 +213,7 @@ async def start_round(
 async def complete_round(
     round_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Complete a round (LIVE → COMPLETED). Admin/Judge only."""
     round_obj = await RoundService.complete_round(
@@ -232,7 +232,7 @@ async def complete_round(
 async def freeze_round(
     round_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Freeze a round (COMPLETED → FROZEN). Admin/Judge only."""
     round_obj = await RoundService.freeze_round(
@@ -256,7 +256,7 @@ async def generate_speaker_turns(
     match_id: str,
     request: GenerateTurnsRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Generate deterministic speaker turns. Admin/Judge only."""
     turns = await MatchService.generate_speaker_turns(
@@ -287,7 +287,7 @@ async def generate_speaker_turns(
 async def start_match(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Start a match (SCHEDULED → LIVE). Admin/Judge only."""
     match = await MatchService.start_match(
@@ -306,7 +306,7 @@ async def start_match(
 async def advance_turn(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Advance to next speaker turn. Admin/Judge only."""
     result = await MatchService.advance_turn(
@@ -322,7 +322,7 @@ async def complete_turn(
     match_id: str,
     turn_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Complete the active turn. Admin/Judge only."""
     turn = await MatchService.complete_turn(
@@ -342,7 +342,7 @@ async def complete_match(
     match_id: str,
     winner_team_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Complete a match (LIVE/SCORING → COMPLETED). Admin/Judge only."""
     match = await MatchService.complete_match(
@@ -364,7 +364,7 @@ async def freeze_match(
     match_id: str,
     request: FreezeMatchRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Freeze a match with immutable score lock. Admin/Judge only."""
     score_lock = await MatchService.freeze_match(
@@ -392,7 +392,7 @@ async def freeze_match(
 async def pause_timer(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Pause the match timer. Admin/Judge only."""
     timer = await TimerService.pause_timer(
@@ -411,7 +411,7 @@ async def pause_timer(
 async def resume_timer(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Resume the match timer. Admin/Judge only."""
     timer = await TimerService.resume_timer(
@@ -434,7 +434,7 @@ async def resume_timer(
 async def get_match_state(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.STUDENT))
+    current_user: dict = Depends(require_min_role(UserRole.student))
 ):
     """Get full match state including turns and timer."""
     match = await MatchService.get_match_with_turns(
@@ -484,7 +484,7 @@ async def get_match_state(
 async def verify_match_integrity(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.STUDENT))
+    current_user: dict = Depends(require_min_role(UserRole.student))
 ):
     """Verify match integrity hash."""
     result = await MatchService.verify_match_integrity(
@@ -498,7 +498,7 @@ async def verify_match_integrity(
 @router.get("/crash-recovery")
 async def crash_recovery(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_min_role(UserRole.SUPER_ADMIN))
+    current_user: dict = Depends(require_min_role(UserRole.teacher))
 ):
     """Check for LIVE matches requiring recovery. SuperAdmin only."""
     live_matches = await TimerService.restore_live_matches(db=db)

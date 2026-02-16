@@ -71,14 +71,14 @@ class SSOConfigCreate(BaseModel):
 
 
 def _check_super_admin(user: User):
-    if user.role != UserRole.SUPER_ADMIN:
+    if user.role != UserRole.teacher:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Super admin access required"
         )
 
 def _check_institution_admin(user: User, institution_id: int):
-    if user.role == UserRole.SUPER_ADMIN:
+    if user.role == UserRole.teacher:
         return True
     # Check if user is admin for this institution
     # (Would need to query InstitutionAdmin table)
@@ -174,7 +174,7 @@ async def update_institution(
         institution.max_students = data.max_students
     
     # Only super admin can update subscription
-    if current_user.role == UserRole.SUPER_ADMIN:
+    if current_user.role == UserRole.teacher:
         if data.subscription_tier:
             institution.subscription_tier = SubscriptionTier(data.subscription_tier)
         if data.subscription_start:

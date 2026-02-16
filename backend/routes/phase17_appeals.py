@@ -140,7 +140,7 @@ async def file_appeal(
     match_id: str,
     request: FileAppealRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.student, UserRole.teacher, UserRole.teacher]))
 ):
     """
     File a new appeal for a match.
@@ -175,7 +175,7 @@ async def file_appeal(
 async def get_match_appeals(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Get all appeals for a match.
@@ -199,7 +199,7 @@ async def get_match_appeals(
 async def get_appeal_details(
     appeal_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Get detailed appeal information including reviews and decision.
@@ -223,7 +223,7 @@ async def get_appeal_details(
 async def assign_for_review(
     appeal_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Assign appeal for review (Admin only).
@@ -253,7 +253,7 @@ async def submit_review(
     appeal_id: str,
     request: SubmitReviewRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Submit a judge review for an appeal.
@@ -287,7 +287,7 @@ async def finalize_decision(
     appeal_id: str,
     request: FinalizeDecisionRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Finalize appeal decision (Admin only).
@@ -335,7 +335,7 @@ async def finalize_decision(
 async def get_override(
     match_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Get override record for a match.
@@ -368,7 +368,7 @@ async def get_override(
 @router.post("/auto-close")
 async def auto_close_expired(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Auto-close appeals past their review deadline.
@@ -396,7 +396,7 @@ async def auto_close_expired(
 async def close_appeal(
     appeal_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ):
     """
     Manually close an appeal (Admin only).

@@ -83,10 +83,10 @@ async def get_public_results(
         # Check if user can view this result
         can_view = False
         
-        if current_user.role in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        if current_user.role in [UserRole.teacher, UserRole.teacher]:
             # Admin can see all
             can_view = True
-        elif current_user.role == UserRole.JUDGE:
+        elif current_user.role == UserRole.teacher:
             # Judges can see results they evaluated
             judge_eval_result = await db.execute(
                 select(JudgeEvaluation).where(
@@ -99,7 +99,7 @@ async def get_public_results(
             )
             if judge_eval_result.scalar_one_or_none():
                 can_view = True
-        elif current_user.role == UserRole.STUDENT:
+        elif current_user.role == UserRole.student:
             # Students can see if they are on the team
             team_member_result = await db.execute(
                 select(TeamMember).where(
@@ -129,7 +129,7 @@ async def get_public_results(
                     "title": project.project_title,
                     "side": project.side,
                     "is_yours": (
-                        current_user.role == UserRole.STUDENT and 
+                        current_user.role == UserRole.student and 
                         any(m.user_id == current_user.id for m in (team.members if team else []))
                     ) if team else False
                 },
@@ -140,7 +140,7 @@ async def get_public_results(
             })
     
     # For students, highlight their position
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         user_team_ids = []
         team_member_result = await db.execute(
             select(TeamMember.team_id).where(TeamMember.user_id == current_user.id)
@@ -173,7 +173,7 @@ async def get_my_results(
     
     For students: Shows results for their teams' projects.
     """
-    if current_user.role not in [UserRole.STUDENT, UserRole.JUDGE]:
+    if current_user.role not in [UserRole.student, UserRole.teacher]:
         raise HTTPException(
             status_code=403,
             detail="This endpoint is for students and judges viewing their own results"
@@ -181,7 +181,7 @@ async def get_my_results(
     
     results_list = []
     
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         # Get user's teams
         team_member_result = await db.execute(
             select(TeamMember.team_id).where(TeamMember.user_id == current_user.id)
@@ -226,7 +226,7 @@ async def get_my_results(
                     "finalized": project.is_locked if hasattr(project, 'is_locked') else True
                 })
     
-    elif current_user.role == UserRole.JUDGE:
+    elif current_user.role == UserRole.teacher:
         # Get judge's evaluations
         eval_result = await db.execute(
             select(JudgeEvaluation).where(

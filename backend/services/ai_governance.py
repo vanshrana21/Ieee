@@ -30,17 +30,17 @@ class AIGovernanceError(Exception):
 
 
 # AI ACCESS POLICY MATRIX (Hard-coded, non-negotiable)
-# Faculty is BLOCKED from ALL AI features
+# PHASE 1: Role Freeze - Only teacher and student roles
 AI_ACCESS_POLICY = {
     # Student AI Tools
-    AIFeatureType.AI_COACH: [UserRole.STUDENT],
-    AIFeatureType.AI_REVIEW: [UserRole.STUDENT],
-    AIFeatureType.COUNTER_ARGUMENT: [UserRole.STUDENT],
+    AIFeatureType.AI_COACH: [UserRole.student],
+    AIFeatureType.AI_REVIEW: [UserRole.student],
+    AIFeatureType.COUNTER_ARGUMENT: [UserRole.student],
     
-    # Judge AI Tools
-    AIFeatureType.JUDGE_ASSIST: [UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN],
-    AIFeatureType.BENCH_QUESTIONS: [UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN],
-    AIFeatureType.FEEDBACK_SUGGEST: [UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+    # Teacher AI Tools (formerly judge/admin)
+    AIFeatureType.JUDGE_ASSIST: [UserRole.teacher],
+    AIFeatureType.BENCH_QUESTIONS: [UserRole.teacher],
+    AIFeatureType.FEEDBACK_SUGGEST: [UserRole.teacher],
 }
 
 
@@ -88,12 +88,12 @@ class AIGovernanceService:
         # Check 1: Role-based access
         allowed_roles = AI_ACCESS_POLICY.get(feature, [])
         if user.role not in allowed_roles:
-            if user.role == UserRole.FACULTY:
+            if user.role == UserRole.teacher:
                 return False, f"FACULTY_BLOCKED: Faculty are prohibited from using AI features"
             return False, f"ROLE_DENIED: {user.role.value} cannot use {feature.value}"
         
         # Check 2: Faculty absolute block (double-check)
-        if user.role == UserRole.FACULTY:
+        if user.role == UserRole.teacher:
             return False, "FACULTY_ABSOLUTE_BLOCK: Faculty cannot invoke any AI tools"
         
         # Check 3: Project state (if applicable)
@@ -110,7 +110,7 @@ class AIGovernanceService:
             if hasattr(project, 'deadline') and project.deadline:
                 if project.deadline < datetime.utcnow():
                     # Allow judges after deadline, not students
-                    if user.role == UserRole.STUDENT:
+                    if user.role == UserRole.student:
                         return False, "DEADLINE_PASSED: AI access blocked after deadline for students"
         
         # Check 4: Institution context

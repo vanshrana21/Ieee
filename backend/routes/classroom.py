@@ -11,7 +11,7 @@ Security features:
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
 import re
@@ -28,6 +28,7 @@ from backend.security.rbac import get_current_user, require_teacher, require_stu
 from backend.state_machines.classroom_session import (
     SessionStateMachine, ClassroomSessionState
 )
+from backend.services.score_integrity_service import prevent_score_modification
 from backend.schemas.classroom import (
     SessionCreate, SessionResponse, SessionJoinRequest, SessionJoinResponse,
     ParticipantResponse, ArgumentCreate, ArgumentResponse, ScoreUpdate,
@@ -965,6 +966,13 @@ async def update_score(
     if not score:
         raise HTTPException(status_code=404, detail="Score record not found")
     
+    # Phase 3: Check if score is locked
+    if score.is_locked:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Score is locked since {score.locked_at} and cannot be modified"
+        )
+    
     # Update scores
     if score_data.legal_reasoning is not None:
         score.legal_reasoning = score_data.legal_reasoning
@@ -982,7 +990,13 @@ async def update_score(
     # Calculate total
     score.calculate_total()
     score.submitted_by = current_user.id
-    score.is_draft = score_data.is_draft
+    
+    # Phase 3: Prevent is_draft toggle after lock
+    if score.is_locked:
+        # Cannot change draft status when locked
+        pass
+    else:
+        score.is_draft = score_data.is_draft
     
     await db.commit()
     await db.refresh(score)
@@ -1006,24 +1020,29 @@ async def get_leaderboard(
         raise HTTPException(status_code=404, detail="Session not found")
     
     is_teacher = session.teacher_id == current_user.id
-    result = await db.execute(
+    participant_result = await db.execute(
         select(ClassroomParticipant).where(
             ClassroomParticipant.session_id == session_id,
             ClassroomParticipant.user_id == current_user.id
         )
     )
-    is_participant = result.scalar_one_or_none()
+    is_participant = participant_result.scalar_one_or_none()
     
     if not is_teacher and not is_participant:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Get scores sorted by total
-    result = await db.execute(
+    # Get scores sorted by final_score (only finalized scores)
+    scores_result = await db.execute(
         select(ClassroomScore)
-        .where(ClassroomScore.session_id == session_id)
-        .order_by(ClassroomScore.total_score.desc())
+        .where(
+            and_(
+                ClassroomScore.session_id == session_id,
+                ClassroomScore.evaluation_status == "finalized"
+            )
+        )
+        .order_by(ClassroomScore.final_score.desc())
     )
-    scores = result.scalars().all()
+    scores = scores_result.scalars().all()
     
     return {
         "scores": [s.to_dict() for s in scores],

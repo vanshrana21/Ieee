@@ -862,3 +862,289 @@ async def get_session_leaderboard(
         entry["rank"] = i
     
     return entries
+
+
+# ============================================================================
+# PHASE 2: Background Task Processing for AI Evaluation
+# ============================================================================
+
+import asyncio
+import logging
+from datetime import datetime
+from typing import Dict, Any, Optional
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import select
+import os
+
+logger = logging.getLogger(__name__)
+
+# Timeout configuration
+EVALUATION_TIMEOUT_SECONDS = 60
+
+
+async def process_ai_evaluation_background(
+    evaluation_id: int,
+    db_url: str
+):
+    """
+    Background task to process AI evaluation asynchronously.
+    
+    This function:
+    1. Creates a fresh database session
+    2. Calls LLM with timeout protection
+    3. Validates JSON response strictly
+    4. Updates evaluation with results
+    5. Handles errors safely without crashing
+    
+    Args:
+        evaluation_id: ID of the evaluation record
+        db_url: Database URL for creating new session
+    """
+    start_time = datetime.utcnow()
+    
+    # Create fresh database session for background task
+    engine = create_async_engine(db_url, echo=False)
+    AsyncSessionLocal = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+    
+    async with AsyncSessionLocal() as db:
+        try:
+            # Fetch the evaluation record
+            result = await db.execute(
+                select(AIEvaluation).where(AIEvaluation.id == evaluation_id)
+            )
+            evaluation = result.scalar_one_or_none()
+            
+            if not evaluation:
+                logger.error(f"[BG Task] Evaluation {evaluation_id} not found")
+                return
+            
+            # Check timeout
+            if evaluation.processing_started_at:
+                elapsed = (datetime.utcnow() - evaluation.processing_started_at).total_seconds()
+                if elapsed > EVALUATION_TIMEOUT_SECONDS:
+                    evaluation.status = EvaluationStatus.FAILED
+                    evaluation.error_message = "Evaluation timeout (>60s)"
+                    await db.commit()
+                    logger.error(f"[BG Task] Evaluation {evaluation_id} timeout")
+                    return
+            
+            # Get rubric
+            rubric_version = await get_rubric_version(evaluation.rubric_version_id, db)
+            if not rubric_version:
+                evaluation.status = EvaluationStatus.FAILED
+                evaluation.error_message = f"Rubric version {evaluation.rubric_version_id} not found"
+                await db.commit()
+                logger.error(f"[BG Task] Rubric not found for eval {evaluation_id}")
+                return
+            
+            rubric_definition = json.loads(rubric_version.frozen_json)
+            
+            # Get transcript
+            transcript_text = await _get_transcript(
+                evaluation.participant_id, 
+                evaluation.round_id, 
+                evaluation.turn_id, 
+                db
+            )
+            
+            if not transcript_text:
+                evaluation.status = EvaluationStatus.FAILED
+                evaluation.error_message = "No transcript available for evaluation"
+                await db.commit()
+                logger.error(f"[BG Task] No transcript for eval {evaluation_id}")
+                return
+            
+            # Build prompt
+            prompt = _build_evaluation_prompt(
+                transcript_text, 
+                rubric_definition, 
+                evaluation.session_id, 
+                evaluation.round_id
+            )
+            
+            # Call LLM with timeout protection
+            try:
+                llm_response, metadata = await _call_llm_with_timeout(
+                    prompt=prompt,
+                    model="gpt-4",
+                    timeout_seconds=EVALUATION_TIMEOUT_SECONDS
+                )
+            except TimeoutError:
+                evaluation.status = EvaluationStatus.FAILED
+                evaluation.error_message = "LLM call timeout (>60s)"
+                await db.commit()
+                logger.error(f"[BG Task] LLM timeout for eval {evaluation_id}")
+                return
+            
+            # Strict JSON validation
+            validation_result = _strict_json_validation(llm_response, rubric_definition)
+            
+            if not validation_result["valid"]:
+                evaluation.status = EvaluationStatus.REQUIRES_REVIEW
+                evaluation.error_message = f"JSON validation failed: {validation_result['errors']}"
+                await db.commit()
+                logger.error(f"[BG Task] Validation failed for eval {evaluation_id}")
+                return
+            
+            # Extract validated scores
+            scores = validation_result["scores"]
+            total_score = sum(scores.values()) / len(scores) if scores else 0.0
+            
+            # Update evaluation with results
+            evaluation.status = EvaluationStatus.COMPLETED
+            evaluation.final_score = Decimal(str(total_score))
+            evaluation.score_breakdown = json.dumps(scores)
+            evaluation.processing_completed_at = datetime.utcnow()
+            evaluation.is_finalized = True
+            
+            # Calculate duration
+            duration_ms = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+            
+            await db.commit()
+            
+            logger.info(
+                f"[BG Task] Evaluation {evaluation_id} completed",
+                extra={
+                    "evaluation_id": evaluation_id,
+                    "duration_ms": duration_ms,
+                    "total_score": total_score,
+                    "success": True
+                }
+            )
+            
+        except Exception as e:
+            logger.exception(f"[BG Task] Unexpected error for evaluation {evaluation_id}")
+            try:
+                # Try to mark as failed
+                evaluation.status = EvaluationStatus.FAILED
+                evaluation.error_message = str(e)[:500]
+                await db.commit()
+            except:
+                pass  # Fail silently if commit fails
+
+
+async def _call_llm_with_timeout(prompt: str, model: str, timeout_seconds: int = 60):
+    """
+    Call LLM with timeout protection.
+    
+    Args:
+        prompt: Prompt to send to LLM
+        model: Model to use
+        timeout_seconds: Maximum time to wait
+        
+    Returns:
+        Tuple of (response_text, metadata)
+        
+    Raises:
+        TimeoutError: If call exceeds timeout
+    """
+    # Create task for LLM call
+    llm_task = asyncio.create_task(call_llm_with_retry(prompt=prompt, model=model))
+    
+    try:
+        result = await asyncio.wait_for(llm_task, timeout=timeout_seconds)
+        return result
+    except asyncio.TimeoutError:
+        llm_task.cancel()
+        raise TimeoutError(f"LLM call exceeded {timeout_seconds} seconds")
+
+
+def _strict_json_validation(llm_response: str, rubric_definition: dict) -> Dict[str, Any]:
+    """
+    Strictly validate LLM JSON response against rubric.
+    
+    Rules:
+    - All required fields must exist
+    - All scores must be integers
+    - Score range: 1-5 only
+    - Out of range -> mark validation failed (no clamping)
+    - Missing fields -> mark validation failed
+    
+    Args:
+        llm_response: Raw LLM response text
+        rubric_definition: Rubric definition with criteria
+        
+    Returns:
+        Dict with 'valid' (bool), 'scores' (dict), 'errors' (list)
+    """
+    errors = []
+    scores = {}
+    
+    try:
+        # Parse JSON
+        data = json.loads(llm_response)
+    except json.JSONDecodeError as e:
+        return {
+            "valid": False,
+            "scores": {},
+            "errors": [f"Invalid JSON: {str(e)}"]
+        }
+    
+    # Get criteria from rubric
+    criteria = rubric_definition.get("criteria", [])
+    
+    for criterion in criteria:
+        criterion_id = criterion.get("id")
+        if not criterion_id:
+            continue
+        
+        # Check field exists
+        if criterion_id not in data:
+            errors.append(f"Missing required field: {criterion_id}")
+            continue
+        
+        value = data[criterion_id]
+        
+        # Check type is int
+        if not isinstance(value, int):
+            errors.append(f"Field {criterion_id} must be int, got {type(value).__name__}")
+            continue
+        
+        # Check range (strict - no clamping, mark as error)
+        if value < 1 or value > 5:
+            errors.append(f"Field {criterion_id} out of range (1-5): {value}")
+            continue
+        
+        scores[criterion_id] = value
+    
+    return {
+        "valid": len(errors) == 0,
+        "scores": scores,
+        "errors": errors
+    }
+
+
+async def get_evaluation_status(evaluation_id: int, db: AsyncSession) -> Dict[str, Any]:
+    """
+    Get current status of an evaluation for polling.
+    
+    Args:
+        evaluation_id: Evaluation ID
+        db: Database session
+        
+    Returns:
+        Dict with status, score, feedback, error
+    """
+    result = await db.execute(
+        select(AIEvaluation).where(AIEvaluation.id == evaluation_id)
+    )
+    evaluation = result.scalar_one_or_none()
+    
+    if not evaluation:
+        return {
+            "status": "not_found",
+            "total_score": None,
+            "feedback_text": None,
+            "error": "Evaluation not found"
+        }
+    
+    return {
+        "status": evaluation.status.value if hasattr(evaluation.status, 'value') else str(evaluation.status),
+        "total_score": float(evaluation.final_score) if evaluation.final_score else None,
+        "feedback_text": evaluation.feedback_text,
+        "error": evaluation.error_message
+    }

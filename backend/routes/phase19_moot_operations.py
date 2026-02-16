@@ -135,7 +135,7 @@ def check_moot_operations_enabled():
 async def create_session(
     request: CreateSessionRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.JUDGE]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Create a new courtroom session.
@@ -207,7 +207,7 @@ async def get_session(
 async def start_session(
     session_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.JUDGE]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Start a session (PENDING → ACTIVE).
@@ -251,7 +251,7 @@ async def pause_session(
     session_id: UUID,
     reason: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.JUDGE]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Pause a session (ACTIVE → PAUSED).
@@ -295,7 +295,7 @@ async def pause_session(
 async def resume_session(
     session_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.JUDGE]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Resume a paused session (PAUSED → ACTIVE).
@@ -339,7 +339,7 @@ async def complete_session(
     session_id: UUID,
     recording_url: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.JUDGE]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Complete a session and create integrity hash.
@@ -552,7 +552,7 @@ async def log_event(
     session_id: UUID,
     request: LogEventRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.JUDGE]))
+    current_user: dict = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ):
     """
     Log a custom event in the session.

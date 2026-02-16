@@ -128,7 +128,7 @@ async def freeze_leaderboard(
     6. Snapshot for this session does NOT already exist (idempotent)
     
     RANKING ALGORITHM:
-    1. Sort by total_score DESC
+    1. Sort by final_score DESC (only finalized scores)
     2. Tie-breaker 1: highest_single_round_score DESC
     3. Tie-breaker 2: earliest_submission_timestamp ASC
     4. Tie-breaker 3: participant_id ASC (deterministic)
@@ -165,7 +165,7 @@ async def freeze_leaderboard(
         select(User).where(User.id == faculty_id)
     )
     faculty = faculty_result.scalar_one_or_none()
-    if not faculty or faculty.role not in (UserRole.FACULTY, UserRole.ADMIN):
+    if not faculty or faculty.role != UserRole.teacher:
         raise UnauthorizedFreezeError()
     
     # Begin transaction for all subsequent operations
@@ -496,8 +496,12 @@ async def _get_participant_score_data(
         round_scores = [Decimal(str(v)) for v in score_breakdown.values()]
         highest_round_score = max(round_scores) if round_scores else Decimal("0")
     
-    # Total score as Decimal
+    # Total score as Decimal (use final_score for ranking)
     total_score = Decimal(str(evaluation.final_score)) if evaluation.final_score else Decimal("0")
+    
+    # Only include finalized scores in ranking
+    if not classroom_score or classroom_score.evaluation_status != "finalized":
+        total_score = Decimal("0")  # Non-finalized scores get zero rank
     
     # Use evaluation_epoch (INTEGER) for deterministic tie-breaking
     # No ISO timestamp parsing - pure integer comparison
@@ -524,7 +528,7 @@ def _compute_deterministic_ranking(
     Compute deterministic ranking with explicit tie-breaking.
     
     RANKING RULES (in order):
-    1. total_score DESC (primary)
+    1. final_score DESC (primary, only finalized scores)
     2. highest_round_score DESC (tie-breaker 1)
     3. evaluation_epoch ASC (earlier = better, tie-breaker 2)
     4. participant_id ASC (deterministic final tie-breaker 3)
@@ -539,12 +543,12 @@ def _compute_deterministic_ranking(
     No ISO timestamp parsing - eliminates datetime parsing overhead and non-determinism.
     """
     # Sort by ranking criteria using tuple comparison
-    # Higher total_score first, higher highest_round_score first,
+    # Higher final_score first, higher highest_round_score first,
     # earlier epoch first (lower integer), lower participant_id first
     sorted_participants = sorted(
         participant_scores,
         key=lambda p: (
-            -p["total_score"],  # Higher score first (descending)
+            -p["final_score"],  # Higher score first (descending)
             -p["highest_round_score"],  # Higher single round first (descending)
             p["evaluation_epoch"],  # Earlier epoch first (ascending - lower int)
             p["participant_id"]  # Lower ID first (ascending, deterministic)
@@ -560,7 +564,7 @@ def _compute_deterministic_ranking(
     for entry in sorted_participants:
         # Build full ranking key tuple (must match sort order)
         current_key = (
-            entry["total_score"],
+            entry["final_score"],
             entry["highest_round_score"],
             entry["evaluation_epoch"],
             entry["participant_id"]
@@ -675,7 +679,7 @@ async def invalidate_leaderboard(
         select(User).where(User.id == admin_id)
     )
     user = user_result.scalar_one_or_none()
-    if not user or user.role != UserRole.ADMIN:
+    if not user or user.role != UserRole.teacher:
         raise UnauthorizedFreezeError()
     
     if not reason or not reason.strip():

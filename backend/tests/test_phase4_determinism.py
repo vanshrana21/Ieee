@@ -203,7 +203,7 @@ async def test_available_judges_sorted_deterministically(
             email=f"judge{i}@test.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=inst.id,
             is_active=True,
             created_at=datetime.utcnow()
@@ -313,7 +313,7 @@ async def test_panel_generation_deterministic_same_input(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()
@@ -475,7 +475,7 @@ async def test_panel_checksum_stable_after_multiple_verifications(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()
@@ -491,7 +491,7 @@ async def test_panel_checksum_stable_after_multiple_verifications(
         email="admin@test.edu",
         full_name="Admin User",
         password_hash="hashed",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=inst.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -606,7 +606,7 @@ async def test_panels_match_pairing_table_numbers(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()

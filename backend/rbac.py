@@ -36,25 +36,23 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 # ================= ROLE HIERARCHY =================
-
+# PHASE 1: Role Freeze - Only teacher and student roles
 ROLE_HIERARCHY = {
-    UserRole.SUPER_ADMIN: 5,
-    UserRole.ADMIN: 4,
-    UserRole.FACULTY: 3,
-    UserRole.JUDGE: 2,
-    UserRole.STUDENT: 1,
+    UserRole.teacher: 2,
+    UserRole.student: 1,
 }
 
 # Permission matrix for moot court features
+# PHASE 1: Only teacher and student roles
 MOOT_COURT_PERMISSIONS = {
-    "create_project": [UserRole.STUDENT],
-    "write_irac": [UserRole.STUDENT],
-    "oral_round_speaker": [UserRole.STUDENT],
-    "oral_round_bench": [UserRole.JUDGE],
-    "evaluate_and_score": [UserRole.JUDGE],
-    "view_all_teams": [UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN],
-    "create_competitions": [UserRole.ADMIN, UserRole.SUPER_ADMIN],
-    "manage_institutions": [UserRole.SUPER_ADMIN],
+    "create_project": [UserRole.student],
+    "write_irac": [UserRole.student],
+    "oral_round_speaker": [UserRole.student],
+    "oral_round_bench": [UserRole.teacher],
+    "evaluate_and_score": [UserRole.teacher],
+    "view_all_teams": [UserRole.teacher],
+    "create_competitions": [UserRole.teacher],
+    "manage_institutions": [UserRole.teacher],
 }
 
 # ================= TOKEN UTILS =================
@@ -178,7 +176,7 @@ def require_auth(func: Callable) -> Callable:
 def require_role(allowed_roles: List[UserRole]):
     """
     Decorator factory: Require specific role(s).
-    Usage: @require_role([UserRole.JUDGE, UserRole.ADMIN])
+    Usage: @require_role([UserRole.teacher, UserRole.teacher])
     """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
@@ -210,7 +208,7 @@ def require_role(allowed_roles: List[UserRole]):
 def require_min_role(min_role: UserRole):
     """
     Decorator factory: Require minimum role level (hierarchy-based).
-    Usage: @require_min_role(UserRole.ADMIN)
+    Usage: @require_min_role(UserRole.teacher)
     """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
@@ -247,7 +245,7 @@ def require_admin(func: Callable) -> Callable:
     Decorator: Require ADMIN or SUPER_ADMIN role.
     Backwards-compatible helper for legacy routes.
     """
-    return require_min_role(UserRole.ADMIN)(func)
+    return require_min_role(UserRole.teacher)(func)
 
 
 def require_permission(permission: str):
@@ -309,7 +307,7 @@ def require_institution_match(func: Callable) -> Callable:
         **kwargs
     ):
         # Super admin can access any institution
-        if current_user.role == UserRole.SUPER_ADMIN:
+        if current_user.role == UserRole.teacher:
             return await func(*args, institution_id=institution_id, current_user=current_user, **kwargs)
 
         # Users without institution can only access public data

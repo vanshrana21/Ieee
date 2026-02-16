@@ -43,7 +43,7 @@ async def generate_panels(
     panel_size: int = Query(default=3, ge=1, le=5, description="Number of judges per panel"),
     strict_mode: bool = Query(default=False, description="Block repeat judging"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Generate judge panels for all pairings in a round.
@@ -131,7 +131,7 @@ async def generate_panels(
 async def publish_panels_endpoint(
     round_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Publish (freeze) panels for a round.
@@ -253,7 +253,7 @@ async def get_panels(
 async def verify_panels(
     round_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Verify panel integrity.
@@ -298,7 +298,7 @@ async def check_judge_conflict(
     petitioner_team_id: int,
     respondent_team_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Check if a judge has conflicts with a specific pairing.

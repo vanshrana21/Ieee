@@ -76,7 +76,7 @@ class TestParticipantAssignmentService:
             email="teacher@test.com",
             hashed_password="hashed",
             name="Test Teacher",
-            role=UserRole.FACULTY
+            role=UserRole.teacher
         )
         db.add(user)
         await db.commit()
@@ -123,7 +123,7 @@ class TestParticipantAssignmentService:
                 email=f"student{i}@test.com",
                 hashed_password="hashed",
                 name=f"Student {i}",
-                role=UserRole.STUDENT
+                role=UserRole.student
             )
             db.add(user)
             await db.commit()
@@ -328,7 +328,7 @@ class TestRaceConditions:
             email="teacher_race@test.com",
             hashed_password="hashed",
             name="Race Test Teacher",
-            role=UserRole.FACULTY
+            role=UserRole.teacher
         )
         db.add(user)
         await db.commit()
@@ -373,7 +373,7 @@ class TestRaceConditions:
                 email=f"race_student{i}@test.com",
                 hashed_password="hashed",
                 name=f"Race Student {i}",
-                role=UserRole.STUDENT
+                role=UserRole.student
             )
             db.add(user)
             await db.commit()

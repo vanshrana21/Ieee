@@ -88,7 +88,7 @@ async def create_institution(
     Phase 5B: Only SUPER_ADMIN can create institutions.
     """
     # Only SUPER_ADMIN can create institutions
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -165,7 +165,7 @@ async def list_institutions(
     query = select(Institution)
     
     # Non-super-admins can only see their own institution
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if not current_user.institution_id:
             return {
                 "success": True,
@@ -219,7 +219,7 @@ async def get_institution(
     Phase 5B: Users can only access their own institution.
     """
     # Check institution access
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if current_user.institution_id != institution_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -260,7 +260,7 @@ async def update_institution(
     Phase 5B: SUPER_ADMIN can update any, ADMIN can update their own.
     """
     # Check permissions
-    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -272,7 +272,7 @@ async def update_institution(
         )
     
     # ADMIN can only update their own institution
-    if current_user.role == UserRole.ADMIN and current_user.institution_id != institution_id:
+    if current_user.role == UserRole.teacher and current_user.institution_id != institution_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -347,7 +347,7 @@ async def suspend_institution(
     Phase 5B: Only SUPER_ADMIN can suspend institutions.
     This is a SOFT DELETE - data is preserved but access is disabled.
     """
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -398,7 +398,7 @@ async def reactivate_institution(
     Reactivate a suspended institution.
     Phase 5B: Only SUPER_ADMIN can reactivate institutions.
     """
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -449,7 +449,7 @@ async def get_institution_stats(
     Phase 5B: Users can only see their own institution stats.
     """
     # Check institution access
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         if current_user.institution_id != institution_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -505,10 +505,10 @@ async def get_institution_stats(
             "active_competitions": sum(1 for c in competitions if c.status == "active"),
             "draft_competitions": sum(1 for c in competitions if c.status == "draft"),
             "users_by_role": {
-                "student": sum(1 for u in users if u.role == UserRole.STUDENT),
-                "judge": sum(1 for u in users if u.role == UserRole.JUDGE),
-                "faculty": sum(1 for u in users if u.role == UserRole.FACULTY),
-                "admin": sum(1 for u in users if u.role == UserRole.ADMIN),
+                "student": sum(1 for u in users if u.role == UserRole.student),
+                "judge": sum(1 for u in users if u.role == UserRole.teacher),
+                "faculty": sum(1 for u in users if u.role == UserRole.teacher),
+                "admin": sum(1 for u in users if u.role == UserRole.teacher),
             }
         }
     }

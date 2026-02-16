@@ -153,7 +153,7 @@ class HotStreaksResponse(BaseModel):
     "/recompute/speaker/{user_id}",
     response_model=RecomputeSpeakerResponse,
     summary="Recompute speaker analytics",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def recompute_speaker(
     user_id: uuid.UUID,
@@ -185,7 +185,7 @@ async def recompute_speaker(
     "/recompute/team/{team_id}",
     response_model=RecomputeTeamResponse,
     summary="Recompute team analytics",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def recompute_team(
     team_id: uuid.UUID,
@@ -217,7 +217,7 @@ async def recompute_team(
     "/recompute/all",
     response_model=BatchRecomputeResponse,
     summary="Batch recompute all analytics",
-    dependencies=[Depends(require_role([UserRole.SUPER_ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def batch_recompute_all(
     batch_size: int = Query(default=100, ge=10, le=500),
@@ -256,7 +256,7 @@ async def batch_recompute_all(
 @router.post(
     "/rankings/recompute/{entity_type}",
     summary="Recompute rankings for entity type",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def recompute_rankings(
     entity_type: str,
@@ -403,7 +403,7 @@ async def get_tier_distribution(
     "/judge/{judge_id}/recompute",
     response_model=JudgeProfileResponse,
     summary="Recompute judge profile",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def recompute_judge_profile(
     judge_id: uuid.UUID,
@@ -440,7 +440,7 @@ async def recompute_judge_profile(
     "/judge/{judge_id}",
     response_model=JudgeProfileResponse,
     summary="Get judge profile",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def get_judge_profile(
     judge_id: uuid.UUID,
@@ -476,7 +476,7 @@ async def get_judge_profile(
     "/judge/bias-report",
     response_model=JudgeBiasReportResponse,
     summary="Get judge bias report",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def get_judge_bias_report(
     db: AsyncSession = Depends(get_db),
@@ -506,7 +506,7 @@ async def get_judge_bias_report(
     "/trends/{entity_type}/{entity_id}",
     response_model=TrendsResponse,
     summary="Get trends for entity",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def get_trends(
     entity_type: str,
@@ -552,7 +552,7 @@ async def get_trends(
     "/trends/{entity_type}/{entity_id}/compute",
     response_model=TrendsResponse,
     summary="Compute trends for entity",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def compute_trends(
     entity_type: str,
@@ -593,7 +593,7 @@ async def compute_trends(
     "/trends/hot-streaks/{entity_type}",
     response_model=HotStreaksResponse,
     summary="Get entities on hot streaks",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def get_hot_streaks(
     entity_type: str,
@@ -638,7 +638,7 @@ async def get_hot_streaks(
     "/trends/momentum/{entity_type}",
     response_model=List[TrendsResponse],
     summary="Get trending entities",
-    dependencies=[Depends(require_role([UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def get_trending_entities(
     entity_type: str,

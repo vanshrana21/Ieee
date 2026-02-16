@@ -125,10 +125,10 @@ async def _get_round_or_404(round_id: int, db: AsyncSession):
 def _check_judge_permission(current_user: User):
     """Verify user can mark AI scores as official"""
     if current_user.role not in [
-        UserRole.JUDGE, 
-        UserRole.FACULTY, 
-        UserRole.ADMIN, 
-        UserRole.SUPER_ADMIN
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher
     ]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

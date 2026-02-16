@@ -85,10 +85,10 @@ class RoundSummary(BaseModel):
 def _check_judge_permission(current_user: User):
     """Verify user has judge/faculty/admin role"""
     if current_user.role not in [
-        UserRole.JUDGE, 
-        UserRole.FACULTY, 
-        UserRole.ADMIN, 
-        UserRole.SUPER_ADMIN
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher
     ]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -247,10 +247,10 @@ async def get_round_scores(
     
     # Non-judges only see submitted scores
     if current_user.role not in [
-        UserRole.JUDGE, 
-        UserRole.FACULTY, 
-        UserRole.ADMIN, 
-        UserRole.SUPER_ADMIN
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher
     ]:
         query = query.where(OralRoundScore.is_submitted == True)
     
@@ -304,10 +304,10 @@ async def get_round_summary(
     
     # Non-judges only see submitted scores
     if current_user.role not in [
-        UserRole.JUDGE, 
-        UserRole.FACULTY, 
-        UserRole.ADMIN, 
-        UserRole.SUPER_ADMIN
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher, 
+        UserRole.teacher
     ]:
         query = query.where(OralRoundScore.is_submitted == True)
     

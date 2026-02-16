@@ -7,7 +7,7 @@ import logging
 from decimal import Decimal
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import get_db
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/api/ai-judge", tags=["ai-judge"])
 
 def _is_faculty(user: User) -> bool:
     """Check if user has faculty role."""
-    return user.role in (UserRole.FACULTY, UserRole.ADMIN)
+    return user.role in (UserRole.teacher, UserRole.teacher)
 
 
 def _make_error_response(error: str, message: str, details: Optional[dict] = None) -> dict:
@@ -148,21 +148,25 @@ async def trigger_evaluation(
     session_id: int,
     round_id: int,
     request: EvaluationTriggerRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Trigger AI evaluation for a participant in a round.
     
-    Faculty only. Returns evaluation ID immediately, processes asynchronously.
+    PHASE 2: Runs asynchronously using BackgroundTasks.
+    Returns immediately with evaluation_id, processing happens in background.
     """
-    if not _is_faculty(current_user):
+    # Check authorization (teacher only after Phase 1)
+    if current_user.role != UserRole.teacher:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=_make_error_response("FORBIDDEN", "Only faculty can trigger evaluations")
+            detail="Only teachers can trigger evaluations"
         )
     
     try:
+        # STEP 1: Create evaluation record and set to PROCESSING
         result = await eval_svc.evaluate(
             session_id=session_id,
             round_id=round_id,
@@ -175,18 +179,25 @@ async def trigger_evaluation(
             transcript_text=request.transcript_text
         )
         
+        evaluation_id = result.get("evaluation_id")
+        
+        # STEP 2: Commit initial state (processing)
         await db.commit()
         
-        if result.get("status") == "requires_review":
-            return EvaluationErrorResponse(
-                success=False,
-                error="EVALUATION_FAILED",
-                message=result.get("message", "Evaluation requires manual review"),
-                requires_review=True,
-                evaluation_id=result.get("evaluation_id")
-            )
+        # STEP 3: Add background task (non-blocking)
+        db_url = str(db.bind.url)
+        background_tasks.add_task(
+            eval_svc.process_ai_evaluation_background,
+            evaluation_id,
+            db_url
+        )
         
-        return result
+        # STEP 4: Return immediately (do not wait)
+        return {
+            "status": "processing",
+            "evaluation_id": evaluation_id,
+            "message": "AI evaluation started in background"
+        }
         
     except eval_svc.InvalidStateError as e:
         await db.rollback()
@@ -202,10 +213,32 @@ async def trigger_evaluation(
         )
     except Exception as e:
         await db.rollback()
-        logger.exception(f"Failed to evaluate round {round_id}")
+        logger.exception(f"Failed to start evaluation for round {round_id}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=_make_error_response("INTERNAL_ERROR", "Failed to evaluate")
+            detail=_make_error_response("INTERNAL_ERROR", "Failed to start evaluation")
+        )
+
+
+@router.get("/evaluations/{evaluation_id}/status")
+async def get_evaluation_status(
+    evaluation_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    PHASE 2: Get evaluation status for polling.
+    
+    Frontend polls this endpoint every 3-5 seconds to check evaluation progress.
+    """
+    try:
+        status = await eval_svc.get_evaluation_status(evaluation_id, db)
+        return status
+    except Exception as e:
+        logger.exception(f"Failed to get status for evaluation {evaluation_id}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get evaluation status"
         )
 
 

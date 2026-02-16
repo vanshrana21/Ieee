@@ -99,7 +99,7 @@ async def verify_presiding_judge(
     For now, checks if user has JUDGE role.
     In production, would check specific presiding assignment.
     """
-    return user.role == UserRole.JUDGE or user.role in [UserRole.ADMIN, UserRole.HOD]
+    return user.role == UserRole.teacher or user.role in [UserRole.teacher, UserRole.teacher]
 
 
 # =============================================================================
@@ -111,7 +111,7 @@ async def raise_objection_endpoint(
     session_id: int,
     request: RaiseObjectionRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY, UserRole.JUDGE]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Raise an objection during a turn.
@@ -194,7 +194,7 @@ async def rule_objection_endpoint(
     objection_id: int,
     request: RuleObjectionRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Rule on a pending objection.
@@ -366,7 +366,7 @@ async def record_violation_endpoint(
     session_id: int,
     request: RecordViolationRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Record a procedural violation.

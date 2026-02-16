@@ -58,11 +58,11 @@ MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB
 
 def check_admin_or_hod(user: User) -> bool:
     """Check if user is ADMIN or HOD."""
-    return user.role in [UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]
+    return user.role in [UserRole.teacher, UserRole.teacher, UserRole.teacher]
 
 def check_judge_or_faculty(user: User) -> bool:
     """Check if user is JUDGE or FACULTY."""
-    return user.role in [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    return user.role in [UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]
 
 
 # =============================================================================
@@ -77,7 +77,7 @@ async def create_moot_problem(
     tournament_id: Optional[int] = Form(None),
     blind_review: bool = Form(True),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Create a new moot problem.
@@ -156,7 +156,7 @@ async def create_clarification(
     question_text: str = Form(..., min_length=10),
     official_response: str = Form(..., min_length=10),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Release a clarification for a moot problem.
@@ -365,7 +365,7 @@ async def evaluate_memorial(
     citation_format_score: Decimal = Form(..., ge=0, le=100),
     rubric_version_id: Optional[int] = Form(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Evaluate a memorial submission.
@@ -414,7 +414,7 @@ async def evaluate_memorial(
 async def get_memorial_for_evaluation(
     submission_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get memorial submission details for evaluation (institution-scoped).
@@ -492,7 +492,7 @@ async def verify_evaluation(
 async def freeze_problem_scores(
     problem_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Freeze all memorial scores for a moot problem.
@@ -535,7 +535,7 @@ async def freeze_problem_scores(
 async def verify_freeze(
     freeze_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Verify the integrity of a score freeze.
@@ -582,7 +582,7 @@ async def get_problem_submissions(
     problem_id: int,
     side: Optional[MemorialSide] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.JUDGE, UserRole.FACULTY, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get all memorial submissions for a moot problem.
@@ -628,7 +628,7 @@ async def get_problem_submissions(
 async def get_problem_evaluations(
     problem_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get all evaluations for a moot problem (admin only).

@@ -50,7 +50,7 @@ async def create_session(
     respondent_team_id: int,
     round_template_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Create new oral session in DRAFT status.
@@ -96,7 +96,7 @@ async def activate_session(
     petitioner_participants: List[int],
     respondent_participants: List[int],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Activate oral session and create turns from template.
@@ -148,7 +148,7 @@ async def evaluate_session(
     responsiveness_score: float,
     courtroom_control_score: float,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Submit oral evaluation for a speaker.
@@ -212,7 +212,7 @@ async def evaluate_session(
 async def finalize_session(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Finalize oral session (irreversible).
@@ -260,7 +260,7 @@ async def finalize_session(
 async def verify_session_integrity(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Verify oral session integrity.

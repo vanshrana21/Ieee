@@ -289,7 +289,7 @@ async def check_session_access(
         return False, None
     
     # Super admin always has access
-    if user.role == UserRole.SUPER_ADMIN:
+    if user.role == UserRole.teacher:
         return True, session
     
     # Check visibility mode
@@ -636,7 +636,7 @@ async def broadcast_message(
         )
     
     # Check role
-    allowed_roles = [UserRole.ADMIN, UserRole.JUDGE, UserRole.SUPER_ADMIN]
+    allowed_roles = [UserRole.teacher, UserRole.teacher, UserRole.teacher]
     if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
