@@ -355,39 +355,6 @@ async function showPastAttempts() {
     }
 }
 
-async function apiRequest(endpoint, method = 'GET', body = null) {
-    const token = localStorage.getItem('access_token');
-    const headers = {
-        'Content-Type': 'application/json'
-    };
-
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const config = {
-        method,
-        headers
-    };
-
-    if (body) {
-        config.body = JSON.stringify(body);
-    }
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
-
-    if (!response.ok) {
-        if (response.status === 401) {
-            localStorage.removeItem('access_token');
-            window.location.href = '/html/login.html';
-        }
-        throw new Error(data.detail || 'API request failed');
-    }
-
-    return data;
-}
-
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');

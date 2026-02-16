@@ -53,10 +53,13 @@ class SessionJoinRequest(BaseModel):
 
 
 class SessionJoinResponse(BaseModel):
-    """Response schema for joining a session."""
+    """Response schema for joining a session with deterministic assignment."""
     session_id: int
     session_code: str
-    role: str
+    side: Optional[str] = None  # PETITIONER / RESPONDENT
+    speaker_number: Optional[int] = None  # 1 or 2
+    total_participants: Optional[int] = None
+    role: Optional[str] = None  # Legacy field for backward compatibility
     current_state: str
     remaining_seconds: Optional[int]
     message: str
@@ -118,6 +121,47 @@ class ScoreUpdate(BaseModel):
 
 
 class SessionStateChangeRequest(BaseModel):
-    """Request schema for state transitions."""
+    """Request schema for state transitions (legacy)."""
     target_state: str = Field(..., pattern=r'^(preparing|study|moot|scoring|completed|cancelled)$')
     validation_data: Optional[Dict[str, Any]] = None
+
+
+class StrictStateTransitionRequest(BaseModel):
+    """Request schema for strict state machine transitions."""
+    target_state: str = Field(..., min_length=1, max_length=50, description="Target state (e.g., PREPARING, ARGUING_PETITIONER)")
+    reason: Optional[str] = Field(None, max_length=500, description="Optional reason for the transition")
+
+
+class StrictStateTransitionResponse(BaseModel):
+    """Response schema for strict state machine transitions."""
+    success: bool
+    session_id: int
+    new_state: str
+    previous_state: str
+    state_updated_at: Optional[str] = None
+    triggered_by: Optional[int] = None
+    reason: Optional[str] = None
+
+
+class AllowedTransitionResponse(BaseModel):
+    """Response schema for allowed transitions."""
+    from_state: str
+    allowed_states: List[str]
+    transitions: List[Dict[str, Any]]
+
+
+class StateLogResponse(BaseModel):
+    """Response schema for state transition log entries."""
+    id: int
+    session_id: int
+    from_state: str
+    to_state: str
+    triggered_by_user_id: Optional[int] = None
+    trigger_type: Optional[str] = None
+    reason: Optional[str] = None
+    is_successful: bool
+    error_message: Optional[str] = None
+    created_at: str
+    
+    class Config:
+        from_attributes = True

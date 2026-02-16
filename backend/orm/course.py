@@ -4,7 +4,7 @@ Course model for law degree programs (BA LLB, BBA LLB, LLB)
 """
 from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.orm import relationship
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class Course(Base):
@@ -35,6 +35,11 @@ class Course(Base):
         "CourseCurriculum",
         back_populates="course",
         cascade="all, delete-orphan"
+    )
+    
+    enrolled_users = relationship(
+        "User",
+        back_populates="course"
     )
     
     def __repr__(self):

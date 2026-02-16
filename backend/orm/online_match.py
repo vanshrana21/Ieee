@@ -12,7 +12,7 @@ from enum import Enum as PyEnum
 import random
 import string
 
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class MatchState(PyEnum):

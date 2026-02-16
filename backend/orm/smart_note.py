@@ -110,7 +110,7 @@ class SmartNote(BaseModel):
     # Relationships
     user = relationship(
         "User",
-        backref="smart_notes",
+        back_populates="smart_notes",
         lazy="selectin"
     )
     

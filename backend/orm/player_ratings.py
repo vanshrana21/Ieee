@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
 
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class PlayerRating(Base):

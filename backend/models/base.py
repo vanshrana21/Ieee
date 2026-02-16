@@ -1,13 +1,12 @@
 """
 backend/models/base.py
-Base model with common fields for all database models
+Base model for legacy models - use backend.orm.base.Base instead
 """
 from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime
-from sqlalchemy.orm import declarative_base
 
-# Create Base class
-Base = declarative_base()
+# Use the canonical Base from orm.base
+from backend.orm.base import Base
 
 
 class TimestampMixin:

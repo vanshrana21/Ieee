@@ -25,12 +25,35 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./legalai.db")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")
 
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=False,
-    future=True,
-    pool_pre_ping=True,
-)
+# Connection pool configuration for high concurrency
+# SQLite has different pool needs than PostgreSQL
+if "sqlite" in DATABASE_URL.lower():
+    # SQLite: Use QueuePool with proper settings for concurrent access
+    # Connect arguments for SQLite to handle concurrent writes
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,
+        future=True,
+        pool_pre_ping=True,
+        pool_size=10,           # Keep some connections ready
+        max_overflow=20,        # Allow more connections under load
+        pool_timeout=30,        # Wait up to 30s for connection
+        connect_args={
+            "timeout": 30.0,   # SQLite busy timeout in seconds
+        }
+    )
+else:
+    # PostgreSQL/MySQL: Use standard pool with larger size
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,
+        future=True,
+        pool_pre_ping=True,
+        pool_size=20,           # Base pool size
+        max_overflow=30,        # Additional connections under load
+        pool_timeout=30,        # Wait up to 30s for connection
+        pool_recycle=3600,      # Recycle connections after 1 hour
+    )
 
 AsyncSessionLocal = async_sessionmaker(
     engine,
@@ -183,6 +206,66 @@ async def check_and_migrate_role_column():
             raise
 
 
+async def check_and_migrate_moot_cases_columns():
+    """
+    PHASE: Case Library Upgrade
+    Check and add new columns to moot_cases table if missing.
+    Safe ALTER TABLE ADD COLUMN for SQLite.
+    """
+    from sqlalchemy import text
+    
+    # New columns to add: (column_name, column_type, default_value)
+    new_columns = [
+        ("external_case_code", "VARCHAR(50)", None),
+        ("topic", "VARCHAR(100)", None),
+        ("citation", "VARCHAR(255)", None),
+        ("short_proposition", "TEXT", None),
+        ("constitutional_articles", "JSON", None),
+        ("key_issues", "JSON", None),
+        ("landmark_cases_expected", "JSON", None),
+        ("complexity_level", "INTEGER", "3"),
+    ]
+    
+    try:
+        async with engine.begin() as conn:
+            # Check if moot_cases table exists
+            result = await conn.execute(text("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='moot_cases'
+            """))
+            table_exists = result.fetchone()
+            
+            if not table_exists:
+                logger.info("Moot cases table doesn't exist yet - skipping migration")
+                return
+            
+            # Get existing columns
+            result = await conn.execute(text("PRAGMA table_info(moot_cases)"))
+            existing_columns = {row[1] for row in result.fetchall()}
+            
+            # Add missing columns
+            columns_added = 0
+            for col_name, col_type, default in new_columns:
+                if col_name not in existing_columns:
+                    if default:
+                        sql = f"ALTER TABLE moot_cases ADD COLUMN {col_name} {col_type} DEFAULT {default}"
+                    else:
+                        sql = f"ALTER TABLE moot_cases ADD COLUMN {col_name} {col_type}"
+                    
+                    logger.info(f"Adding column {col_name} to moot_cases")
+                    await conn.execute(text(sql))
+                    columns_added += 1
+            
+            if columns_added > 0:
+                logger.info(f"✓ Successfully added {columns_added} columns to moot_cases table")
+            else:
+                logger.info("✓ All moot_cases columns already exist - no migration needed")
+                
+    except Exception as e:
+        logger.error(f"Moot cases migration error: {str(e)}")
+        raise
+
+
 async def init_db():
     """
     Initialize database:
@@ -205,6 +288,7 @@ async def init_db():
         from backend.orm.oral_round import OralRound
         
         # PHASE 5/6: Moot court and submissions
+        from backend.orm.moot_case import MootCase
         from backend.orm.moot_project import MootProject
         from backend.orm.submission import Submission
         from backend.orm.team_activity import TeamActivityLog
@@ -243,6 +327,12 @@ async def init_db():
         # First, handle migration for existing database
         await check_and_migrate_role_column()
         await check_and_migrate_institution_column()
+        await check_and_migrate_moot_cases_columns()  # NEW: Phase Case Library migration
+        
+        # Log database dialect
+        logger.info(f"Database dialect: {engine.url.get_backend_name()}")
+        if engine.url.get_backend_name() == "sqlite":
+            logger.warning("Running on SQLite — JSONB downgraded to JSON.")
         
         # Then create all tables (this will only create missing tables)
         async with engine.begin() as conn:
@@ -260,3 +350,39 @@ async def close_db():
     """Close database connection"""
     await engine.dispose()
     logger.info("Database connection closed")
+
+
+async def seed_moot_cases(db: AsyncSession):
+    """
+    Seed default moot cases if none exist.
+    Called during startup after DB initialization.
+    """
+    from sqlalchemy import select, func
+    from backend.orm.moot_case import MootCase
+    
+    try:
+        # Check if any MootCase exists
+        result = await db.execute(select(func.count()).select_from(MootCase))
+        count = result.scalar()
+        
+        if count == 0:
+            logger.info("No moot cases found - seeding default case")
+            
+            default_case = MootCase(
+                title="Justice K.S. Puttaswamy vs Union of India",
+                description="Landmark judgment establishing Right to Privacy as Fundamental Right",
+                legal_domain="constitutional",
+                difficulty_level="advanced"
+            )
+            
+            db.add(default_case)
+            await db.commit()
+            
+            logger.info("✓ Successfully seeded default moot case (ID: %s)", default_case.id)
+        else:
+            logger.info("✓ Moot cases already exist (%d cases) - skipping seed", count)
+            
+    except Exception as e:
+        logger.error(f"Failed to seed moot cases: {str(e)}")
+        await db.rollback()
+        raise

@@ -43,12 +43,13 @@ async def create_session(
 ):
     """
     Create new classroom session.
-    Only teachers can create sessions.
+    Only teachers/faculty can create sessions.
     """
-    if current_user.get("role") != "teacher":
+    user_role = current_user.get("role")
+    if user_role not in ["teacher", "faculty"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only teachers can create sessions"
+            detail="Only teachers or faculty can create sessions"
         )
     
     # Create session

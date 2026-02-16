@@ -388,6 +388,64 @@
     </div>
 
     <div class="main-grid">
+      <!-- Create Session Form (Teacher Only) -->
+      <div id="create-session-form" style="display: none; background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 1.5rem;">🎓 Create New Session</h2>
+        <div style="display: grid; gap: 1rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Session Topic</label>
+            <input type="text" id="session-topic" placeholder="e.g., Right to Privacy vs National Security" style="width: 100%; padding: 0.75rem; background: var(--primary-bg); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-primary);">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Category</label>
+              <select id="session-category" style="width: 100%; padding: 0.75rem; background: var(--primary-bg); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-primary);">
+                <option value="constitutional">Constitutional Law</option>
+                <option value="criminal">Criminal Law</option>
+                <option value="civil">Civil Law</option>
+                <option value="corporate">Corporate Law</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Max Participants</label>
+              <input type="number" id="max-participants" value="40" min="2" max="100" style="width: 100%; padding: 0.75rem; background: var(--primary-bg); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-primary);">
+            </div>
+          </div>
+          <button class="btn primary" id="create-session-btn" style="margin-top: 1rem;">🚀 Create Session</button>
+        </div>
+      </div>
+
+      <!-- Join Session Form (Student Only) -->
+      <div id="join-session-form" style="display: none; background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 1.5rem;">👥 Join Session</h2>
+        <div style="display: grid; gap: 1rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Session Code</label>
+            <input type="text" id="session-code-input" placeholder="JURIS-XXXXXX" maxlength="12" style="width: 100%; padding: 0.75rem; background: var(--primary-bg); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-primary); text-transform: uppercase; font-family: monospace;">
+          </div>
+          <button class="btn primary" id="join-session-btn" style="margin-top: 1rem;">🔑 Join Session</button>
+        </div>
+      </div>
+
+      <!-- Session Info (Hidden until session created/joined) -->
+      <div id="session-info" style="display: none; background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 1rem;">📋 Session Information</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+          <div>
+            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Session Code</p>
+            <div class="session-code" id="session-code-display">-</div>
+          </div>
+          <div>
+            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Status</p>
+            <div id="session-status">-</div>
+          </div>
+        </div>
+        <div id="participants-section" style="margin-top: 2rem;">
+          <h3 style="margin-bottom: 1rem;">👥 Participants</h3>
+          <ul id="participants-list" style="list-style: none; padding: 0;"></ul>
+        </div>
+      </div>
+
       <!-- Main Courtroom Panel -->
       <div class="courtroom-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -615,5 +673,8 @@
     
     console.log('Classroom Mode initialized. Session:', sessionId);
   </script>
+  
+  <!-- Include Classroom JavaScript -->
+  <script src="../js/classroom.js"></script>
 </body>
 </html>

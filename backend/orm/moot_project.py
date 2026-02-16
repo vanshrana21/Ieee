@@ -81,9 +81,9 @@ class MootProject(Base):
     deleted_at = Column(DateTime, nullable=True)  # Soft delete
     
     # Relationships
-    issues = relationship("MootIssue", backref="project", lazy="selectin", cascade="all, delete-orphan")
-    oral_rounds = relationship("OralRound", backref="project", lazy="selectin", cascade="all, delete-orphan")
-    evaluations = relationship("MootEvaluation", backref="project", lazy="selectin", cascade="all, delete-orphan")
+    issues = relationship("MootIssue", back_populates="project", lazy="selectin", cascade="all, delete-orphan")
+    oral_rounds = relationship("OralRound", back_populates="moot_project", lazy="selectin", cascade="all, delete-orphan")
+    evaluations = relationship("MootEvaluation", back_populates="project", lazy="selectin", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<MootProject(id={self.id}, title='{self.title}', institution={self.institution_id})>"
@@ -142,7 +142,8 @@ class MootIssue(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    irac_blocks = relationship("IRACBlock", backref="issue", lazy="selectin", cascade="all, delete-orphan")
+    project = relationship("MootProject", back_populates="issues")
+    # irac_blocks = relationship("IRACBlock", backref="issue", lazy="selectin", cascade="all, delete-orphan")  # TODO: Implement IRACBlock model if needed
     
     def to_dict(self, include_irac=False):
         data = {

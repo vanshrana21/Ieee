@@ -115,6 +115,8 @@ class ClassroomRound(Base):
     winner = relationship("User", foreign_keys=[winner_id])
     actions = relationship("ClassroomRoundAction", back_populates="round", 
                           cascade="all, delete-orphan", lazy="dynamic")
+    turns = relationship("ClassroomTurn", back_populates="round", 
+                      cascade="all, delete-orphan", order_by="ClassroomTurn.turn_order")
     
     # AI session reference
     ai_session = relationship("AIOpponentSession", foreign_keys=[ai_opponent_session_id])

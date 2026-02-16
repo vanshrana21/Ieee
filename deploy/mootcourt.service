@@ -1,0 +1,44 @@
+[Unit]
+Description=Moot Court Tournament API Server
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=notify
+User=mootcourt
+Group=mootcourt
+WorkingDirectory=/opt/mootcourt
+Environment="PATH=/opt/mootcourt/venv/bin"
+Environment="PYTHONPATH=/opt/mootcourt"
+EnvironmentFile=/opt/mootcourt/.env
+
+ExecStart=/opt/mootcourt/venv/bin/gunicorn \
+    -c /opt/mootcourt/deploy/gunicorn.conf.py \
+    backend.main:app
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/mootcourt/logs /opt/mootcourt/uploads
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# Resource limits
+LimitNOFILE=65535
+LimitNPROC=4096
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target

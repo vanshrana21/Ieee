@@ -338,6 +338,14 @@
     <div class="container">
       <div class="form-card">
         <form id="create-session-form">
+          <!-- Moot Case Selector -->
+          <div class="form-group">
+            <label class="form-label">Moot Case *</label>
+            <select class="form-select" id="moot-case" required>
+              <option value="">Loading cases...</option>
+            </select>
+          </div>
+
           <!-- Topic -->
           <div class="form-group">
             <label class="form-label">Moot Topic</label>
@@ -410,47 +418,192 @@
     </div>
   </section>
 
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
   <script>
-    // Toggle selection
-    document.querySelectorAll('.toggle-option').forEach(option => {
-      option.addEventListener('click', function() {
-        document.querySelectorAll('.toggle-option').forEach(o => o.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
+    const API_BASE = "http://127.0.0.1:8000";
 
-    // Form submission
-    document.getElementById('create-session-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
+    // ROLE GUARD: Only teachers can create sessions
+    function checkFacultyAccess() {
+      const role = localStorage.getItem("user_role");
+      console.log("[CLASSROOM] User role:", role);
       
-      const topic = document.getElementById('topic').value.trim();
-      const category = document.getElementById('category').value;
-      const prepTime = document.getElementById('prep-time').value;
-      const oralTime = document.getElementById('oral-time').value;
-      const aiJudge = document.querySelector('input[name="ai-judge"]:checked').value;
+      if (role !== "teacher") {
+        console.warn("[CLASSROOM] Access denied: Only teachers can create sessions");
+        
+        // Hide create form
+        const form = document.getElementById('create-session-form');
+        if (form) form.style.display = 'none';
+        
+        // Show access denied message
+        const formCard = document.querySelector('.form-card');
+        if (formCard) {
+          formCard.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+              <div style="font-size: 48px; margin-bottom: 1rem;">🚫</div>
+              <h2 style="color: var(--accent-gold); margin-bottom: 1rem;">Access Denied</h2>
+              <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Only teachers can create sessions.
+              </p>
+              <button class="submit-btn" onclick="window.location.href='classroom-join-session.html'">
+                Join a Session Instead →
+              </button>
+            </div>
+          `;
+        }
+        
+        return false;
+      }
+      return true;
+    }
+
+    // Load moot cases from API using global apiRequest
+    async function loadMootCases() {
+      try {
+        console.log("[CLASSROOM] Loading moot cases...");
+        const cases = await window.apiRequest('/api/classroom/moot-cases', {
+          method: 'GET'
+        });
+        
+        if (!cases || !Array.isArray(cases)) {
+          console.warn("[CLASSROOM] No cases returned or invalid format");
+          return;
+        }
+
+        const select = document.getElementById("moot-case");
+        select.innerHTML = "";
+
+        if (cases.length === 0) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "No cases available";
+          select.appendChild(option);
+          return;
+        }
+
+        cases.forEach(c => {
+          const option = document.createElement("option");
+          option.value = c.id;
+          option.textContent = `${c.title} (${c.topic})`;
+          select.appendChild(option);
+        });
+
+        console.log(`[CLASSROOM] Loaded ${cases.length} moot cases`);
+
+      } catch (error) {
+        console.error("[CLASSROOM ERROR] Failed to load moot cases:", error);
+        const select = document.getElementById("moot-case");
+        select.innerHTML = "";
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "Failed to load cases";
+        select.appendChild(option);
+      }
+    }
+
+    // Create session using global apiRequest with proper response handling
+    async function createSession(formData) {
+      try {
+        console.log("[CLASSROOM] Creating session...");
+        
+        const data = await window.apiRequest('/api/classroom/sessions', {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+
+        if (!data) {
+          throw new Error("No response from server");
+        }
+
+        // Auto-detect response shape
+        const sessionCode = data.session_code || (data.session && data.session.session_code);
+        const sessionId = data.id || (data.session && data.session.id);
+        
+        if (!sessionCode) {
+          console.error("[CLASSROOM ERROR] Response shape:", data);
+          throw new Error("Session code missing in response");
+        }
+
+        // Store session data
+        const sessionData = {
+          code: sessionCode,
+          id: sessionId,
+          topic: formData.topic,
+          category: formData.category,
+          prepTime: formData.prep_time_minutes,
+          oralTime: formData.oral_time_minutes,
+          aiJudge: formData.ai_judge_mode,
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem('teacher_session', JSON.stringify(sessionData));
+        
+        // Display session code
+        const codeEl = document.getElementById('generated-code');
+        const displayEl = document.getElementById('session-code-display');
+        const formEl = document.getElementById('create-session-form');
+        
+        if (!codeEl || !displayEl) {
+          throw new Error("Session code display elements not found");
+        }
+        
+        codeEl.textContent = sessionCode;
+        displayEl.classList.add('show');
+        if (formEl) formEl.style.display = 'none';
+        
+        console.log("[CLASSROOM] Session created:", sessionCode);
+        
+      } catch (err) {
+        console.error("[CLASSROOM ERROR] Session creation failed:", err.message);
+        alert(err.message || "Failed to create session. Please try again.");
+        throw err;
+      }
+    }
+
+    // Initialize page
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("[CLASSROOM] Page initialized");
       
-      // Generate random session code
-      const code = 'JURIS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      // Check role access first
+      if (!checkFacultyAccess()) {
+        return;
+      }
       
-      // Store session data
-      const sessionData = {
-        code: code,
-        topic: topic,
-        category: category,
-        prepTime: prepTime,
-        oralTime: oralTime,
-        aiJudge: aiJudge,
-        createdAt: new Date().toISOString()
-      };
-      localStorage.setItem('teacher_session', JSON.stringify(sessionData));
+      // Load moot cases
+      loadMootCases();
       
-      // Show session code
-      document.getElementById('generated-code').textContent = code;
-      document.getElementById('session-code-display').classList.add('show');
-      document.getElementById('create-session-form').style.display = 'none';
-      
-      // Log to console (replace with API call)
-      console.log('Creating session:', sessionData);
+      // Attach form submit handler
+      document.getElementById('create-session-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const mootCaseId = document.getElementById('moot-case').value;
+        const topic = document.getElementById('topic').value.trim();
+        const category = document.getElementById('category').value;
+        const prepTime = parseInt(document.getElementById('prep-time').value);
+        const oralTime = parseInt(document.getElementById('oral-time').value);
+        const aiJudge = document.querySelector('input[name="ai-judge"]:checked').value;
+        
+        if (!mootCaseId) {
+          alert('Please select a moot case');
+          return;
+        }
+        
+        const formData = {
+          case_id: parseInt(mootCaseId),
+          topic: topic,
+          category: category,
+          prep_time_minutes: prepTime,
+          oral_time_minutes: oralTime,
+          ai_judge_mode: aiJudge,
+          max_participants: 40
+        };
+        
+        try {
+          await createSession(formData);
+        } catch (err) {
+          // Error already logged and alerted in createSession
+          console.log("[CLASSROOM] Form submission failed");
+        }
+      });
     });
 
     function goToControlPanel() {

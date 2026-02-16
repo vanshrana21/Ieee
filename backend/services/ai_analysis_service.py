@@ -3,6 +3,8 @@
 AI-powered analysis service for legal case data.
 Uses RAG pattern: AI analyzes only the provided case data, no hallucination.
 Enhanced with structured case brief generation.
+
+Phase 20 Integration: Lifecycle guards prevent evaluation on closed tournaments.
 """
 import os
 import logging
@@ -15,6 +17,37 @@ logger = logging.getLogger(__name__)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
+
+
+async def _check_lifecycle_guard(tournament_id: str, operation: str = "score") -> bool:
+    """
+    Phase 20: Check if tournament is closed for operations.
+    
+    Args:
+        tournament_id: Tournament UUID string
+        operation: Operation type
+        
+    Returns:
+        True if allowed, False if blocked
+    """
+    try:
+        from backend.config.feature_flags import feature_flags
+        if not feature_flags.FEATURE_TOURNAMENT_LIFECYCLE:
+            return True  # Lifecycle not enabled, allow
+        
+        from backend.services.phase20_lifecycle_service import LifecycleService
+        from sqlalchemy.ext.asyncio import AsyncSession
+        from backend.database import async_session_maker
+        from uuid import UUID
+        
+        async with async_session_maker() as db:
+            allowed, _ = await LifecycleService.check_operation_allowed(
+                db, UUID(tournament_id), operation
+            )
+            return allowed
+    except Exception as e:
+        logger.warning(f"Lifecycle guard check failed: {e}")
+        return True  # Fail open on error
 
 
 def analyze_cases_with_ai(

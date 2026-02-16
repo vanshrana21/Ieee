@@ -6,7 +6,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class AIOpponentArgument(Base):

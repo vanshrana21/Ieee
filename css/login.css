@@ -10,40 +10,9 @@
     --text-muted: rgba(255, 255, 255, 0.7);
 }
 
-/* Fullscreen canvas animated background */
-#bg-animation {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    overflow: hidden;
-    background: #0a1628;
-}
+/* Split Layout System */
 
-/* Dark translucent overlay for text readability */
-#bg-animation::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg,
-            rgba(10, 22, 40, 0.6) 0%,
-            rgba(10, 22, 40, 0.4) 50%,
-            rgba(10, 22, 40, 0.6) 100%);
-    pointer-events: none;
-    z-index: 1;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* Global resets */
 html,
 body {
     width: 100%;
@@ -57,34 +26,44 @@ body {
     background: #0a1628;
 }
 
-/* Login container above animation */
+/* Split Grid Container */
 .login-container {
-    position: relative;
-    z-index: 2;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    min-height: 100vh;
-    height: 100%;
-    overflow-y: auto;
-    background: transparent;
+    grid-template-columns: 55% 45%;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
+/* Left Visual Panel */
 .login-left {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 48px;
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    display: block;
+    /* Ensure visible */
 }
 
+/* Hero Image & Overlay - Removed for CSS background control */
+.hero-image,
+.hero-overlay {
+    display: none !important;
+}
+
+/* Branding (Top Left) */
 .login-branding {
-    max-width: 420px;
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    z-index: 2;
+    max-width: none;
 }
 
 .login-logo {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 32px;
+    margin-bottom: 0;
 }
 
 .login-brand-text {
@@ -94,28 +73,18 @@ body {
     letter-spacing: -0.02em;
 }
 
-.login-tagline {
-    font-size: 38px;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.2;
-    margin-bottom: 16px;
-    letter-spacing: -0.02em;
-}
-
-.login-description {
-    font-size: 17px;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.6;
-}
-
+/* Right Login Form Panel */
 .login-right {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 48px;
+    background: #0B1220;
+    position: relative;
+    z-index: 2;
 }
 
+/* Login Card */
 .login-card {
     width: 100%;
     max-width: 420px;
@@ -327,14 +296,31 @@ body {
 @media (max-width: 992px) {
     .login-container {
         grid-template-columns: 1fr;
+        grid-template-rows: 40vh auto;
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
     }
 
     .login-left {
-        display: none;
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 40vh;
+    }
+
+    .hero-image {
+        object-position: center;
     }
 
     .login-right {
         padding: 32px 24px;
+        min-height: 60vh;
+        align-items: flex-start;
+    }
+
+    .login-card {
+        margin-top: 0;
     }
 }
 

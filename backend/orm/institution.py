@@ -59,8 +59,8 @@ class Institution(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    users = relationship("User", backref="institution", lazy="selectin")
-    competitions = relationship("Competition", backref="institution", lazy="selectin", cascade="all, delete-orphan")
+    users = relationship("User", back_populates="institution", lazy="selectin")
+    competitions = relationship("Competition", back_populates="institution", lazy="selectin", cascade="all, delete-orphan")
     
     # Phase 6: New relationships
     admins = relationship("InstitutionAdmin", back_populates="institution", cascade="all, delete-orphan")

@@ -4,7 +4,9 @@
 <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link href="https://use.typekit.net/xxxxxxx.css" rel="stylesheet">
     <style>
         @font-face {
@@ -76,12 +78,13 @@
     </nav>
 
     <section class="hero">
-        <div class="hero-bg-overlay"></div>
+        <div class="hero-bg-image"></div>
         <div class="container hero-container">
             <div class="hero-content">
                 <p class="hero-eyebrow">BUILT FOR INDIAN LAW STUDENTS</p>
                 <h1 class="hero-title">Law School, Simplified.</h1>
-                <p class="hero-subtitle">Read cases faster, prepare for exams, practice moots, and master law with AI — semester by semester.</p>
+                <p class="hero-subtitle">Read cases faster, prepare for exams, practice moots, and master law with AI —
+                    semester by semester.</p>
 
                 <div class="hero-actions">
                     <a href="signup.html" class="btn btn-primary btn-large">Start Your Law Journey</a>
@@ -109,7 +112,8 @@
                         </svg>
                     </div>
                     <h3 class="audience-title">Law Students</h3>
-                    <p class="audience-description">BA LLB, BBA LLB, and LLB students preparing for university exams and building strong legal foundations.</p>
+                    <p class="audience-description">BA LLB, BBA LLB, and LLB students preparing for university exams and
+                        building strong legal foundations.</p>
                 </div>
 
                 <div class="audience-card">
@@ -124,7 +128,8 @@
                         </svg>
                     </div>
                     <h3 class="audience-title">Moot Advocates</h3>
-                    <p class="audience-description">Aspiring lawyers mastering argumentation with AI-powered moot court practice.</p>
+                    <p class="audience-description">Aspiring lawyers mastering argumentation with AI-powered moot court
+                        practice.</p>
                 </div>
 
                 <div class="audience-card">
@@ -136,7 +141,8 @@
                         </svg>
                     </div>
                     <h3 class="audience-title">All Semesters</h3>
-                    <p class="audience-description">From first year to final — Lexora adapts to your course and semester requirements.</p>
+                    <p class="audience-description">From first year to final — Lexora adapts to your course and semester
+                        requirements.</p>
                 </div>
             </div>
         </div>
@@ -354,13 +360,14 @@
         (function () {
             'use strict';
 
-            const hero = document.querySelector('.hero');
+            const heroBg = document.querySelector('.hero-bg-image');
 
             function parallaxScroll() {
+                if (window.innerWidth < 768) return;
                 const scrolled = window.pageYOffset;
                 const rate = scrolled * 0.3;
-                if (hero) {
-                    hero.style.backgroundPositionY = rate + 'px';
+                if (heroBg) {
+                    heroBg.style.backgroundPositionY = rate + 'px';
                 }
             }
 
