@@ -56,6 +56,10 @@ class MootEvaluation(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Relationships
+    project = relationship("MootProject", back_populates="evaluations")
+    judge = relationship("User", foreign_keys=[judge_id])
+    
     def calculate_total(self):
         """Calculate total score from individual categories"""
         scores = [

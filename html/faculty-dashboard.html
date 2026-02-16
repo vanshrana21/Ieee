@@ -147,6 +147,8 @@
         </div>
     </div>
 
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
     <script>
         const API_BASE = '/api';
         let facultyData = null;
@@ -161,71 +163,74 @@
         // Load Dashboard Data
         async function loadDashboard() {
             try {
-                const token = localStorage.getItem('access_token');
-                if (!token) {
-                    window.location.href = '/login.html';
+                const data = await apiRequest(`${API_BASE}/faculty/dashboard`);
+                
+                if (!data) {
+                    renderEmptyDashboard();
                     return;
                 }
 
-                const response = await fetch(`${API_BASE}/faculty/dashboard`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = '/login.html';
-                        return;
-                    }
-                    throw new Error('Failed to load dashboard');
-                }
-
-                const data = await response.json();
                 facultyData = data.faculty;
                 
                 // Update header
-                document.getElementById('faculty-name').textContent = facultyData.full_name || 'Faculty';
-                document.getElementById('faculty-institution').textContent = `Institution #${facultyData.institution_id}`;
+                document.getElementById('faculty-name').textContent = facultyData?.full_name || 'Faculty';
+                document.getElementById('faculty-institution').textContent = facultyData?.institution_id ? `Institution #${facultyData.institution_id}` : 'No Institution';
 
-                // Render metrics
-                renderMetrics(data.metrics);
+                // Render metrics (with fallback)
+                renderMetrics(data.metrics || {});
 
-                // Render teams
-                renderTeams(data.teams);
-                teamsData = data.teams;
+                // Render teams (with fallback)
+                renderTeams(data.teams || []);
+                teamsData = data.teams || [];
 
-                // Render activity
-                renderActivity(data.recent_activity);
+                // Render activity (with fallback)
+                renderActivity(data.recent_activity || []);
 
                 // Load projects
-                loadProjects();
+                await loadProjects();
 
             } catch (error) {
                 console.error('Dashboard load error:', error);
-                showError('Failed to load dashboard. Please try again.');
+                renderEmptyDashboard();
             }
+        }
+
+        // Render empty dashboard state
+        function renderEmptyDashboard() {
+            document.getElementById('faculty-name').textContent = 'Faculty';
+            document.getElementById('faculty-institution').textContent = 'No Institution';
+            renderMetrics({});
+            renderTeams([]);
+            renderActivity([]);
+            renderProjects([]);
         }
 
         // Render Metrics
         function renderMetrics(metrics) {
             const container = document.getElementById('metrics-grid');
+            const totalProjects = metrics?.total_projects ?? 0;
+            const activeTeams = metrics?.active_teams ?? 0;
+            const avgCompleteness = metrics?.average_irac_completeness ?? 0;
+            const lockedProjects = metrics?.locked_projects ?? 0;
+            
             container.innerHTML = `
                 <div class="bg-white p-6 rounded-lg shadow-md metric-card">
                     <p class="text-sm text-gray-500 mb-1">Total Projects</p>
-                    <p class="text-3xl font-bold text-gray-800">${metrics.total_projects}</p>
+                    <p class="text-3xl font-bold text-gray-800">${totalProjects}</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-md metric-card">
                     <p class="text-sm text-gray-500 mb-1">Active Teams</p>
-                    <p class="text-3xl font-bold text-blue-600">${metrics.active_teams}</p>
+                    <p class="text-3xl font-bold text-blue-600">${activeTeams}</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-md metric-card">
                     <p class="text-sm text-gray-500 mb-1">Avg IRAC Completeness</p>
-                    <p class="text-3xl font-bold ${metrics.average_irac_completeness >= 75 ? 'text-green-600' : metrics.average_irac_completeness >= 50 ? 'text-yellow-600' : 'text-red-600'}">
-                        ${metrics.average_irac_completeness}%
+                    <p class="text-3xl font-bold ${avgCompleteness >= 75 ? 'text-green-600' : avgCompleteness >= 50 ? 'text-yellow-600' : 'text-red-600'}">
+                        ${avgCompleteness}%
                     </p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-md metric-card">
                     <p class="text-sm text-gray-500 mb-1">Locked Projects</p>
-                    <p class="text-3xl font-bold text-purple-600">${metrics.locked_projects}/${metrics.total_projects}</p>
+                    <p class="text-3xl font-bold text-purple-600">${lockedProjects}/${totalProjects}</p>
                 </div>
             `;
         }
@@ -234,7 +239,7 @@
         function renderTeams(teams) {
             const tbody = document.getElementById('teams-table');
             if (!teams || teams.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No active teams found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No teams yet</td></tr>';
                 return;
             }
 
@@ -264,27 +269,28 @@
         // Load Projects
         async function loadProjects() {
             try {
-                const token = localStorage.getItem('access_token');
-                const statusFilter = document.getElementById('status-filter').value;
+                const statusFilter = document.getElementById('status-filter')?.value || '';
                 
                 let url = `${API_BASE}/faculty/projects`;
                 if (statusFilter) {
                     url += `?status=${statusFilter}`;
                 }
 
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const data = await apiRequest(url);
 
-                if (!response.ok) throw new Error('Failed to load projects');
+                if (!data) {
+                    projectsData = [];
+                    renderProjects([]);
+                    return;
+                }
 
-                const data = await response.json();
-                projectsData = data.projects;
+                projectsData = data.projects || [];
                 renderProjects(projectsData);
 
             } catch (error) {
                 console.error('Projects load error:', error);
-                showError('Failed to load projects');
+                projectsData = [];
+                renderProjects([]);
             }
         }
 
@@ -292,7 +298,7 @@
         function renderProjects(projects) {
             const container = document.getElementById('projects-grid');
             if (!projects || projects.length === 0) {
-                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No projects found</div>';
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No projects yet</div>';
                 return;
             }
 
@@ -326,7 +332,7 @@
         function renderActivity(activity) {
             const container = document.getElementById('activity-list');
             if (!activity || activity.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">No recent activity</p>';
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No activity yet</p>';
                 return;
             }
 

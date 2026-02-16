@@ -73,28 +73,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from backend.routes import rag_search
 from backend.routes import notes
 
-from backend.database import init_db, close_db
+from backend.database import init_db, close_db, seed_moot_cases, AsyncSessionLocal
 from backend.routes import router
 from backend.routes import search
 from backend.errors import ErrorCode, APIError, log_and_raise_internal, get_error_summary
+
 # ============================================
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(search.router)
-
-@app.get("/")
-async def root():
-    return {"message": "Legal Search API"}
+# Rate Limiter Configuration
+# ============================================
+limiter = Limiter(key_func=get_remote_address)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -117,6 +110,15 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
         logger.info("Database connected successfully")
+        
+        # Seed default moot cases
+        async with AsyncSessionLocal() as session:
+            await seed_moot_cases(session)
+            
+            # PHASE: Seed structured High Court cases
+            from backend.services.case_library_service import seed_high_court_cases
+            inserted = await seed_high_court_cases(session)
+            logger.info(f"✓ High Court case library: {inserted} cases seeded")
     except Exception as e:
         logger.error(f"Failed to connect to database: {str(e)}")
         raise
@@ -138,6 +140,11 @@ app = FastAPI(
     redoc_url="/redoc" if os.getenv("ENVIRONMENT", "development") == "development" else None,
     lifespan=lifespan
 )
+
+# Attach rate limiter to the app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+logger.info("✓ Rate limiter configured")
 
 origins = [
     "http://localhost:3000",
@@ -344,7 +351,131 @@ from backend.routes.ai_moot import ai_moot_router
 app.include_router(ai_moot_router, prefix="/api")
 
 # Phase 7: Classroom Mode (Moot Court Classroom Sessions)
-app.include_router(classroom_router, prefix="/api")
+app.include_router(classroom_router)
+
+# Phase 3: Round Engine (conditionally enabled)
+from backend.config.feature_flags import feature_flags
+if feature_flags.FEATURE_CLASSROOM_ROUND_ENGINE:
+    from backend.routes.classroom_rounds import router as round_engine_router
+    app.include_router(round_engine_router)
+    logger.info("✅ Phase 3 Round Engine enabled")
+else:
+    logger.info("⏸️ Phase 3 Round Engine disabled (set FEATURE_CLASSROOM_ROUND_ENGINE=True to enable)")
+
+# Phase 4: AI Judge Evaluation Engine (conditionally enabled)
+if feature_flags.FEATURE_AI_JUDGE_EVALUATION:
+    from backend.routes.ai_judge import router as ai_judge_router
+    app.include_router(ai_judge_router)
+    logger.info("✅ Phase 4 AI Judge Evaluation enabled")
+else:
+    logger.info("⏸️ Phase 4 AI Judge Evaluation disabled (set FEATURE_AI_JUDGE_EVALUATION=True to enable)")
+
+# Phase 5: Leaderboard Engine (conditionally enabled)
+if feature_flags.FEATURE_LEADERBOARD_ENGINE:
+    from backend.routes.leaderboard import router as leaderboard_router
+    app.include_router(leaderboard_router)
+    logger.info("✅ Phase 5 Leaderboard Engine enabled")
+else:
+    logger.info("⏸️ Phase 5 Leaderboard Engine disabled (set FEATURE_LEADERBOARD_ENGINE=True to enable)")
+
+# Phase 14: Deterministic Round Engine (conditionally enabled)
+if feature_flags.FEATURE_CLASSROOM_ROUND_ENGINE:
+    from backend.routes.phase14_round_engine import router as phase14_router
+    app.include_router(phase14_router)
+    logger.info("✅ Phase 14 Deterministic Round Engine enabled")
+    
+    # Run crash recovery on startup
+    from backend.services.phase14_crash_recovery import startup_recovery
+    import asyncio
+    try:
+        recovery_result = asyncio.get_event_loop().run_until_complete(startup_recovery())
+        if recovery_result.get("recovered", 0) > 0:
+            logger.warning(f"🔧 Crash recovery: Restored {recovery_result['recovered']} LIVE matches")
+    except Exception as e:
+        logger.error(f"Crash recovery failed: {e}")
+else:
+    logger.info("⏸️ Phase 14 Deterministic Round Engine disabled (set FEATURE_CLASSROOM_ROUND_ENGINE=True to enable)")
+
+# Phase 15: AI Judge Intelligence Layer (conditionally enabled)
+if feature_flags.FEATURE_AI_JUDGE_OFFICIAL or feature_flags.FEATURE_AI_JUDGE_SHADOW:
+    from backend.routes.phase15_ai_judge import router as phase15_router
+    app.include_router(phase15_router)
+    logger.info("✅ Phase 15 AI Judge Intelligence Layer enabled")
+    if feature_flags.FEATURE_AI_JUDGE_OFFICIAL:
+        logger.info("  └─ Official evaluation: enabled")
+    if feature_flags.FEATURE_AI_JUDGE_SHADOW:
+        logger.info("  └─ Shadow scoring: enabled")
+else:
+    logger.info("⏸️ Phase 15 AI Judge Intelligence Layer disabled (set FEATURE_AI_JUDGE_OFFICIAL=True or FEATURE_AI_JUDGE_SHADOW=True to enable)")
+
+# Phase 16: Performance Analytics & Ranking Intelligence Layer (conditionally enabled)
+if (feature_flags.FEATURE_ANALYTICS_ENGINE or 
+    feature_flags.FEATURE_RANKING_ENGINE or 
+    feature_flags.FEATURE_JUDGE_ANALYTICS or 
+    feature_flags.FEATURE_TREND_ENGINE):
+    from backend.routes.phase16_analytics import router as phase16_router
+    app.include_router(phase16_router)
+    logger.info("✅ Phase 16 Performance Analytics & Ranking Intelligence Layer enabled")
+    if feature_flags.FEATURE_ANALYTICS_ENGINE:
+        logger.info("  └─ Analytics engine: enabled")
+    if feature_flags.FEATURE_RANKING_ENGINE:
+        logger.info("  └─ Ranking engine: enabled")
+    if feature_flags.FEATURE_JUDGE_ANALYTICS:
+        logger.info("  └─ Judge analytics: enabled")
+    if feature_flags.FEATURE_TREND_ENGINE:
+        logger.info("  └─ Trend engine: enabled")
+else:
+    logger.info("⏸️ Phase 16 Performance Analytics & Ranking Intelligence Layer disabled (set any FEATURE_*=True to enable)")
+
+# Phase 17: Appeals & Governance Override Engine (conditionally enabled)
+if feature_flags.FEATURE_APPEALS_ENGINE:
+    from backend.routes.phase17_appeals import router as phase17_router
+    app.include_router(phase17_router)
+    logger.info("✅ Phase 17 Appeals & Governance Override Engine enabled")
+    if feature_flags.FEATURE_MULTI_JUDGE_APPEALS:
+        logger.info("  └─ Multi-judge appeals: enabled")
+    if feature_flags.FEATURE_APPEAL_OVERRIDE_RANKING:
+        logger.info("  └─ Appeal override ranking: enabled")
+    if feature_flags.FEATURE_APPEAL_AUTO_CLOSE:
+        logger.info("  └─ Auto-close: enabled")
+else:
+    logger.info("⏸️ Phase 17 Appeals & Governance Override Engine disabled (set FEATURE_APPEALS_ENGINE=True to enable)")
+
+# Phase 18: Scheduling & Court Allocation Engine (conditionally enabled)
+if feature_flags.FEATURE_SCHEDULING_ENGINE:
+    from backend.routes.phase18_scheduling import router as phase18_router
+    app.include_router(phase18_router)
+    logger.info("✅ Phase 18 Scheduling & Court Allocation Engine enabled")
+    if feature_flags.FEATURE_JUDGE_AVAILABILITY:
+        logger.info("  └─ Judge availability: enabled")
+else:
+    logger.info("⏸️ Phase 18 Scheduling & Court Allocation Engine disabled (set FEATURE_SCHEDULING_ENGINE=True to enable)")
+
+# Phase 19: Moot Courtroom Operations & Live Session Management (conditionally enabled)
+if feature_flags.FEATURE_MOOT_OPERATIONS:
+    from backend.routes.phase19_moot_operations import router as phase19_router
+    app.include_router(phase19_router)
+    logger.info("✅ Phase 19 Moot Courtroom Operations enabled")
+    if feature_flags.FEATURE_SESSION_RECORDING:
+        logger.info("  └─ Session recording: enabled")
+else:
+    logger.info("⏸️ Phase 19 Moot Courtroom Operations disabled (set FEATURE_MOOT_OPERATIONS=True to enable)")
+
+# Phase 20: Tournament Lifecycle Orchestrator (conditionally enabled)
+if feature_flags.FEATURE_TOURNAMENT_LIFECYCLE:
+    from backend.routes.phase20_lifecycle import router as phase20_router
+    app.include_router(phase20_router)
+    logger.info("✅ Phase 20 Tournament Lifecycle Orchestrator enabled")
+else:
+    logger.info("⏸️ Phase 20 Tournament Lifecycle Orchestrator disabled (set FEATURE_TOURNAMENT_LIFECYCLE=True to enable)")
+
+# Phase 21: Admin Command Center (conditionally enabled)
+if feature_flags.FEATURE_ADMIN_COMMAND_CENTER:
+    from backend.routes.phase21_admin_center import router as phase21_router
+    app.include_router(phase21_router)
+    logger.info("✅ Phase 21 Admin Command Center enabled")
+else:
+    logger.info("⏸️ Phase 21 Admin Command Center disabled (set FEATURE_ADMIN_COMMAND_CENTER=True to enable)")
 
 # DEBUG: Log all registered routes on startup
 from fastapi.routing import APIRoute
@@ -354,6 +485,11 @@ if "/api/ai-moot/problems" in registered_paths:
     logger.info("✓ AI Moot routes properly registered")
 else:
     logger.warning("⚠️  AI Moot routes MISSING - check router registration")
+
+# Configure SQLAlchemy mappers
+from sqlalchemy.orm import configure_mappers
+configure_mappers()
+logger.info("✓ SQLAlchemy mappers configured")
 
 if __name__ == "__main__":
     import uvicorn

@@ -11,12 +11,9 @@ from backend.orm.base import Base
 
 
 class UserRole(str, Enum):
-    """User roles for Phase 5A RBAC"""
-    STUDENT = "student"
-    JUDGE = "judge"
-    FACULTY = "faculty"
-    ADMIN = "admin"
-    SUPER_ADMIN = "super_admin"
+    """User roles - simplified to teacher and student only"""
+    teacher = "teacher"
+    student = "student"
 
 
 class User(Base):
@@ -41,7 +38,7 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True, index=True)
     full_name = Column(String(200), nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT, index=True)
+    role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.student, index=True)
     
     # Institution Context (Phase 5A)
     institution_id = Column(
@@ -79,8 +76,7 @@ class User(Base):
     
     course = relationship(
         "Course",
-        foreign_keys=[course_id],
-        backref="enrolled_users"
+        back_populates="enrolled_users"
     )
 
     bookmarks = relationship(
@@ -133,6 +129,71 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin"
+    )
+    
+    # Classroom Mode relationships
+    classroom_sessions = relationship(
+        "ClassroomSession",
+        back_populates="teacher",
+        cascade="all, delete-orphan"
+    )
+    
+    classroom_participations = relationship(
+        "ClassroomParticipant",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    
+    classroom_scores = relationship(
+        "ClassroomScore",
+        foreign_keys="ClassroomScore.user_id",
+        back_populates="user"
+    )
+    
+    classroom_arguments = relationship(
+        "ClassroomArgument",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    
+    # Classroom round relationships
+    rounds_as_petitioner = relationship(
+        "ClassroomRound",
+        foreign_keys="ClassroomRound.petitioner_id",
+        back_populates="petitioner"
+    )
+    
+    rounds_as_respondent = relationship(
+        "ClassroomRound",
+        foreign_keys="ClassroomRound.respondent_id",
+        back_populates="respondent"
+    )
+    
+    rounds_as_judge = relationship(
+        "ClassroomRound",
+        foreign_keys="ClassroomRound.judge_id",
+        back_populates="judge"
+    )
+    
+    institution_admin_roles = relationship(
+        "InstitutionAdmin",
+        back_populates="user"
+    )
+    
+    institution = relationship(
+        "Institution",
+        back_populates="users"
+    )
+    
+    bulk_upload_sessions = relationship(
+        "BulkUploadSession",
+        back_populates="uploaded_by"
+    )
+    
+    smart_notes = relationship(
+        "SmartNote",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
     
     def __repr__(self):

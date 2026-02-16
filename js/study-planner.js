@@ -28,20 +28,15 @@ async function loadPlan() {
     `;
     
     try {
-        const token = localStorage.getItem('access_token');
         const endpoint = planType === 'daily' ? '/daily' : '/weekly';
+        const data = await apiRequest(`${PLANNER_API}${endpoint}`);
         
-        const response = await fetch(`${PLANNER_API}${endpoint}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (!response.ok) throw new Error('Failed to load plan');
-        
-        currentPlan = await response.json();
-        renderPlan(currentPlan);
-        updateStats(currentPlan);
-        renderRecommendations(currentPlan.recommendations);
-        
+        if (data) {
+            currentPlan = data;
+            renderPlan(currentPlan);
+            updateStats(currentPlan);
+            renderRecommendations(currentPlan.recommendations);
+        }
     } catch (error) {
         console.error('Error loading plan:', error);
         planDays.innerHTML = `
@@ -57,19 +52,20 @@ async function loadNextItem() {
     const container = document.getElementById('nextItemContent');
     
     try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`${PLANNER_API}/next`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const item = await apiRequest(`${PLANNER_API}/next`);
         
-        if (!response.ok) {
-            throw new Error('No next item');
+        if (item) {
+            renderNextItem(item);
+        } else {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>No items available</h3>
+                    <p>Start learning to get recommendations.</p>
+                </div>
+            `;
         }
-        
-        const item = await response.json();
-        renderNextItem(item);
-        
     } catch (error) {
+        console.error('[API ERROR] Failed to load next item:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <h3>No items available</h3>
@@ -197,22 +193,19 @@ async function regeneratePlan() {
     `;
     
     try {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`${PLANNER_API}/regenerate?plan_type=${planType}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
+        const data = await apiRequest(`${PLANNER_API}/regenerate?plan_type=${planType}`, {
+            method: 'POST'
         });
         
-        if (!response.ok) throw new Error('Failed to regenerate');
-        
-        currentPlan = await response.json();
-        renderPlan(currentPlan);
-        updateStats(currentPlan);
-        renderRecommendations(currentPlan.recommendations);
-        showToast('Study plan regenerated');
-        
+        if (data) {
+            currentPlan = data;
+            renderPlan(currentPlan);
+            updateStats(currentPlan);
+            renderRecommendations(currentPlan.recommendations);
+            showToast('Study plan regenerated');
+        }
     } catch (error) {
-        console.error('Error regenerating plan:', error);
+        console.error('[API ERROR] Failed to regenerate plan:', error);
         showToast('Failed to regenerate plan');
         loadPlan();
     }

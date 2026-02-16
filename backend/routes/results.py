@@ -1,25 +1,37 @@
 """
 backend/routes/results.py
-Phase 9: Competition Results Routes
+Phase 9: Competition Results Routes + Tournament Results & Ranking Engine
 
 Public endpoints for viewing published competition results.
-Students can view their own results after publication.
+Admin endpoints for tournament finalization and verification.
 """
 import logging
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, desc
 
 from backend.database import get_db
-from backend.rbac import get_current_user
+from backend.rbac import get_current_user, require_admin
 from backend.orm.user import User, UserRole
 from backend.orm.competition import Competition
 from backend.orm.moot_project import MootProject
 from backend.orm.team import Team, TeamMember
 from backend.orm.judge_evaluation import JudgeEvaluation, JudgeAssignment
+from backend.orm.tournament_results import (
+    TournamentTeamResult, TournamentSpeakerResult, TournamentResultsFreeze
+)
+from backend.orm.national_network import NationalTournament
 from backend.services.judge_evaluation import JudgeEvaluationService
+from backend.services.results_service import (
+    finalize_tournament_results,
+    verify_results_integrity,
+    ResultsAlreadyFrozenError,
+    IncompleteTournamentError,
+    ResultsNotFoundError
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/results", tags=["Results"])
@@ -255,3 +267,215 @@ async def get_my_results(
         "count": len(results_list),
         "your_role": current_user.role.value
     }
+
+
+# =============================================================================
+# Tournament Results & Ranking Engine (Phase 9)
+# =============================================================================
+
+@router.post("/tournaments/{tournament_id}/finalize")
+async def finalize_tournament(
+    tournament_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin)
+) -> Dict[str, Any]:
+    """
+    Finalize tournament results with deterministic ranking.
+    
+    RBAC: ADMIN, HOD only.
+    
+    Idempotent: Returns existing freeze if already finalized.
+    
+    Args:
+        tournament_id: Tournament to finalize
+    
+    Returns:
+        Finalization confirmation with freeze details
+    """
+    try:
+        freeze = await finalize_tournament_results(
+            tournament_id=tournament_id,
+            user_id=current_user.id,
+            db=db
+        )
+        
+        return {
+            "success": True,
+            "tournament_id": tournament_id,
+            "frozen_at": freeze.frozen_at.isoformat(),
+            "frozen_by": freeze.frozen_by,
+            "results_checksum": freeze.results_checksum,
+            "message": "Tournament results finalized successfully"
+        }
+    
+    except IncompleteTournamentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tournament incomplete: {str(e)}"
+        )
+    
+    except ResultsNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tournament not found"
+        )
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Finalization failed: {str(e)}"
+        )
+
+
+@router.get("/tournaments/{tournament_id}/teams")
+async def get_team_results(
+    tournament_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> List[Dict[str, Any]]:
+    """
+    Get tournament team results (rankings).
+    
+    Public access. Sorted by final_rank ascending.
+    
+    Args:
+        tournament_id: Tournament ID
+    
+    Returns:
+        List of team results
+    """
+    # Verify tournament exists
+    result = await db.execute(
+        select(NationalTournament).where(NationalTournament.id == tournament_id)
+    )
+    tournament = result.scalar_one_or_none()
+    
+    if not tournament:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tournament not found"
+        )
+    
+    # Fetch results sorted deterministically
+    result = await db.execute(
+        select(TournamentTeamResult)
+        .where(TournamentTeamResult.tournament_id == tournament_id)
+        .order_by(
+            TournamentTeamResult.final_rank.asc(),
+            TournamentTeamResult.team_id.asc()
+        )
+    )
+    team_results = result.scalars().all()
+    
+    return [tr.to_dict() for tr in team_results]
+
+
+@router.get("/tournaments/{tournament_id}/speakers")
+async def get_speaker_results(
+    tournament_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> List[Dict[str, Any]]:
+    """
+    Get tournament speaker results (rankings).
+    
+    Public access. Sorted by final_rank ascending.
+    
+    Args:
+        tournament_id: Tournament ID
+    
+    Returns:
+        List of speaker results
+    """
+    # Verify tournament exists
+    result = await db.execute(
+        select(NationalTournament).where(NationalTournament.id == tournament_id)
+    )
+    tournament = result.scalar_one_or_none()
+    
+    if not tournament:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tournament not found"
+        )
+    
+    # Fetch results sorted deterministically
+    result = await db.execute(
+        select(TournamentSpeakerResult)
+        .where(TournamentSpeakerResult.tournament_id == tournament_id)
+        .order_by(
+            TournamentSpeakerResult.final_rank.asc(),
+            TournamentSpeakerResult.speaker_id.asc()
+        )
+    )
+    speaker_results = result.scalars().all()
+    
+    return [sr.to_dict() for sr in speaker_results]
+
+
+@router.get("/tournaments/{tournament_id}/verify")
+async def verify_results(
+    tournament_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Verify tournament results integrity.
+    
+    Returns hash verification status and tamper detection.
+    
+    Args:
+        tournament_id: Tournament ID
+    
+    Returns:
+        Verification report
+    """
+    # Verify tournament exists
+    result = await db.execute(
+        select(NationalTournament).where(NationalTournament.id == tournament_id)
+    )
+    tournament = result.scalar_one_or_none()
+    
+    if not tournament:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tournament not found"
+        )
+    
+    verification = await verify_results_integrity(tournament_id, db)
+    
+    return verification
+
+
+@router.get("/tournaments/{tournament_id}/freeze-status")
+async def get_freeze_status(
+    tournament_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Check if tournament results are frozen.
+    
+    Args:
+        tournament_id: Tournament ID
+    
+    Returns:
+        Freeze status
+    """
+    result = await db.execute(
+        select(TournamentResultsFreeze)
+        .where(TournamentResultsFreeze.tournament_id == tournament_id)
+    )
+    freeze = result.scalar_one_or_none()
+    
+    if freeze:
+        return {
+            "frozen": True,
+            "frozen_at": freeze.frozen_at.isoformat(),
+            "frozen_by": freeze.frozen_by,
+            "results_checksum": freeze.results_checksum
+        }
+    else:
+        return {
+            "frozen": False
+        }

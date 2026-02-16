@@ -12,7 +12,7 @@ from enum import Enum as PyEnum
 import secrets
 import re
 
-from backend.database import Base
+from backend.orm.base import Base
 
 
 class SessionState(PyEnum):
@@ -57,7 +57,7 @@ class ClassroomSession(Base):
     id = Column(Integer, primary_key=True, index=True)
     session_code = Column(String(12), unique=True, index=True, nullable=False)
     teacher_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    case_id = Column(Integer, ForeignKey("moot_cases.id"), nullable=True)  # Optional case reference
+    case_id = Column(Integer, ForeignKey("moot_cases.id"), nullable=False)
     
     # Session configuration
     topic = Column(String(255), nullable=False)
@@ -69,6 +69,7 @@ class ClassroomSession(Base):
     
     # State management with timer persistence (CRITICAL for production)
     current_state = Column(String(20), default=SessionState.CREATED.value)
+    state_updated_at = Column(DateTime(timezone=True), nullable=True)  # NEW: Track state changes
     is_active = Column(Boolean, default=True)  # NEW: Session active status
     phase_start_timestamp = Column(DateTime(timezone=True), nullable=True)  # When current phase began
     phase_duration_seconds = Column(Integer, nullable=True)  # Configured duration for current phase
@@ -84,10 +85,19 @@ class ClassroomSession(Base):
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
-    teacher = relationship("User", back_populates="classroom_sessions")
-    participants = relationship("ClassroomParticipant", back_populates="session", cascade="all, delete-orphan")
-    scores = relationship("ClassroomScore", back_populates="session", cascade="all, delete-orphan")
-    arguments = relationship("ClassroomArgument", back_populates="session", cascade="all, delete-orphan")
+    teacher = relationship("User", back_populates="classroom_sessions", lazy="selectin")
+    case = relationship(
+        "MootCase",
+        back_populates="sessions",
+        lazy="selectin"
+    )
+    participants = relationship("ClassroomParticipant", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
+    scores = relationship("ClassroomScore", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
+    arguments = relationship("ClassroomArgument", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
+    rounds = relationship("ClassroomRound", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
+    round_actions = relationship("ClassroomRoundAction", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
+    state_logs = relationship("ClassroomSessionStateLog", back_populates="session", cascade="all, delete-orphan", lazy="selectin", order_by="desc(ClassroomSessionStateLog.created_at)")
+    leaderboard_snapshots = relationship("SessionLeaderboardSnapshot", back_populates="session", lazy="selectin")  # Phase 5
     
     # Production-grade constraints
     __table_args__ = (
@@ -190,33 +200,77 @@ class ClassroomSession(Base):
 
 
 class ClassroomParticipant(Base):
-    """Classroom participant table with role assignment logic."""
+    """Classroom participant table with deterministic role and speaking order assignment."""
     __tablename__ = "classroom_participants"
     
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("classroom_sessions.id"), nullable=False)
+    session_id = Column(Integer, ForeignKey("classroom_sessions.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    role = Column(String(20), default=ParticipantRole.OBSERVER.value)  # petitioner/respondent/observer
+    
+    # Deterministic assignment fields
+    side = Column(String(20), nullable=False)  # PETITIONER / RESPONDENT
+    speaker_number = Column(Integer, nullable=False)  # 1 or 2
+    
+    # Legacy field for backward compatibility (maps to side)
+    role = Column(String(20), default=ParticipantRole.OBSERVER.value)
+    
+    # Status tracking
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
-    last_seen_at = Column(DateTime(timezone=True), nullable=True)  # For reconnection tracking
-    is_connected = Column(Boolean, default=True)  # Real-time connection status
+    last_seen_at = Column(DateTime(timezone=True), nullable=True)
+    is_connected = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True)  # For soft deletion
     
     # Score reference
     score_id = Column(Integer, ForeignKey("classroom_scores.id"), nullable=True)
     
-    # Concurrency protection: prevent duplicate joins
+    # Strict constraints for deterministic assignment
     __table_args__ = (
+        # Prevent duplicate user in same session
         UniqueConstraint('session_id', 'user_id', name='uq_participant_session_user'),
+        # Prevent duplicate speaker position within same side
+        UniqueConstraint('session_id', 'side', 'speaker_number', name='uq_participant_session_side_speaker'),
+        # Ensure speaker_number is only 1 or 2
+        Index('idx_participant_session', 'session_id', 'is_active'),
     )
     
     # Relationships
     session = relationship("ClassroomSession", back_populates="participants")
     user = relationship("User", back_populates="classroom_participations")
     score = relationship("ClassroomScore", back_populates="participant")
+    turns = relationship("ClassroomTurn", back_populates="participant")  # Phase 3
+    leaderboard_entries = relationship("SessionLeaderboardEntry", back_populates="participant", lazy="selectin")  # Phase 5
+    
+    @staticmethod
+    def get_assignment_for_position(position: int) -> tuple:
+        """
+        Deterministic assignment mapping based on join order.
+        
+        Position mapping:
+        1 -> (PETITIONER, 1)
+        2 -> (RESPONDENT, 1)
+        3 -> (PETITIONER, 2)
+        4 -> (RESPONDENT, 2)
+        
+        Args:
+            position: The position in join order (1-indexed)
+            
+        Returns:
+            Tuple of (side, speaker_number)
+        """
+        if position < 1 or position > 4:
+            raise ValueError(f"Position must be 1-4, got {position}")
+        
+        mapping = {
+            1: ("PETITIONER", 1),
+            2: ("RESPONDENT", 1),
+            3: ("PETITIONER", 2),
+            4: ("RESPONDENT", 2)
+        }
+        return mapping[position]
     
     @staticmethod
     def assign_role(participant_count):
-        """Assign role based on join order: 1st=Petitioner, 2nd=Respondent, rest=Observer."""
+        """Legacy method - assign role based on join order."""
         if participant_count == 0:
             return ParticipantRole.PETITIONER.value
         elif participant_count == 1:
@@ -225,7 +279,7 @@ class ClassroomParticipant(Base):
             return ParticipantRole.OBSERVER.value
     
     def mark_connected(self):
-        """Mark participant as connected (for reconnection tracking)."""
+        """Mark participant as connected."""
         self.is_connected = True
         self.last_seen_at = datetime.utcnow()
     
@@ -246,10 +300,13 @@ class ClassroomParticipant(Base):
             "id": self.id,
             "session_id": self.session_id,
             "user_id": self.user_id,
+            "side": self.side,
+            "speaker_number": self.speaker_number,
             "role": self.role,
             "joined_at": self.joined_at.isoformat() if self.joined_at else None,
             "last_seen_at": self.last_seen_at.isoformat() if self.last_seen_at else None,
             "is_connected": self.is_connected,
+            "is_active": self.is_active,
             "score_id": self.score_id
         }
 
@@ -280,6 +337,7 @@ class ClassroomScore(Base):
     session = relationship("ClassroomSession", back_populates="scores")
     user = relationship("User", foreign_keys=[user_id], back_populates="classroom_scores")
     submitted_by_user = relationship("User", foreign_keys=[submitted_by])
+    participant = relationship("ClassroomParticipant", back_populates="score")
     
     def calculate_total(self):
         """Calculate total score from criteria."""

@@ -1,93 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Reset your Lexora password - AI-Powered Legal Research Assistant">
-    <title>Forgot Password - Lexora</title>
+    <meta name="description" content="Reset your JurisAI password">
+    <title>Forgot Password - JurisAI</title>
     <link rel="stylesheet" href="../css/main.css">
-    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="../css/auth-bg.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
 </head>
+
 <body>
-    <div class="auth-container">
-        <div class="auth-left">
-            <div class="auth-left-content">
-                <div class="auth-logo">
-                    <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="32" height="32" rx="6" fill="#1e3a5f"/>
-                        <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572"/>
-                        <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff"/>
+
+    <!-- Login Container Structure Reuse -->
+    <div class="login-container auth-split auth-left--image-first">
+        <div class="login-left auth-left">
+            <img src="../assets/images/lady-justice.jpg" alt="Lady Justice" class="hero-image">
+            <div class="hero-overlay"></div>
+            <div class="login-branding">
+                <div class="login-logo">
+                    <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="6" fill="rgba(255,255,255,0.15)" />
+                        <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" fill="#c5a572" />
+                        <path d="M16 12L19 14V18L16 20L13 18V14L16 12Z" fill="#ffffff" />
                     </svg>
-                    <span class="auth-brand">Lexora</span>
+                    <span class="login-brand-text">JurisAI</span>
                 </div>
-                
-                <h1 class="auth-left-title">AI-Powered Legal Research for Modern Law Practices</h1>
-                <p class="auth-left-description">Find relevant case judgments, statutes, and legal precedents in seconds. Trusted by legal professionals worldwide.</p>
-                
-                <ul class="auth-trust-list">
-                    <li class="auth-trust-item">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0110 0v4"/>
-                        </svg>
-                        <span>Bank-level 256-bit encryption</span>
-                    </li>
-                    <li class="auth-trust-item">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        </svg>
-                        <span>SOC 2 Type II certified</span>
-                    </li>
-                    <li class="auth-trust-item">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                            <circle cx="8.5" cy="7" r="4"/>
-                            <path d="M20 8v6M23 11h-6"/>
-                        </svg>
-                        <span>GDPR compliant infrastructure</span>
-                    </li>
-                </ul>
             </div>
         </div>
-        
-        <div class="auth-right">
-            <div class="auth-card">
-                <div class="auth-card-header">
-                    <h2 class="auth-card-title">Reset your password</h2>
-                    <p class="auth-card-subtitle">Enter your email address and we'll send you a reset link</p>
+
+        <div class="login-right auth-right">
+            <div class="login-card">
+                <div class="login-card-header">
+                    <h2 class="login-title">Reset Password</h2>
+                    <p class="login-subtitle">Enter your email to receive a reset link</p>
                 </div>
-                
-                <form class="auth-form" action="#" method="post">
+
+                <form id="forgotForm" class="login-form">
                     <div class="form-group">
                         <label for="email" class="form-label">Email address</label>
-                        <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
-                            class="form-input" 
-                            placeholder="you@lawfirm.com"
-                            required
-                        >
+                        <input type="email" id="email" name="email" class="form-input" placeholder="you@university.edu"
+                            required>
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-large auth-submit">
+
+                    <button type="submit" class="btn-primary login-submit" style="margin-top: 1rem;">
                         Send Reset Link
                     </button>
-                    
-                    <p class="form-helper" style="text-align: center; margin-top: var(--spacing-md);">
-                        If an account exists, a password reset link will be sent to your email.
-                    </p>
                 </form>
-                
-                <div class="auth-card-footer">
-                    <p><a href="login.html" class="auth-link">Back to Sign In</a></p>
+
+                <div class="login-card-footer">
+                    <p>Remembered your password? <a href="login.html" class="login-link">Sign in</a></p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Dummy Logic Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const forgotForm = document.getElementById('forgotForm');
+
+            if (forgotForm) {
+                forgotForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    // Requirement: Show alert "If this email exists, a reset link has been sent."
+                    // Requirement: DO NOT call backend.
+                    alert("If this email exists, a reset link has been sent.");
+                });
+            }
+        });
+    </script>
 </body>
+
 </html>

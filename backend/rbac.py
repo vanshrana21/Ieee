@@ -242,6 +242,14 @@ def require_min_role(min_role: UserRole):
     return decorator
 
 
+def require_admin(func: Callable) -> Callable:
+    """
+    Decorator: Require ADMIN or SUPER_ADMIN role.
+    Backwards-compatible helper for legacy routes.
+    """
+    return require_min_role(UserRole.ADMIN)(func)
+
+
 def require_permission(permission: str):
     """
     Decorator factory: Require specific moot-court permission.

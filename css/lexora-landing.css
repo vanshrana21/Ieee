@@ -151,30 +151,45 @@ body.lexora-landing .hero {
     align-items: center;
     justify-content: center;
     padding-top: 80px;
-    background: transparent;
+    background: #0B1220;
     overflow: hidden;
 }
 
+/* Layer 1: Base Image */
+body.lexora-landing .hero-bg-image {
+    position: absolute;
+    inset: 0;
+    background-image: url('../assets/images/law-library-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: brightness(0.85) contrast(1.1) saturate(0.95);
+    z-index: 0;
+}
+
+/* Layer 2: Gradient Overlay */
 body.lexora-landing .hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--lexora-overlay-heavy);
+    inset: 0;
+    background: linear-gradient(to bottom,
+            rgba(11, 18, 32, 0.65) 0%,
+            rgba(11, 18, 32, 0.75) 40%,
+            rgba(11, 18, 32, 0.85) 100%);
     z-index: 1;
 }
 
+/* Layer 3: Subtle Vignette */
 body.lexora-landing .hero::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--lexora-vignette);
+    inset: 0;
+    background: radial-gradient(ellipse at center,
+            rgba(0, 0, 0, 0) 40%,
+            rgba(0, 0, 0, 0.35) 100%);
     z-index: 1;
+    opacity: 0.4;
+    pointer-events: none;
 }
 
 body.lexora-landing .hero-container {
@@ -738,7 +753,7 @@ body.lexora-landing .footer-bottom p {
     body.lexora-landing .cta {
         padding: 5rem 0;
     }
-    
+
     body.lexora-landing .audience-grid,
     body.lexora-landing .features-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -749,6 +764,15 @@ body.lexora-landing .footer-bottom p {
     body.lexora-landing .hero {
         min-height: auto;
         padding: 8rem 1rem 5rem;
+    }
+
+    /* Mobile adjustments for background */
+    body.lexora-landing .hero::before {
+        opacity: 0.95;
+    }
+
+    body.lexora-landing .hero-bg-image {
+        filter: brightness(0.8) contrast(1.1) saturate(0.95);
     }
 
     body.lexora-landing .hero-title {

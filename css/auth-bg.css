@@ -1,0 +1,138 @@
+/* ---------- auth-bg.css ---------- */
+
+/* Global Background Setup - CINEMATIC RESTORE */
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    min-height: 100vh;
+    background: #0b1c2d;
+    /* Fallback */
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* 1️⃣ Background Layer (Cinematic — Full Viewport) */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+
+    background-image: url('../assets/images/lady-justice.jpg');
+    background-size: cover;
+    background-position: center left;
+    background-repeat: no-repeat;
+
+    filter: brightness(0.65) contrast(1.15) saturate(0.85);
+}
+
+/* 2️⃣ Overlay Layer (Right-Side Fade Only) */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+
+    background: linear-gradient(to right,
+            rgba(11, 18, 32, 0.15) 0%,
+            rgba(11, 18, 32, 0.55) 45%,
+            rgba(11, 18, 32, 0.85) 75%,
+            rgba(11, 18, 32, 0.95) 100%);
+}
+
+/* 3️⃣ Remove Split Layout Completely */
+.auth-split,
+.login-container,
+.auth-container {
+    display: flex;
+    /* Keep flex for vertical centering of card */
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    /* Align card to right */
+    width: 100%;
+    min-height: 100vh;
+    padding-right: 5%;
+    /* Spacing from edge */
+    background: transparent !important;
+}
+
+/* Hide Left Visual Panel & Legacy Content */
+/* Don't hide the parent if we need the child. */
+.auth-left,
+.login-left {
+    position: absolute;
+    /* Take out of flow */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: transparent !important;
+    z-index: 10;
+    /* Above background */
+}
+
+/* Hide everything inside left EXCEPT branding */
+.auth-left>*:not(.login-branding):not(.auth-logo) {
+    display: none !important;
+}
+
+/* Ensure branding is visible and positioned */
+.login-branding,
+.auth-logo {
+    display: flex !important;
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    z-index: 20;
+}
+
+
+/* Right Panel - Card Container */
+.auth-split>div:last-child,
+.auth-right,
+.login-right {
+    width: 100%;
+    max-width: 500px;
+    /* Card constraint */
+    margin-left: auto;
+    /* Push to right */
+    margin-right: 0;
+    padding: 0;
+    /* Container padding handles edge */
+    background: transparent !important;
+    display: block;
+    /* Normal block flow for card */
+}
+
+/* Card Styling - Untouched */
+.auth-card,
+.login-card {
+    position: relative;
+    z-index: 5;
+    /* Glassmorphism intact */
+}
+
+/* 5️⃣ Mobile Behavior */
+@media (max-width: 768px) {
+    body::before {
+        background-position: 20% center;
+        filter: brightness(0.6) contrast(1.1) saturate(0.85);
+    }
+
+    .auth-split,
+    .login-container {
+        align-items: center;
+        /* Center card on mobile */
+        padding-right: 0;
+        padding: 24px;
+    }
+
+    .auth-right,
+    .login-right {
+        margin: 0 auto;
+        /* Center card */
+    }
+}

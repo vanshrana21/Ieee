@@ -11,32 +11,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadTeamDashboard(teamId, compId) {
-    const token = getAuthToken();
-    if (!token) return;
-    
     try {
         // Load team info
-        const teamResponse = await fetch(`/api/teams/${teamId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const team = await apiRequest(`/api/teams/${teamId}`);
         
-        if (teamResponse.ok) {
-            const team = await teamResponse.json();
+        if (team) {
             document.getElementById('team-name').textContent = team.name || 'Unknown Team';
             document.getElementById('team-side').textContent = team.side || 'Unknown';
         }
         
         // Load memorials
-        const memorialResponse = await fetch(`/api/competitions/${compId}/teams/${teamId}/memorials`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const memorials = await apiRequest(`/api/competitions/${compId}/teams/${teamId}/memorials`);
         
-        if (memorialResponse.ok) {
-            const memorials = await memorialResponse.json();
-            if (memorials.length > 0) {
-                const latest = memorials[0];
-                updateMemorialStatus(latest);
-            }
+        if (memorials && memorials.length > 0) {
+            const latest = memorials[0];
+            updateMemorialStatus(latest);
         }
     } catch (error) {
         console.error('Error loading dashboard:', error);

@@ -31,6 +31,7 @@ class Competition(Base):
     rounds = relationship("OralRound", back_populates="competition", cascade="all, delete-orphan")
     problem = relationship("MootProject", foreign_keys=[problem_id])
     creator = relationship("User", foreign_keys=[created_by_id])
+    institution = relationship("Institution", back_populates="competitions")
 
 
 # ============================================================================

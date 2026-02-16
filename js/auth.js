@@ -216,74 +216,22 @@ function getUserRole() {
 
 /**
  * Get dashboard URL based on user role
- * @param {string} role - 'lawyer' or 'student'
+ * @param {string} role - User role
  * @returns {string} - Dashboard URL
  */
 function getDashboardUrl(role) {
-    if (role === 'lawyer') {
-        return '/html/dashboard-lawyer.html';
-    } else if (role === 'student') {
-        return '/html/dashboard-student.html';
-    } else {
-        return '/html/dashboard.html';
-    }
+    // Map roles to their respective dashboards - only teacher and student
+    const dashboardMap = {
+        'teacher': '/html/faculty-dashboard.html',
+        'student': '/html/dashboard-student.html'
+    };
+    
+    return dashboardMap[role] || '/html/dashboard-student.html';
 }
 
 // ============================================================================
-// API REQUEST
+// AUTHENTICATED FETCH (Legacy - uses global window.apiRequest)
 // ============================================================================
-
-async function apiRequest(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const token = getToken();
-    
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-    
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    const config = {
-        ...options,
-        headers
-    };
-    
-    try {
-        const response = await fetch(url, config);
-        const data = await response.json();
-        
-        if (!response.ok) {
-            if (response.status === 401) {
-                removeToken();
-                if (!window.location.pathname.includes('login.html')) {
-                    window.location.href = '/html/login.html';
-                }
-            }
-            
-            return {
-                success: false,
-                error: data.detail || data.message || 'Request failed',
-                status: response.status
-            };
-        }
-        
-        return {
-            success: true,
-            data: data
-        };
-        
-    } catch (error) {
-        console.error('API request failed:', error);
-        return {
-            success: false,
-            error: 'Network error. Please check if the backend is running.',
-            originalError: error
-        };
-    }
-}
 
 async function authenticatedFetch(url, options = {}) {
     const token = getToken();
@@ -297,18 +245,7 @@ async function authenticatedFetch(url, options = {}) {
         'Authorization': `Bearer ${token}`
     };
     
-    const response = await fetch(url, {
-        ...options,
-        headers
-    });
-    
-    if (response.status === 401) {
-        clearAccessToken();
-        window.location.href = '/html/login.html';
-        throw new Error('Session expired. Please login again.');
-    }
-    
-    return response;
+    return window.apiRequest(url, { ...options, headers });
 }
 
 // ============================================================================
@@ -316,43 +253,31 @@ async function authenticatedFetch(url, options = {}) {
 // ============================================================================
 
 async function register(fullName, email, password, role) {
-    const registerResult = await apiRequest('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-            full_name: fullName,
-            email: email,
-            password: password,
-            name: fullName,
-            role: role
-        })
-    });
+    try {
+        const data = await window.apiRequest("/api/auth/register", {
+            method: "POST",
+            body: JSON.stringify({
+                name: fullName,
+                email: email,
+                password: password,
+                role: role
+            })
+        });
 
-    if (!registerResult.success) {
-        return registerResult;
+        if (!data || !data.access_token) {
+            alert("Registration failed");
+            return;
+        }
+
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("user_role", data.role);
+
+        window.location.href = "/html/onboarding.html";
+
+    } catch (err) {
+        console.error("Registration error:", err);
+        alert(err.message);
     }
-
-    if (registerResult.data.access_token) {
-        setToken(registerResult.data.access_token);
-        
-        if (registerResult.data.role) {
-            setUserRole(registerResult.data.role);
-        }
-        
-        if (registerResult.data.name || registerResult.data.full_name) {
-            saveUserName(registerResult.data.name || registerResult.data.full_name);
-        }
-        
-        if (typeof registerResult.data.is_enrolled === 'boolean') {
-            localStorage.setItem('is_enrolled', registerResult.data.is_enrolled);
-        }
-        
-        return {
-            success: true,
-            data: registerResult.data
-        };
-    }
-
-    return registerResult;
 }
 
 // ============================================================================
@@ -361,60 +286,28 @@ async function register(fullName, email, password, role) {
 
 async function login(email, password) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                username: email,
-                password: password
-            })
+        const data = await window.apiRequest("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ email, password })
         });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            return {
-                success: false,
-                error: data.detail || 'Login failed',
-                status: response.status
-            };
+
+        if (!data || !data.access_token) {
+            alert("Invalid email or password");
+            return;
         }
-        
-        if (data.access_token) {
-            localStorage.setItem('access_token', data.access_token);
-            
-            if (data.role) {
-                setUserRole(data.role);
-            }
-            
-            if (data.name || data.full_name || data.user_name) {
-                const userName = data.name || data.full_name || data.user_name;
-                saveUserName(userName);
-            }
-            
-            if (typeof data.is_enrolled === 'boolean') {
-                localStorage.setItem('is_enrolled', data.is_enrolled);
-            }
-            
-            return {
-                success: true,
-                data: data
-            };
+
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("user_role", data.role);
+
+        if (data.role === "teacher") {
+            window.location.href = "/html/faculty-dashboard.html";
         } else {
-            return {
-                success: false,
-                error: 'No access token received from server'
-            };
+            window.location.href = "/html/dashboard-student.html";
         }
-        
-    } catch (error) {
-        console.error('Login error:', error);
-        return {
-            success: false,
-            error: 'Network error. Please check if the backend is running.'
-        };
+
+    } catch (err) {
+        console.error("Login error:", err);
+        alert(err.message);
     }
 }
 
@@ -504,7 +397,7 @@ async function handleLogin(event) {
  * @returns {Promise<Object>} - Success/error result
  */
 async function enrollUser(courseId, semester) {
-    const result = await apiRequest('/api/users/enroll', {
+    const result = await window.apiRequest('/api/users/enroll', {
         method: 'POST',
         body: JSON.stringify({
             course_id: courseId,
@@ -538,7 +431,7 @@ function logout() {
 // ============================================================================
 
 async function getCurrentUser() {
-    const result = await apiRequest('/api/users/me', {
+    const result = await window.apiRequest('/api/users/me', {
         method: 'GET'
     });
     
@@ -556,7 +449,7 @@ async function getCurrentUser() {
 }
 
 async function getUserCredits() {
-    const result = await apiRequest('/api/users/credits', {
+    const result = await window.apiRequest('/api/users/credits', {
         method: 'GET'
     });
     
@@ -583,7 +476,7 @@ async function getUserCredits() {
  * @returns {Promise<Object>} - Dashboard data with subjects and progress
  */
 async function getUserCurriculum() {
-    const result = await apiRequest('/api/curriculum/dashboard', {
+    const result = await window.apiRequest('/api/curriculum/dashboard', {
         method: 'GET'
     });
     
@@ -814,17 +707,14 @@ async function refreshAccessToken() {
     if (!refreshToken) return false;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+        const data = await window.apiRequest('/api/auth/refresh', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh_token: refreshToken })
         });
 
-        if (!response.ok) {
+        if (!data) {
             throw new Error('Token refresh failed');
         }
-
-        const data = await response.json();
         
         setToken(data.access_token);
         setRefreshToken(data.refresh_token);
@@ -912,19 +802,30 @@ document.addEventListener('DOMContentLoaded', () => {
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const fullName = document.getElementById('fullname').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            const role = document.getElementById('role').value;
-            const submitBtn = signupForm.querySelector('.auth-submit');
+            const fullNameEl = document.getElementById('fullname');
+            const emailEl = document.getElementById('email');
+            const passwordEl = document.getElementById('password');
+            const confirmPasswordEl = document.getElementById('confirm-password');
+            const roleEl = document.getElementById('role');
+            const submitBtn = document.getElementById('signupBtn');
+            
+            if (!fullNameEl || !emailEl || !passwordEl || !confirmPasswordEl || !roleEl) {
+                alert('Form elements not found. Please refresh the page.');
+                return;
+            }
+            
+            const fullName = fullNameEl.value.trim();
+            const email = emailEl.value.trim();
+            const password = passwordEl.value;
+            const confirmPassword = confirmPasswordEl.value;
+            const role = roleEl.value;
             
             if (!role) {
                 alert('Please select your role (Lawyer or Law Student)');
                 return;
             }
             
-            if (!fullName || fullName.trim().length === 0) {
+            if (!fullName) {
                 alert('Please enter your full name');
                 return;
             }
@@ -934,8 +835,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Creating Account...';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating Account...';
+            }
             
             saveUserName(fullName);
             
@@ -953,8 +856,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 alert(result.error || 'Registration failed. Please try again.');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Create Account';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign Up';
+                }
             }
         });
     }

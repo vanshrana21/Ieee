@@ -1,64 +1,66 @@
-/**
- * api.js
- * Global API wrapper for JurisAI
- */
+console.log("[API] Single API Layer Active");
 
-if (!window.API_BASE_URL) {
-    window.API_BASE_URL = 'http://127.0.0.1:8000';
-}
+window.API_BASE = "http://127.0.0.1:8000";
 
-const api = {
-    /**
-     * Helper for making authenticated requests
-     */
+window.getToken = function () {
+    return localStorage.getItem("access_token");
+};
+
+window.clearToken = function () {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_role");
+};
+
+window.apiRequest = async function (path, options = {}) {
+    const token = window.getToken();
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {})
+    };
+
+    const response = await fetch(`${window.API_BASE}${path}`, {
+        ...options,
+        headers
+    });
+
+    if (response.status === 401) {
+        console.warn("[AUTH] Token invalid or expired.");
+        window.clearToken();
+        window.location.href = "/html/login.html";
+        return null;
+    }
+
+    if (!response.ok) {
+        let err = null;
+        try {
+            err = await response.json();
+        } catch {}
+        throw new Error(err?.message || "API Error");
+    }
+
+    return response.json();
+};
+
+// Legacy API object for backward compatibility
+window.api = {
     async request(endpoint, options = {}) {
-        const token = localStorage.getItem('access_token');
-        const headers = {
-            'Content-Type': 'application/json',
-            ...options.headers
-        };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const config = {
-            ...options,
-            headers
-        };
-
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-        const data = await response.json();
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem('access_token');
-                window.location.href = '/html/login.html';
-            }
-            throw new Error(data.detail || data.message || 'API Request failed');
-        }
-
-        return data;
+        return window.apiRequest(endpoint, options);
     },
 
-    /**
-     * GET request
-     */
     async get(endpoint) {
-        return this.request(endpoint, { method: 'GET' });
+        return window.apiRequest(endpoint, { method: "GET" });
     },
 
-    /**
-     * POST request
-     */
     async post(endpoint, body) {
-        return this.request(endpoint, {
-            method: 'POST',
+        return window.apiRequest(endpoint, {
+            method: "POST",
             body: JSON.stringify(body)
         });
     },
 
-    // --- Subject Context Endpoints (Phase 9.1 & 9.2) ---
+    // --- Subject Context Endpoints ---
     async getSubjects() {
         return this.get('/subjects');
     },
@@ -71,7 +73,7 @@ const api = {
         return this.get(`/subjects/${subjectId}/resume`);
     },
 
-    // --- Dashboard Stats Endpoints (Phase 9.3) ---
+    // --- Dashboard Stats Endpoints ---
     async getDashboardStats() {
         return this.get('/api/dashboard/stats');
     },
@@ -80,7 +82,7 @@ const api = {
         return this.get('/api/dashboard/last-activity');
     },
 
-    // --- Student Content & Modules (Phase 4) ---
+    // --- Student Content & Modules ---
     async getSubjectModules(subjectId) {
         return this.get(`/api/student/subject/${subjectId}/modules`);
     },
@@ -105,5 +107,3 @@ const api = {
         return this.get(`/api/student/subject/${subjectId}/availability`);
     }
 };
-
-window.api = api;

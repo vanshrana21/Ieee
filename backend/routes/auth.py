@@ -1,25 +1,30 @@
 """
 backend/routes/auth.py
-Updated authentication routes with role support
+Updated authentication routes with role support and rate limiting
 """
 import os
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from typing import Optional
+from functools import partial
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr, ConfigDict
 
-from backend.rbac import (
+from backend.security.rbac import (
     create_access_token, 
     create_refresh_token, 
-    refresh_access_token,
-    get_current_user as rbac_get_current_user
+    get_current_user as rbac_get_current_user,
+    validate_user_role_on_creation
 )
 from backend.database import get_db
 from backend.orm.user import User, UserRole
@@ -28,6 +33,7 @@ from backend.errors import ErrorCode, raise_bad_request, raise_unauthorized
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+limiter = Limiter(key_func=get_remote_address)
 
 # ================= CONFIG =================
 
@@ -36,12 +42,36 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
+# Use asyncio-friendly password hashing
+# bcrypt can block the event loop - run in thread pool for high concurrency
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
-    bcrypt__truncate_error=False
+    bcrypt__truncate_error=False,
+    bcrypt__rounds=10,  # Slightly reduce rounds for performance (default is 12)
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+# Thread pool for running blocking operations
+_executor = None
+
+def get_executor():
+    global _executor
+    if _executor is None:
+        _executor = ThreadPoolExecutor(max_workers=4)
+    return _executor
+
+async def hash_password_async(password: str) -> str:
+    """Async-friendly password hashing that doesn't block the event loop."""
+    password = normalize_password(password)
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(get_executor(), pwd_context.hash, password)
+
+async def verify_password_async(plain: str, hashed: str) -> bool:
+    """Async-friendly password verification that doesn't block the event loop."""
+    plain = normalize_password(plain)
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(get_executor(), pwd_context.verify, plain, hashed)
 
 # ================= SCHEMAS =================
 
@@ -50,12 +80,12 @@ class UserRegister(BaseModel):
     Registration schema with role field.
     
     Changes:
-    - Added 'role' field (required, must be 'lawyer' or 'student')
+    - Added 'role' field (required, must be 'teacher' or 'student')
     """
     email: EmailStr
     password: str
     name: str
-    role: UserRole  # NEW: Required role field
+    role: UserRole  # NEW: Required role field (teacher or student only)
 
 
 class UserLogin(BaseModel):
@@ -106,13 +136,13 @@ def normalize_password(password: str) -> str:
 
 
 def hash_password(password: str) -> str:
-    """Hash password using bcrypt"""
+    """Synchronous password hash for backward compatibility."""
     password = normalize_password(password)
     return pwd_context.hash(password)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify password against hash"""
+    """Synchronous password verify for backward compatibility."""
     plain = normalize_password(plain)
     return pwd_context.verify(plain, hashed)
 
@@ -183,7 +213,12 @@ async def get_current_user(
 # ================= ROUTES =================
 
 @router.post("/register", response_model=Token, status_code=201)
-async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")  # Rate limit: 10 registrations per minute
+async def register(
+    request: Request,  # Required by slowapi
+    user_data: UserRegister, 
+    db: AsyncSession = Depends(get_db)
+):
     """
     Register new user with role.
     Phase 5A: Added refresh token for session management.
@@ -203,6 +238,13 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
             }
         )
     
+    # STRICT ROLE VALIDATION - Phase 1: Only teacher or student allowed
+    try:
+        validate_user_role_on_creation(user_data.role.value)
+    except HTTPException as e:
+        logger.warning(f"Invalid role in registration: {user_data.role.value}")
+        raise e
+    
     logger.info(f"Registration attempt for email: {user_data.email}, role: {user_data.role}")
     
     result = await db.execute(select(User).where(User.email == user_data.email))
@@ -219,10 +261,13 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
             }
         )
 
+    # Hash password asynchronously to not block event loop
+    password_hash = await hash_password_async(user_data.password)
+    
     user = User(
         email=user_data.email,
         full_name=user_data.name,
-        password_hash=hash_password(user_data.password),
+        password_hash=password_hash,
         role=user_data.role,
     )
 
@@ -260,7 +305,9 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("30/minute")  # Rate limit: 30 logins per minute per IP
 async def login(
+    request: Request,  # Required by slowapi
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db),
 ):
@@ -288,7 +335,12 @@ async def login(
     result = await db.execute(select(User).where(User.email == credentials.email))
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(credentials.password, user.password_hash):
+    # Use async password verification to not block event loop
+    password_valid = False
+    if user:
+        password_valid = await verify_password_async(credentials.password, user.password_hash)
+    
+    if not user or not password_valid:
         logger.warning(f"Invalid credentials for email: {credentials.email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -330,7 +382,9 @@ async def login(
 
 
 @router.post("/login/form", response_model=Token)
+@limiter.limit("30/minute")  # Rate limit: 30 logins per minute per IP
 async def login_form(
+    request: Request,  # Required by slowapi
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
@@ -345,7 +399,12 @@ async def login_form(
     result = await db.execute(select(User).where(User.email == form_data.username))
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(form_data.password, user.password_hash):
+    # Use async password verification to not block event loop
+    password_valid = False
+    if user:
+        password_valid = await verify_password_async(form_data.password, user.password_hash)
+
+    if not user or not password_valid:
         logger.warning(f"Invalid credentials for username: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

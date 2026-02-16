@@ -8,6 +8,7 @@
     <title>Sign In - JurisAI</title>
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="../css/auth-bg.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -15,12 +16,11 @@
 
 <body>
 
-    <!-- Connect Three Canvas Background -->
-    <div id="bg-animation"></div>
-
     <!-- Login Container -->
-    <div class="login-container">
-        <div class="login-left">
+    <div class="login-container auth-split auth-left--image-first">
+        <div class="login-left auth-left">
+            <img src="../assets/images/lady-justice.jpg" alt="Lady Justice" class="hero-image">
+            <div class="hero-overlay"></div>
             <div class="login-branding">
                 <div class="login-logo">
                     <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,20 +30,17 @@
                     </svg>
                     <span class="login-brand-text">JurisAI</span>
                 </div>
-                <h1 class="login-tagline">AI-Powered Legal Education</h1>
-                <p class="login-description">Master law with intelligent learning paths, case studies, and AI-assisted
-                    research.</p>
             </div>
         </div>
 
-        <div class="login-right">
+        <div class="login-right auth-right">
             <div class="login-card">
                 <div class="login-card-header">
                     <h2 class="login-title">Welcome back</h2>
                     <p class="login-subtitle">Sign in to your account to continue</p>
                 </div>
 
-                <form id="loginForm" class="login-form">
+                <form id="loginForm" class="auth-form">
                     <div class="form-group">
                         <label for="email" class="form-label">Email address</label>
                         <input type="email" id="email" name="email" class="form-input" placeholder="you@university.edu"
@@ -64,7 +61,7 @@
                         <a href="forgot.html" class="login-link">Forgot password?</a>
                     </div>
 
-                    <button type="submit" class="btn-primary login-submit">
+                    <button type="submit" id="loginBtn" class="btn-primary login-submit">
                         Sign In
                     </button>
 
@@ -82,42 +79,8 @@
         </div>
     </div>
 
-    <!-- Connect Three Animation Script -->
-    <script src="../js/connect-three-bg.js"></script>
-    <script src="../js/error-handler.js"></script>
-    <script src="../js/login.js"></script>
-    <script src="../js/storage-service.js"></script>
-    
-    <!-- Login Form Handler -->
-    <script>
-        // API Configuration - points to backend server
-        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-          ? 'http://localhost:8000'
-          : ''; // Production: use relative URL
-        
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            // Basic validation
-            if (!email || !password) {
-                alert('Please enter both email and password');
-                return;
-            }
-            
-            // Simulate authentication (replace with real auth API call)
-            // In production: const response = await fetch(`${API_BASE}/api/auth/login`, {...})
-            
-            // Store auth token
-            localStorage.setItem('auth_token', 'demo_token_' + Date.now());
-            localStorage.setItem('user_email', email);
-            
-            // Redirect to dashboard
-            window.location.href = 'dashboard-student.html';
-        });
-    </script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
 </body>
 
 </html>

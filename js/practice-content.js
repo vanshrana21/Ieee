@@ -684,36 +684,6 @@ function updateTimerDisplay() {
     }
 }
 
-async function apiRequest(endpoint, method = 'GET', body = null) {
-    const token = localStorage.getItem('access_token');
-    const headers = {
-        'Content-Type': 'application/json'
-    };
-
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const config = {
-        method,
-        headers
-    };
-
-    if (body) {
-        config.body = JSON.stringify(body);
-    }
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    if (!response.ok) {
-        if (response.status === 401) {
-            localStorage.removeItem('access_token');
-            window.location.href = '/html/login.html';
-        }
-        throw new Error('API request failed');
-    }
-    return await response.json();
-}
-
 function showToast(message, type = 'info') {
     if (window.JurisErrorHandler) {
         window.JurisErrorHandler.showToast(message, type === 'error' ? 'error' : 'info');
