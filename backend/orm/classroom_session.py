@@ -4,7 +4,10 @@ Classroom Session Database Models - Production Grade
 Isolated tables for Classroom Mode (B2B).
 Features: Timer persistence, concurrency protection, reconnection safety.
 """
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Float, Text, Enum, Index, UniqueConstraint
+from sqlalchemy import (
+    Column, Integer, String, DateTime, ForeignKey, 
+    Text, JSON, Float, Boolean, CheckConstraint, Enum, Index, UniqueConstraint, event
+)
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
@@ -13,6 +16,21 @@ import secrets
 import re
 
 from backend.orm.base import Base
+
+
+# Phase 3: Model-level lock enforcement
+@event.listens_for(ClassroomScore, "before_update")
+def prevent_update_if_locked(mapper, connection, target):
+    """Prevent modification of locked scores at model level."""
+    if target.is_locked:
+        raise Exception("Locked score cannot be modified")
+
+
+@event.listens_for(ClassroomScore, "before_delete")
+def prevent_delete_if_locked(mapper, connection, target):
+    """Prevent deletion of locked scores at model level."""
+    if target.is_locked:
+        raise Exception("Locked score cannot be deleted")
 
 
 class SessionState(PyEnum):
@@ -333,11 +351,31 @@ class ClassroomScore(Base):
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
     is_draft = Column(Boolean, default=True)
     
+    # Score integrity (Phase 3)
+    is_locked = Column(Boolean, default=False, nullable=False)  # Prevents modification after finalization
+    locked_at = Column(DateTime(timezone=True), nullable=True)  # When score was locked
+    final_score = Column(Float, nullable=True)  # Authoritative score used for ranking
+    
+    # AI Evaluation tracking (Phase 2)
+    evaluation_status = Column(String(20), default="pending")  # pending, processing, completed, failed, finalized
+    evaluation_started_at = Column(DateTime(timezone=True), nullable=True)
+    evaluation_completed_at = Column(DateTime(timezone=True), nullable=True)
+    evaluation_error = Column(Text, nullable=True)
+    evaluation_duration_ms = Column(Integer, nullable=True)
+    
     # Relationships
     session = relationship("ClassroomSession", back_populates="scores")
     user = relationship("User", foreign_keys=[user_id], back_populates="classroom_scores")
     submitted_by_user = relationship("User", foreign_keys=[submitted_by])
     participant = relationship("ClassroomParticipant", back_populates="score")
+    
+    # DB-level constraints (Phase 3)
+    __table_args__ = (
+        CheckConstraint(
+            '(is_locked = FALSE) OR (final_score IS NOT NULL)',
+            name='ck_final_score_when_locked'
+        ),
+    )
     
     def calculate_total(self):
         """Calculate total score from criteria."""

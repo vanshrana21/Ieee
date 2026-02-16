@@ -117,7 +117,7 @@ class AITutor:
     # ========== SYSTEM PROMPTS ==========
     
     SYSTEM_PROMPTS = {
-        UserRole.STUDENT: """You are a legal education assistant for LAW STUDENTS in India.
+        UserRole.student: """You are a legal education assistant for LAW STUDENTS in India.
 
 RESPONSE GUIDELINES:
 - Use proper legal terminology
@@ -141,7 +141,7 @@ STRUCTURE:
 4. Key points summary
 """,
         
-        UserRole.JUDGE: """You are a legal reference assistant for LEGAL PROFESSIONALS in India.
+        UserRole.teacher: """You are a legal reference assistant for LEGAL PROFESSIONALS in India.
 
 RESPONSE GUIDELINES:
 - Advanced legal analysis
@@ -161,50 +161,6 @@ STRUCTURE:
 2. Statutory framework
 3. Judicial interpretation (with cases)
 4. Practical considerations
-""",
-        
-        UserRole.FACULTY: """You are a legal reference assistant for LEGAL PROFESSIONALS in India.
-
-RESPONSE GUIDELINES:
-- Advanced legal analysis
-- Statutory interpretation with precedent
-- Procedural considerations
-- Recent developments and amendments
-- Academic rigor expected
-
-CONSTRAINTS:
-- NO personal legal advice
-- NO political statements
-- Verify with latest statutes (mention this)
-- Reference case law from provided database only
-
-STRUCTURE:
-1. Principle statement
-2. Statutory framework
-3. Judicial interpretation (with cases)
-4. Practical considerations
-""",
-        
-        UserRole.ADMIN: """You are a legal information assistant for the GENERAL PUBLIC in India.
-
-RESPONSE GUIDELINES:
-- Simple language (avoid complex jargon)
-- Explain concepts, not legal advice
-- Use everyday examples
-- Focus on rights and responsibilities
-- Friendly, accessible tone
-
-CONSTRAINTS:
-- NO legal advice (informational only)
-- NO jargon without explanation
-- NO case law (unless very famous)
-- Clear disclaimer needed
-
-STRUCTURE:
-1. Simple explanation in plain language
-2. Real-world example
-3. Why it matters to common people
-4. When to consult a lawyer
 """
     }
     
@@ -268,7 +224,7 @@ STRUCTURE:
             logger.error(f"Error searching learn content: {e}")
         
         # Search CaseContent (only for law students, judges, and faculty)
-        if user.role in [UserRole.STUDENT, UserRole.JUDGE, UserRole.FACULTY]:
+        if user.role in [UserRole.student, UserRole.teacher, UserRole.teacher]:
             try:
                 case_stmt = select(CaseContent).where(
                     or_(*[CaseContent.case_name.ilike(f"%{kw}%") for kw in keywords])
@@ -314,7 +270,7 @@ STRUCTURE:
         # Base system prompt
         system_prompt = AITutor.SYSTEM_PROMPTS.get(
             user.role,
-            AITutor.SYSTEM_PROMPTS[UserRole.ADMIN]
+            AITutor.SYSTEM_PROMPTS[UserRole.teacher]
         )
         
         # Level instruction
@@ -473,12 +429,12 @@ STRUCTURE:
             "What are the key points I should remember?",
         ]
         
-        if role == UserRole.STUDENT:
+        if role == UserRole.student:
             base_prompts.extend([
                 "Which cases illustrate this principle?",
                 "How is this tested in exams?"
             ])
-        elif role in [UserRole.JUDGE, UserRole.FACULTY]:
+        elif role in [UserRole.teacher, UserRole.teacher]:
             base_prompts.extend([
                 "What are the procedural considerations?",
                 "Are there recent amendments?"

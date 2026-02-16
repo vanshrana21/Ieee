@@ -80,7 +80,7 @@ async def user_a(db: AsyncSession, institution_a: Institution) -> User:
         email="user_a@lawcollege.edu",
         full_name="User A",
         password_hash="hashed_password",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=institution_a.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -97,7 +97,7 @@ async def user_b(db: AsyncSession, institution_b: Institution) -> User:
         email="user_b@lawcollege.edu",
         full_name="User B",
         password_hash="hashed_password",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=institution_b.id,
         is_active=True,
         created_at=datetime.utcnow()

@@ -97,7 +97,7 @@ class ModelInfoResponse(BaseModel):
     "/shadow/{match_id}",
     response_model=ShadowScoreResponse,
     summary="Generate shadow scoring for LIVE match",
-    dependencies=[Depends(require_role([UserRole.JUDGE, UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher, UserRole.teacher]))]
 )
 async def generate_shadow_score(
     match_id: uuid.UUID,
@@ -125,7 +125,7 @@ async def generate_shadow_score(
     "/evaluate/{match_id}",
     response_model=OfficialEvaluationResponse,
     summary="Generate official AI evaluation for FROZEN match",
-    dependencies=[Depends(require_role([UserRole.JUDGE, UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher, UserRole.teacher]))]
 )
 async def generate_official_evaluation(
     match_id: uuid.UUID,
@@ -154,7 +154,7 @@ async def generate_official_evaluation(
     "/result/{match_id}",
     response_model=EvaluationHistoryResponse,
     summary="Get AI evaluation history for match",
-    dependencies=[Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.STUDENT]))]
+    dependencies=[Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.student]))]
 )
 async def get_evaluation_result(
     match_id: uuid.UUID,
@@ -178,7 +178,7 @@ async def get_evaluation_result(
     "/verify/{match_id}",
     response_model=VerificationResponse,
     summary="Verify integrity of AI evaluation",
-    dependencies=[Depends(require_role([UserRole.SUPER_ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher]))]
 )
 async def verify_evaluation_integrity(
     match_id: uuid.UUID,
@@ -206,7 +206,7 @@ async def verify_evaluation_integrity(
     "/snapshot/{match_id}",
     response_model=SnapshotResponse,
     summary="Get match snapshot for AI evaluation",
-    dependencies=[Depends(require_role([UserRole.JUDGE, UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher, UserRole.teacher]))]
 )
 async def get_match_snapshot(
     match_id: uuid.UUID,
@@ -239,7 +239,7 @@ async def get_match_snapshot(
     "/models",
     response_model=ModelInfoResponse,
     summary="Get available AI models",
-    dependencies=[Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))]
 )
 async def get_available_models(
     current_user=Depends(get_current_user)
@@ -262,7 +262,7 @@ async def get_available_models(
 @router.get(
     "/shadow-scores/{match_id}",
     summary="Get shadow scores for match",
-    dependencies=[Depends(require_role([UserRole.JUDGE, UserRole.ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher, UserRole.teacher]))]
 )
 async def get_shadow_scores(
     match_id: uuid.UUID,
@@ -288,7 +288,7 @@ async def get_shadow_scores(
 @router.delete(
     "/shadow-scores/{match_id}",
     summary="Delete shadow scores for match",
-    dependencies=[Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN]))]
+    dependencies=[Depends(require_role([UserRole.teacher, UserRole.teacher]))]
 )
 async def delete_shadow_scores(
     match_id: uuid.UUID,

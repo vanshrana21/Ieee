@@ -47,7 +47,7 @@ async def require_admin_or_super(
     Phase 9: Only Admin and Super Admin can manage evaluations.
     Faculty explicitly blocked.
     """
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(
             status_code=403,
             detail="Access denied. Admin or Super Admin role required. Faculty cannot manage evaluations."
@@ -227,7 +227,7 @@ async def assign_judge(
             and_(
                 User.id == data.judge_id,
                 User.institution_id == current_user.institution_id,
-                User.role == UserRole.JUDGE
+                User.role == UserRole.teacher
             )
         )
     )

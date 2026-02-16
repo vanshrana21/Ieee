@@ -110,7 +110,7 @@ async def test_user(db: AsyncSession, test_institution):
         email="test@example.com",
         hashed_password="hashed_password",
         full_name="Test User",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=test_institution.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -127,7 +127,7 @@ async def second_user(db: AsyncSession, second_institution):
         email="second@example.com",
         hashed_password="hashed_password",
         full_name="Second User",
-        role=UserRole.FACULTY,
+        role=UserRole.teacher,
         institution_id=second_institution.id,
         is_active=True,
         created_at=datetime.utcnow()

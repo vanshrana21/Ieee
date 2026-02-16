@@ -458,7 +458,7 @@ async def test_checksum_stable_after_multiple_verifications(
         email="admin@test.edu",
         full_name="Admin User",
         password_hash="hashed",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=1,
         is_active=True,
         created_at=datetime.utcnow()

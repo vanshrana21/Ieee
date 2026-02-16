@@ -57,7 +57,7 @@ async def check_project_edit_allowed(
     Returns True if editing is permitted, False otherwise.
     """
     # Admins can always edit (for override purposes)
-    if current_user.role in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role in [UserRole.teacher, UserRole.teacher]:
         return True
     
     # If project is explicitly locked or submitted
@@ -187,7 +187,7 @@ async def list_projects(
     )
     
     # Students only see their own projects
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         query = query.where(MootProject.created_by == current_user.id)
     
     if status:
@@ -233,11 +233,11 @@ async def get_project(
         raise HTTPException(status_code=404, detail="Project not found")
     
     # Check institution access
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Students can only access their own projects
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     return {
@@ -270,10 +270,10 @@ async def update_project(
         raise HTTPException(status_code=404, detail="Project not found")
     
     # Check permissions
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Phase 6B: Check team permission (CAPTAIN only for project metadata updates)
@@ -327,10 +327,10 @@ async def delete_project(
         raise HTTPException(status_code=404, detail="Project not found")
     
     # Check permissions
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Phase 6B: Check team permission (CAPTAIN only for project delete)
@@ -376,10 +376,10 @@ async def create_issue(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Phase 6B: Check team permission for issue CRUD (CAPTAIN, SPEAKER)
@@ -446,10 +446,10 @@ async def list_issues(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     result = await db.execute(
@@ -494,10 +494,10 @@ async def update_issue(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Phase 6B: Check team permission for issue CRUD (CAPTAIN, SPEAKER)
@@ -561,10 +561,10 @@ async def delete_issue(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Phase 6B: Check team permission for issue CRUD (CAPTAIN, SPEAKER)
@@ -618,10 +618,10 @@ async def save_irac(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Phase 6B: Check team permission for IRAC write (CAPTAIN, SPEAKER, RESEARCHER)
@@ -720,10 +720,10 @@ async def get_irac_history(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     query = select(IRACBlock).where(IRACBlock.project_id == project_id)

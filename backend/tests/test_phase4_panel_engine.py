@@ -87,7 +87,7 @@ async def user_admin_a(db: AsyncSession, institution_a: Institution) -> User:
         email="admin_a@test.edu",
         full_name="Admin A",
         password_hash="hashed",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=institution_a.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -104,7 +104,7 @@ async def judge_from_inst_a(db: AsyncSession, institution_a: Institution) -> Use
         email="judge_a@test.edu",
         full_name="Judge A",
         password_hash="hashed",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=institution_a.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -205,7 +205,7 @@ async def test_no_conflict_different_institution(
         email="judge_b@test.edu",
         full_name="Judge B",
         password_hash="hashed",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=institution_b.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -239,7 +239,7 @@ async def test_comprehensive_conflict_check(
         email="judge_b@test.edu",
         full_name="Judge B",
         password_hash="hashed",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=institution_b.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -296,7 +296,7 @@ async def test_repeat_judging_detected(
         email="judge_b@test.edu",
         full_name="Judge B",
         password_hash="hashed",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=institution_b.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -350,7 +350,7 @@ async def test_strict_mode_blocks_repeat_judging(
         email="judge_b@test.edu",
         full_name="Judge B",
         password_hash="hashed",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=institution_b.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -415,7 +415,7 @@ async def test_publish_idempotent(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()
@@ -462,7 +462,7 @@ async def test_tamper_detection_detects_missing_panel(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()
@@ -559,7 +559,7 @@ async def test_panel_members_from_different_institutions(
                 email=f"judge{i}@{inst.code.lower()}.edu",
                 full_name=f"Judge from {inst.name}",
                 password_hash="hashed",
-                role=UserRole.JUDGE,
+                role=UserRole.teacher,
                 institution_id=inst.id,
                 is_active=True,
                 created_at=datetime.utcnow()
@@ -628,7 +628,7 @@ async def test_postgresql_trigger_blocks_panel_update(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()
@@ -685,7 +685,7 @@ async def test_assignment_history_created(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()
@@ -742,7 +742,7 @@ async def test_panel_roles_assigned_correctly(
             email=f"judge{i}@college{i}.edu",
             full_name=f"Judge {i}",
             password_hash="hashed",
-            role=UserRole.JUDGE,
+            role=UserRole.teacher,
             institution_id=judge_inst.id,
             is_active=True,
             created_at=datetime.utcnow()

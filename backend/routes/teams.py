@@ -115,7 +115,7 @@ async def require_captain(
         raise HTTPException(status_code=404, detail="Team not found")
     
     # Super admins bypass captain check
-    if current_user.role == UserRole.SUPER_ADMIN:
+    if current_user.role == UserRole.teacher:
         return team
     
     # Check if user is captain
@@ -160,7 +160,7 @@ async def require_team_member(
         raise HTTPException(status_code=404, detail="Team not found")
     
     # Super admins bypass membership check
-    if current_user.role == UserRole.SUPER_ADMIN:
+    if current_user.role == UserRole.teacher:
         return team
     
     # Check if user is a member
@@ -675,7 +675,7 @@ async def list_team_activity(
     Chronological list (latest first), paginated.
     """
     # Verify user can access team (must be member, faculty, or admin)
-    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.FACULTY]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         # Check if user is a team member
         member_result = await db.execute(
             select(TeamMember).where(

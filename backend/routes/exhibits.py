@@ -89,7 +89,7 @@ async def verify_presiding_judge(
     For now, checks if user has JUDGE role or higher.
     In production, would check specific presiding assignment.
     """
-    return user.role in [UserRole.JUDGE, UserRole.ADMIN, UserRole.HOD]
+    return user.role in [UserRole.teacher, UserRole.teacher, UserRole.teacher]
 
 
 # =============================================================================
@@ -102,7 +102,7 @@ async def upload_exhibit_endpoint(
     side: str = Form(..., description="petitioner or respondent"),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY, UserRole.JUDGE]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Upload an exhibit file (PDF only).
@@ -188,7 +188,7 @@ async def mark_exhibit_endpoint(
     session_id: int,
     exhibit_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY, UserRole.JUDGE]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Mark an exhibit with deterministic numbering.
@@ -254,7 +254,7 @@ async def tender_exhibit_endpoint(
     exhibit_id: int,
     request: TenderExhibitRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY, UserRole.JUDGE]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Tender an exhibit during a turn.
@@ -306,7 +306,7 @@ async def rule_exhibit_endpoint(
     exhibit_id: int,
     request: RuleExhibitRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Rule on a tendered exhibit (admit or reject).
@@ -482,7 +482,7 @@ async def get_exhibit_endpoint(
 async def verify_exhibits_endpoint(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.JUDGE, UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Verify integrity of all exhibits in a session.

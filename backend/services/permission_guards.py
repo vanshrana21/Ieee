@@ -204,7 +204,7 @@ async def require_team_permission(
         )
     
     # Super admins bypass remaining checks
-    if user.role == UserRole.SUPER_ADMIN:
+    if user.role == UserRole.teacher:
         # Return a mock team member for super admin
         return TeamMember(
             institution_id=user.institution_id,
@@ -314,7 +314,7 @@ async def require_read_permission(
     if user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Cross-institution access denied")
     
-    if user.role == UserRole.SUPER_ADMIN:
+    if user.role == UserRole.teacher:
         return TeamMember(
             institution_id=user.institution_id,
             team_id=project.team_id or 0,

@@ -25,7 +25,7 @@ router = APIRouter(prefix="/superadmin", tags=["Live Courtroom Admin"])
 @router.get("/live-ledger/verify", status_code=status.HTTP_200_OK)
 async def verify_all_live_ledgers(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     System-wide chain verification for all live courtroom sessions.
@@ -108,7 +108,7 @@ async def verify_all_live_ledgers(
 @router.get("/live-ledger/stats", status_code=status.HTTP_200_OK)
 async def get_live_ledger_statistics(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get statistics about live courtroom ledgers.

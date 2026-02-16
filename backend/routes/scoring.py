@@ -207,7 +207,7 @@ async def create_score(
     Judges can create scores for teams they are assigned to evaluate.
     """
     # Check permissions
-    if current_user.role not in [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only judges can create scores")
     
     # Verify competition access
@@ -219,7 +219,7 @@ async def create_score(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if judge already has a score for this team/submission/slot
@@ -316,7 +316,7 @@ async def list_scores(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query
@@ -329,10 +329,10 @@ async def list_scores(
         query = query.where(JudgeScore.judge_id == judge_id)
     
     # Publication filter (Phase 5D: Critical for privacy)
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         # Students only see published scores
         query = query.where(JudgeScore.is_published == True)
-    elif current_user.role in [UserRole.JUDGE]:
+    elif current_user.role in [UserRole.teacher]:
         # Judges see their own scores (published or not) + published scores from others
         if not include_unpublished:
             query = query.where(
@@ -353,7 +353,7 @@ async def list_scores(
     return {
         "success": True,
         "competition_id": competition_id,
-        "scores": [s.to_dict(include_notes=(current_user.role != UserRole.STUDENT)) for s in scores],
+        "scores": [s.to_dict(include_notes=(current_user.role != UserRole.student)) for s in scores],
         "count": len(scores)
     }
 
@@ -377,20 +377,20 @@ async def get_score(
         raise HTTPException(status_code=404, detail="Score not found")
     
     # Check access
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != score.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != score.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Students can only see published scores
-    if current_user.role == UserRole.STUDENT and not score.is_published:
+    if current_user.role == UserRole.student and not score.is_published:
         raise HTTPException(status_code=404, detail="Score not found")  # Don't reveal existence
     
     # Judges can see their own unpublished scores
-    if current_user.role == UserRole.JUDGE and score.judge_id != current_user.id and not score.is_published:
+    if current_user.role == UserRole.teacher and score.judge_id != current_user.id and not score.is_published:
         raise HTTPException(status_code=404, detail="Score not found")
     
     return {
         "success": True,
-        "score": score.to_dict(include_notes=(current_user.role != UserRole.STUDENT))
+        "score": score.to_dict(include_notes=(current_user.role != UserRole.student))
     }
 
 
@@ -414,11 +414,11 @@ async def update_score(
         raise HTTPException(status_code=404, detail="Score not found")
     
     # Check ownership
-    if score.judge_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if score.judge_id != current_user.id and current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="You can only update your own scores")
     
     # Check if already finalized
-    if score.is_final and current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if score.is_final and current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=400, detail="Score is finalized. Contact admin to unlock.")
     
     # Update fields
@@ -496,7 +496,7 @@ async def finalize_score(
         raise HTTPException(status_code=404, detail="Score not found")
     
     # Check ownership
-    if score.judge_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if score.judge_id != current_user.id and current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="You can only finalize your own scores")
     
     # Check if already finalized
@@ -544,7 +544,7 @@ async def publish_score(
     Phase 5D: Only Admin/Faculty can publish.
     """
     # Check permissions
-    if current_user.role not in [UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Faculty/Admin can publish scores")
     
     result = await db.execute(
@@ -556,7 +556,7 @@ async def publish_score(
         raise HTTPException(status_code=404, detail="Score not found")
     
     # Verify institution
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != score.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != score.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if already published
@@ -599,7 +599,7 @@ async def unpublish_score(
     Phase 5D: Only Admin can unpublish.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Admin can unpublish scores")
     
     result = await db.execute(
@@ -611,7 +611,7 @@ async def unpublish_score(
         raise HTTPException(status_code=404, detail="Score not found")
     
     # Verify institution
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != score.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != score.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if published
@@ -652,7 +652,7 @@ async def list_conflicts(
     Phase 5D: Admin/Faculty can view and resolve conflicts.
     """
     # Check permissions
-    if current_user.role not in [UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Verify competition access
@@ -664,7 +664,7 @@ async def list_conflicts(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query
@@ -698,7 +698,7 @@ async def resolve_conflict(
     Phase 5D: Admin can resolve conflicts by selecting which score to use or providing override.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Admin can resolve conflicts")
     
     result = await db.execute(
@@ -710,7 +710,7 @@ async def resolve_conflict(
         raise HTTPException(status_code=404, detail="Conflict not found")
     
     # Verify institution
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != conflict.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != conflict.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Update conflict

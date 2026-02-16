@@ -43,7 +43,7 @@ async def create_tournament_round(
     round_number: int,
     round_type: RoundType,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Create new tournament round.
@@ -177,7 +177,7 @@ async def list_rounds(
 async def generate_pairings(
     round_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Generate pairings for a round (Swiss or Knockout).
@@ -262,7 +262,7 @@ async def generate_pairings(
 async def publish_round_endpoint(
     round_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Publish (freeze) a round.
@@ -337,7 +337,7 @@ async def publish_round_endpoint(
 async def verify_round(
     round_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Verify round integrity.

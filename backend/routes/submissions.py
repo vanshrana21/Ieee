@@ -230,7 +230,7 @@ async def create_deadline(
     Admin+ only.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Verify competition exists and user has access
@@ -242,7 +242,7 @@ async def create_deadline(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if deadline already exists for this type
@@ -300,7 +300,7 @@ async def list_deadlines(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     result = await db.execute(
@@ -355,7 +355,7 @@ async def upload_submission(
         raise HTTPException(status_code=404, detail="Team not found")
     
     # Check if user is team member
-    if current_user.role == UserRole.STUDENT and current_user.id not in [m.id for m in team.members]:
+    if current_user.role == UserRole.student and current_user.id not in [m.id for m in team.members]:
         raise HTTPException(status_code=403, detail="You are not a member of this team")
     
     # Check deadline status
@@ -480,7 +480,7 @@ async def finalize_submission(
         raise HTTPException(status_code=404, detail="Submission not found")
     
     # Verify access
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         team_result = await db.execute(
             select(Team).where(Team.id == submission.team_id)
         )
@@ -550,7 +550,7 @@ async def unlock_submission(
     Phase 5C: Judges can override lock for legitimate late submissions.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FACULTY]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Admin/Faculty can unlock submissions")
     
     result = await db.execute(
@@ -562,7 +562,7 @@ async def unlock_submission(
         raise HTTPException(status_code=404, detail="Submission not found")
     
     # Verify institution access
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != submission.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != submission.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Unlock
@@ -615,14 +615,14 @@ async def list_submissions(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query
     query = select(Submission).where(Submission.competition_id == competition_id)
     
     # Students only see their own team's submissions
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         # Find teams this user is a member of
         team_result = await db.execute(
             select(Team).where(

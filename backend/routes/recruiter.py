@@ -65,9 +65,9 @@ async def log_recruiter_access(
 def check_recruiter_permissions(user: User) -> bool:
     """Check if user has recruiter access permissions."""
     allowed_roles = [
-        UserRole.RECRUITER,
-        UserRole.ADMIN,
-        UserRole.SUPER_ADMIN
+        UserRole.teacher,
+        UserRole.teacher,
+        UserRole.teacher
     ]
     return user.role in allowed_roles
 
@@ -80,7 +80,7 @@ def check_recruiter_permissions(user: User) -> bool:
 async def get_candidate_profile(
     candidate_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get candidate skill vector and ranking information.
@@ -167,7 +167,7 @@ async def search_candidates(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Search candidates by performance criteria.
@@ -274,7 +274,7 @@ async def get_national_rankings(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get paginated national rankings for an academic year.
@@ -374,7 +374,7 @@ async def verify_candidate_checksum(
     candidate_id: int,
     academic_year_id: Optional[int] = Query(None, description="Academic year for ranking context"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Verify a candidate's ranking checksum.
@@ -433,7 +433,7 @@ async def verify_candidate_checksum(
 async def get_institution_performance(
     institution_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get performance summary for an institution.
@@ -475,7 +475,7 @@ async def get_my_access_logs(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get access logs for the current recruiter.
@@ -511,7 +511,7 @@ async def get_my_access_logs(
 @router.get("/stats/summary", status_code=status.HTTP_200_OK)
 async def get_recruiter_platform_stats(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Get platform-wide statistics for recruiter dashboard.

@@ -124,7 +124,7 @@ async def submit_project(
         raise HTTPException(status_code=404, detail="Competition not found")
     
     # Check institution
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Get project
@@ -142,7 +142,7 @@ async def submit_project(
         raise HTTPException(status_code=404, detail="Project not found")
     
     # Verify ownership
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="You can only submit your own projects")
     
     # Check if already submitted
@@ -212,7 +212,7 @@ async def lock_project(
     Requires reason and is logged.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only admins can lock projects")
     
     # Get competition
@@ -224,7 +224,7 @@ async def lock_project(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Get project
@@ -290,7 +290,7 @@ async def unlock_project(
     Requires reason and is logged.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only admins can unlock projects")
     
     # Get competition
@@ -302,7 +302,7 @@ async def unlock_project(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Get project
@@ -377,7 +377,7 @@ async def extend_deadline(
     Requires reason and is logged.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only admins can extend deadlines")
     
     # Get competition
@@ -389,7 +389,7 @@ async def extend_deadline(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Get old deadline for logging
@@ -447,7 +447,7 @@ async def change_competition_status(
     When moving to submission_closed/evaluation, all projects are locked.
     """
     # Check permissions
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only admins can change competition status")
     
     # Get competition
@@ -459,7 +459,7 @@ async def change_competition_status(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     old_status = competition.status
@@ -538,7 +538,7 @@ async def get_audit_logs(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query
@@ -547,7 +547,7 @@ async def get_audit_logs(
     )
     
     # Students only see logs for their own projects
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         # Get student's projects in this competition
         proj_result = await db.execute(
             select(MootProject.id).where(

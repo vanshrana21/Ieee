@@ -72,7 +72,7 @@ async def create_evaluation(
     Only judges/faculty can create evaluations.
     """
     # Check permissions
-    if current_user.role not in [UserRole.JUDGE, UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only judges can create evaluations")
     
     # Verify project access
@@ -89,7 +89,7 @@ async def create_evaluation(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if evaluation already exists
@@ -168,21 +168,21 @@ async def list_evaluations(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query
     query = select(MootEvaluation).where(MootEvaluation.project_id == project_id)
     
     # Students only see finalized evaluations
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         query = query.where(MootEvaluation.is_draft == False)
         # Students only see their own project's evaluations
         if project.created_by != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
     
     # Judges see their own + all finalized
-    if current_user.role == UserRole.JUDGE:
+    if current_user.role == UserRole.teacher:
         query = query.where(
             or_(
                 MootEvaluation.judge_id == current_user.id,
@@ -225,18 +225,18 @@ async def get_evaluation(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Access control
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         # Students only see finalized evaluations for their own projects
         if evaluation.is_draft:
             raise HTTPException(status_code=404, detail="Evaluation not found")
         if project.created_by != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.JUDGE:
+    if current_user.role == UserRole.teacher:
         # Judges can see their own drafts, but not other judges' drafts
         if evaluation.is_draft and evaluation.judge_id != current_user.id:
             raise HTTPException(status_code=404, detail="Evaluation not found")
@@ -267,7 +267,7 @@ async def update_evaluation(
         raise HTTPException(status_code=404, detail="Evaluation not found")
     
     # Check ownership
-    if evaluation.judge_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if evaluation.judge_id != current_user.id and current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="You can only update your own evaluations")
     
     # Check if locked
@@ -328,7 +328,7 @@ async def finalize_evaluation(
         raise HTTPException(status_code=404, detail="Evaluation not found")
     
     # Check ownership
-    if evaluation.judge_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if evaluation.judge_id != current_user.id and current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="You can only finalize your own evaluations")
     
     # Check if already finalized
@@ -380,7 +380,7 @@ async def delete_evaluation(
         raise HTTPException(status_code=404, detail="Evaluation not found")
     
     # Check ownership or admin
-    if evaluation.judge_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if evaluation.judge_id != current_user.id and current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="You can only delete your own evaluations")
     
     # Check if finalized

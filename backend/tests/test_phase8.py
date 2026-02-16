@@ -81,7 +81,7 @@ async def test_user(db: AsyncSession, test_institution):
         email="test@example.com",
         hashed_password="hashed_password",
         full_name="Test User",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=test_institution.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -98,7 +98,7 @@ async def judge_user(db: AsyncSession, test_institution):
         email="judge@example.com",
         hashed_password="hashed_password",
         full_name="Judge User",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=test_institution.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -115,7 +115,7 @@ async def second_judge(db: AsyncSession, second_institution):
         email="judge2@example.com",
         hashed_password="hashed_password",
         full_name="Second Judge",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=second_institution.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -443,7 +443,7 @@ async def test_judge_conflict_detection(db: AsyncSession, test_institution, seco
         email="other@example.com",
         hashed_password="hashed",
         full_name="Other Judge",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=second_institution.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -625,7 +625,7 @@ async def test_multi_institution_isolation(db: AsyncSession, test_institution, s
         email="other@institution.com",
         hashed_password="hashed",
         full_name="Other User",
-        role=UserRole.STUDENT,
+        role=UserRole.student,
         institution_id=second_institution.id,
         is_active=True,
         created_at=datetime.utcnow()

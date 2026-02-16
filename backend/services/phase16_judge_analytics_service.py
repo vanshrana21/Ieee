@@ -42,7 +42,7 @@ class JudgeAnalyticsService:
             select(User).where(
                 and_(
                     User.id == judge_user_id,
-                    User.role.in_([UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN])
+                    User.role.in_([UserRole.teacher, UserRole.teacher, UserRole.teacher])
                 )
             )
         )
@@ -311,7 +311,7 @@ class JudgeAnalyticsService:
         from backend.orm.user import User, UserRole
         result = await db.execute(
             select(User.id).where(
-                User.role.in_([UserRole.JUDGE, UserRole.ADMIN, UserRole.SUPER_ADMIN])
+                User.role.in_([UserRole.teacher, UserRole.teacher, UserRole.teacher])
             ).order_by(User.id)
         )
         judge_ids = [row[0] for row in result.all()]

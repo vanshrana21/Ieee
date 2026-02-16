@@ -76,7 +76,7 @@ async def user_a(db: AsyncSession, institution_a: Institution) -> User:
         email="user_a@lawcollege.edu",
         full_name="User A",
         password_hash="hashed_password",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=institution_a.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -93,7 +93,7 @@ async def judge_a(db: AsyncSession, institution_a: Institution) -> User:
         email="judge_a@lawcollege.edu",
         full_name="Judge A",
         password_hash="hashed_password",
-        role=UserRole.JUDGE,
+        role=UserRole.teacher,
         institution_id=institution_a.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -110,7 +110,7 @@ async def speaker_a(db: AsyncSession, institution_a: Institution) -> User:
         email="speaker_a@lawcollege.edu",
         full_name="Speaker A",
         password_hash="hashed_password",
-        role=UserRole.TEAM_MEMBER,
+        role=UserRole.student,
         institution_id=institution_a.id,
         is_active=True,
         created_at=datetime.utcnow()
@@ -222,7 +222,7 @@ async def active_session(
         email="speaker_b@lawcollege.edu",
         full_name="Speaker B",
         password_hash="hashed_password",
-        role=UserRole.TEAM_MEMBER,
+        role=UserRole.student,
         institution_id=institution_a.id,
         is_active=True,
         created_at=datetime.utcnow()

@@ -86,10 +86,10 @@ async def create_round(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Create round
@@ -134,10 +134,10 @@ async def list_rounds(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     result = await db.execute(
@@ -176,10 +176,10 @@ async def get_round(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     return {
@@ -215,7 +215,7 @@ async def complete_round(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Complete and lock
@@ -273,7 +273,7 @@ async def submit_response(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Phase 6B: Check team permission for oral response (CAPTAIN, SPEAKER)
@@ -332,10 +332,10 @@ async def list_responses(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     result = await db.execute(
@@ -380,14 +380,14 @@ async def submit_question(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     question = BenchQuestion(
         institution_id=round_session.institution_id,
         round_id=round_id,
         project_id=round_session.project_id,
-        judge_id=current_user.id if current_user.role in [UserRole.JUDGE, UserRole.FACULTY] else None,
+        judge_id=current_user.id if current_user.role in [UserRole.teacher, UserRole.teacher] else None,
         judge_name=data.judge_name or (current_user.full_name if hasattr(current_user, 'full_name') else None),
         question_text=data.question_text,
         issue_id=data.issue_id,
@@ -427,10 +427,10 @@ async def list_questions(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     result = await db.execute(
@@ -470,7 +470,7 @@ async def generate_transcript(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Get all responses and questions
@@ -581,10 +581,10 @@ async def get_transcript(
     )
     project = project_result.scalar_one_or_none()
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != project.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != project.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.role == UserRole.STUDENT and project.created_by != current_user.id:
+    if current_user.role == UserRole.student and project.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     transcript_result = await db.execute(

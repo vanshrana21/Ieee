@@ -33,7 +33,7 @@ class TimerPauseRequest(BaseModel):
 
 def _check_judge_permission(current_user: User):
     """Verify user has judge/admin/faculty role"""
-    if current_user.role not in [UserRole.JUDGE, UserRole.ADMIN, UserRole.FACULTY]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only judges/admins can control timer"

@@ -65,7 +65,7 @@ async def user(db: AsyncSession, institution: Institution) -> User:
         email="test@lawcollege.edu",
         full_name="Test User",
         password_hash="hashed_password",
-        role=UserRole.ADMIN,
+        role=UserRole.teacher,
         institution_id=institution.id,
         is_active=True,
         created_at=datetime.utcnow()

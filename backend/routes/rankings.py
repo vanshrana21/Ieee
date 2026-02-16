@@ -61,7 +61,7 @@ async def compute_rankings(
     Admin/Faculty only.
     """
     # Check permissions
-    if current_user.role not in [UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(
             status_code=403,
             detail="Only Faculty/Admin can compute rankings"
@@ -76,7 +76,7 @@ async def compute_rankings(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Compute rankings
@@ -119,7 +119,7 @@ async def list_rankings(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query
@@ -129,7 +129,7 @@ async def list_rankings(
         query = query.where(TeamRanking.ranking_type == ranking_type)
     
     # Students only see published rankings
-    if current_user.role == UserRole.STUDENT:
+    if current_user.role == UserRole.student:
         query = query.where(TeamRanking.is_published == True)
     elif not include_draft:
         query = query.where(TeamRanking.is_published == True)
@@ -142,7 +142,7 @@ async def list_rankings(
     return {
         "success": True,
         "competition_id": competition_id,
-        "rankings": [r.to_dict(include_details=(current_user.role != UserRole.STUDENT)) for r in rankings],
+        "rankings": [r.to_dict(include_details=(current_user.role != UserRole.student)) for r in rankings],
         "count": len(rankings)
     }
 
@@ -165,16 +165,16 @@ async def get_ranking(
         raise HTTPException(status_code=404, detail="Ranking not found")
     
     # Check access
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != ranking.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != ranking.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Students only see published rankings
-    if current_user.role == UserRole.STUDENT and not ranking.is_published:
+    if current_user.role == UserRole.student and not ranking.is_published:
         raise HTTPException(status_code=404, detail="Ranking not found")
     
     return {
         "success": True,
-        "ranking": ranking.to_dict(include_details=(current_user.role != UserRole.STUDENT))
+        "ranking": ranking.to_dict(include_details=(current_user.role != UserRole.student))
     }
 
 
@@ -191,7 +191,7 @@ async def publish_rankings(
     Phase 5E: Publish rankings to make them visible to students.
     Admin only.
     """
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Admin can publish rankings")
     
     # Verify competition
@@ -203,7 +203,7 @@ async def publish_rankings(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Update rankings
@@ -248,7 +248,7 @@ async def generate_leaderboard(
     Phase 5E: Generate leaderboard view.
     """
     # Check permissions
-    if current_user.role not in [UserRole.FACULTY, UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Verify competition
@@ -260,7 +260,7 @@ async def generate_leaderboard(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Generate leaderboard
@@ -301,7 +301,7 @@ async def view_leaderboard(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Get leaderboard
@@ -319,7 +319,7 @@ async def view_leaderboard(
         raise HTTPException(status_code=404, detail="Leaderboard not found")
     
     # Students only see published leaderboards
-    if current_user.role == UserRole.STUDENT and not leaderboard.is_published:
+    if current_user.role == UserRole.student and not leaderboard.is_published:
         raise HTTPException(status_code=404, detail="Leaderboard not found")
     
     return {
@@ -337,7 +337,7 @@ async def publish_leaderboard(
     """
     Publish leaderboard for public viewing.
     """
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Admin can publish leaderboards")
     
     result = await db.execute(
@@ -348,7 +348,7 @@ async def publish_leaderboard(
     if not leaderboard:
         raise HTTPException(status_code=404, detail="Leaderboard not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.teacher:
         # Get competition for institution check
         comp_result = await db.execute(
             select(Competition).where(Competition.id == leaderboard.competition_id)
@@ -380,7 +380,7 @@ async def create_tie_break_rule(
     """
     Phase 5E: Create tie-break rule for competition.
     """
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Admin can create tie-break rules")
     
     # Verify competition
@@ -392,7 +392,7 @@ async def create_tie_break_rule(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     rule = TieBreakRule(
@@ -452,7 +452,7 @@ async def select_winners(
     Phase 5E: Select official winners based on rankings.
     Admin only.
     """
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only Admin can select winners")
     
     # Verify competition
@@ -464,7 +464,7 @@ async def select_winners(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Select winners
@@ -501,7 +501,7 @@ async def list_winners(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     
-    if current_user.role != UserRole.SUPER_ADMIN and current_user.institution_id != competition.institution_id:
+    if current_user.role != UserRole.teacher and current_user.institution_id != competition.institution_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build query

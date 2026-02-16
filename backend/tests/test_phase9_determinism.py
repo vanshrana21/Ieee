@@ -424,7 +424,7 @@ def test_recruiter_role_in_enum():
     from backend.orm.user import UserRole
     
     assert hasattr(UserRole, 'RECRUITER'), "UserRole must have RECRUITER member"
-    assert UserRole.RECRUITER == 'recruiter', "RECRUITER value must be 'recruiter'"
+    assert UserRole.teacher == 'recruiter', "RECRUITER value must be 'recruiter'"
 
 
 def test_serializable_isolation_in_ranking():

@@ -77,7 +77,7 @@ async def verify_session_access(
 async def start_session_endpoint(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Start a live court session.
@@ -123,7 +123,7 @@ async def start_session_endpoint(
 async def pause_session_endpoint(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Pause a live court session.
@@ -162,7 +162,7 @@ async def pause_session_endpoint(
 async def resume_session_endpoint(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Resume a paused live court session.
@@ -201,7 +201,7 @@ async def resume_session_endpoint(
 async def complete_session_endpoint(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Complete a live court session.
@@ -252,7 +252,7 @@ async def start_turn_endpoint(
     session_id: int,
     turn_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Start a turn in a session.
@@ -313,7 +313,7 @@ async def end_turn_endpoint(
     session_id: int,
     turn_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     End a turn in a session.
@@ -384,7 +384,7 @@ async def get_timer_endpoint(
 async def timer_tick_endpoint(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Server-side timer tick.
@@ -496,7 +496,7 @@ async def get_events_endpoint(
 async def verify_session_endpoint(
     session_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Verify the integrity of the event chain.
@@ -525,7 +525,7 @@ async def verify_session_endpoint(
 async def create_session_endpoint(
     round_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Create a new live court session for a round.
@@ -583,7 +583,7 @@ async def create_turn_endpoint(
     turn_type: str,
     allocated_seconds: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.HOD, UserRole.FACULTY]))
+    current_user: User = Depends(require_role([UserRole.teacher, UserRole.teacher, UserRole.teacher]))
 ) -> Dict[str, Any]:
     """
     Create a new turn for a session.

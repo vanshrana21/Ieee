@@ -208,7 +208,7 @@ async def get_available_judges(
                 )
             )
         )
-        .where(User.role == UserRole.JUDGE)
+        .where(User.role == UserRole.teacher)
         .where(User.is_active == True)
         .group_by(User.id, User.institution_id)
         .order_by(

@@ -76,7 +76,7 @@ async def create_competition(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    if current_user.role not in [UserRole.ADMIN, UserRole.FACULTY, UserRole.SUPER_ADMIN]:
+    if current_user.role not in [UserRole.teacher, UserRole.teacher, UserRole.teacher]:
         raise HTTPException(status_code=403, detail="Only admins/faculty can create competitions")
     
     result = await db.execute(select(MootProject).where(MootProject.id == comp.problem_id))

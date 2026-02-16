@@ -568,14 +568,8 @@ async def check_user_can_raise_objection(
         return False, "User not found"
     
     # Check roles that can raise objections
-    allowed_roles = [
-        UserRole.ADMIN,
-        UserRole.HOD,
-        UserRole.FACULTY,
-        UserRole.JUDGE
-    ]
-    
-    if user.role not in allowed_roles:
+    # PHASE 1: Only teachers can raise objections
+    if user.role != UserRole.teacher:
         return False, f"Role {user.role.value} cannot raise objections"
     
     # Check session
