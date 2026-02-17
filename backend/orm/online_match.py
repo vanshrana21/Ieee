@@ -3,8 +3,26 @@ Online Match Database Models
 
 Isolated tables for Online 1v1 Mode (B2C).
 No shared tables with Classroom Mode.
+
+Phase 4: Competitive Match Engine
+- Adds structured 3-round scoring
+- Enforces immutable finalized matches
+- Reuses existing matches table for online 1v1 mode
 """
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Float, Text, Enum
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Float,
+    Text,
+    Enum,
+    CheckConstraint,
+    UniqueConstraint,
+    event,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
@@ -42,7 +60,8 @@ class Match(Base):
     id = Column(Integer, primary_key=True, index=True)
     match_code = Column(String(20), unique=True, index=True, nullable=False)
     player1_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    player2_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # Phase 4: allow AI fallback matches where player2_id can be NULL
+    player2_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     player1_role = Column(String(50), nullable=False)  # petitioner, respondent
     player2_role = Column(String(50), nullable=False)
     topic = Column(String(255), nullable=False)
@@ -50,14 +69,39 @@ class Match(Base):
     current_state = Column(String(50), default=MatchState.SEARCHING.value)
     winner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
+    # Phase 4: structured competitive match fields
+    # Logical state machine for ranked engine:
+    # queued | matched | in_progress | completed | finalized
+    state = Column(String(20), default="queued")
+    player_1_score = Column(Float, nullable=True)
+    player_2_score = Column(Float, nullable=True)
+    # Optional aggregate for tie-breaker step 3
+    player_1_legal_reasoning = Column(Float, nullable=True)
+    player_2_legal_reasoning = Column(Float, nullable=True)
+    is_ai_match = Column(Boolean, default=False, nullable=False)
+    is_locked = Column(Boolean, default=False, nullable=False)
+    # Phase 5: ensure rating is processed exactly once
+    rating_processed = Column(Boolean, default=False, nullable=False)
+    # Phase 6: season tracking (nullable for now)
+    season_id = Column(Integer, nullable=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    finalized_at = Column(DateTime(timezone=True), nullable=True)
+    
+    __table_args__ = (
+        # Phase 4: cannot finalize without both scores present
+        CheckConstraint(
+            "(state != 'finalized') OR (player_1_score IS NOT NULL AND player_2_score IS NOT NULL)",
+            name="ck_matches_scores_before_finalize",
+        ),
+    )
     
     # Relationships
-    player1 = relationship("User", foreign_keys=[player1_id], back_populates="matches_as_player1")
-    player2 = relationship("User", foreign_keys=[player2_id], back_populates="matches_as_player2")
+    player1 = relationship("User", foreign_keys=[player1_id])
+    player2 = relationship("User", foreign_keys=[player2_id])
     winner = relationship("User", foreign_keys=[winner_id])
     participants = relationship("MatchParticipant", back_populates="match", cascade="all, delete-orphan")
     scores = relationship("MatchScore", back_populates="match", cascade="all, delete-orphan")
@@ -106,7 +150,7 @@ class MatchParticipant(Base):
     
     # Relationships
     match = relationship("Match", back_populates="participants")
-    user = relationship("User", back_populates="match_participations")
+    user = relationship("User", foreign_keys=[user_id])
     
     def to_dict(self):
         """Convert to dictionary."""
@@ -143,7 +187,7 @@ class MatchScore(Base):
     
     # Relationships
     match = relationship("Match", back_populates="scores")
-    user = relationship("User", back_populates="match_scores")
+    user = relationship("User", foreign_keys=[user_id])
     
     def calculate_total(self):
         """Calculate total score from criteria."""
@@ -198,7 +242,7 @@ class MatchArgument(Base):
     
     # Relationships
     match = relationship("Match")
-    user = relationship("User", back_populates="match_arguments")
+    user = relationship("User", foreign_keys=[user_id])
     
     def to_dict(self):
         """Convert to dictionary."""
@@ -213,14 +257,80 @@ class MatchArgument(Base):
         }
 
 
-# Add relationships to User model
-def add_user_relationships():
-    """Add online match relationships to User model."""
-    from backend.orm.user import User
+class MatchRound(Base):
+    """
+    Phase 4: Structured competitive match rounds.
     
-    User.matches_as_player1 = relationship("Match", foreign_keys=[Match.player1_id], back_populates="player1")
-    User.matches_as_player2 = relationship("Match", foreign_keys=[Match.player2_id], back_populates="player2")
-    User.match_participations = relationship("MatchParticipant", back_populates="user")
-    User.match_scores = relationship("MatchScore", back_populates="user")
-    User.match_arguments = relationship("MatchArgument", back_populates="user")
-    User.won_matches = relationship("Match", foreign_keys=[Match.winner_id], back_populates="winner")
+    Each ranked match creates 6 rows:
+    - 3 rounds for player 1
+    - 3 rounds for player 2
+    
+    Round numbers:
+    1 = Opening
+    2 = Rebuttal
+    3 = Closing
+    """
+    __tablename__ = "match_rounds"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    match_id = Column(Integer, ForeignKey("matches.id"), nullable=False)
+    player_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    round_number = Column(Integer, nullable=False)
+    argument_text = Column(Text, nullable=True)
+    final_score = Column(Float, nullable=True)
+    
+    is_submitted = Column(Boolean, default=False, nullable=False)
+    is_locked = Column(Boolean, default=False, nullable=False)
+    
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    
+    __table_args__ = (
+        # One row per (match, player, round)
+        UniqueConstraint(
+            "match_id",
+            "player_id",
+            "round_number",
+            name="uq_match_round_player_round",
+        ),
+        CheckConstraint(
+            "round_number >= 1 AND round_number <= 3",
+            name="ck_match_round_number_valid",
+        ),
+    )
+    
+    match = relationship("Match")
+    player = relationship("User")
+
+
+# Phase 4: ORM-level lock enforcement
+@event.listens_for(Match, "before_update")
+def prevent_match_update_if_locked(mapper, connection, target):
+    """Prevent modification of locked matches at model level."""
+    if getattr(target, "is_locked", False):
+        raise Exception("Locked match cannot be modified")
+
+
+@event.listens_for(Match, "before_delete")
+def prevent_match_delete_if_locked(mapper, connection, target):
+    """Prevent deletion of locked matches at model level."""
+    if getattr(target, "is_locked", False):
+        raise Exception("Locked match cannot be deleted")
+
+
+@event.listens_for(MatchRound, "before_update")
+def prevent_round_update_if_locked(mapper, connection, target):
+    """Prevent modification of locked rounds at model level."""
+    if getattr(target, "is_locked", False):
+        raise Exception("Locked round cannot be modified")
+
+
+@event.listens_for(MatchRound, "before_delete")
+def prevent_round_delete_if_locked(mapper, connection, target):
+    """Prevent deletion of locked rounds at model level."""
+    if getattr(target, "is_locked", False):
+        raise Exception("Locked round cannot be deleted")
+
+
+# User relationships removed to prevent back_populates conflicts
+# Use direct queries instead of reverse relationships

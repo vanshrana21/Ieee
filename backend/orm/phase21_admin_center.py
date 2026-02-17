@@ -76,7 +76,7 @@ class AdminActionLog(Base):
     
     # Relationships
     tournament = relationship("Tournament", back_populates="admin_action_logs")
-    actor = relationship("User", back_populates="admin_actions")
+    actor = relationship("User", foreign_keys=[actor_id])
     
     # Table constraints
     __table_args__ = (

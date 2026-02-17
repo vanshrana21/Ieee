@@ -75,7 +75,7 @@ class CourtroomSession(Base):
     started_at = Column(DateTime, nullable=True)
     ended_at = Column(DateTime, nullable=True)
     recording_url = Column(String(500), nullable=True)
-    metadata = Column(JSON, nullable=True)  # Session config, notes
+    meta_data_json = Column("metadata", JSON, nullable=True)
     integrity_hash = Column(String(64), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
@@ -114,7 +114,7 @@ class CourtroomSession(Base):
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "ended_at": self.ended_at.isoformat() if self.ended_at else None,
             "recording_url": self.recording_url,
-            "metadata": self.metadata,
+            "metadata": self.meta_data_json,
             "integrity_hash": self.integrity_hash,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

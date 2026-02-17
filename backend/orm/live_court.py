@@ -15,9 +15,9 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
     Column, Integer, String, DateTime, ForeignKey, 
-    Index, UniqueConstraint, Enum, Boolean, Text
+    Index, UniqueConstraint, Enum, Boolean, Text, Numeric
 )
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship, validates, synonym
 from sqlalchemy import event
 
 from backend.database import Base
@@ -44,8 +44,11 @@ class OralSide(PyEnum):
 
 class OralTurnType(PyEnum):
     PRESENTATION = "presentation"
+    OPENING = "opening"
+    ARGUMENT = "argument"
     REBUTTAL = "rebuttal"
     SURREBUTTAL = "surrebuttal"
+    SUR_REBUTTAL = "sur_rebuttal"
     QUESTION = "question"
     ANSWER = "answer"
 
@@ -66,6 +69,35 @@ class LiveEventType:
     TURN_ENDED = "TURN_ENDED"
     TURN_EXPIRED = "TURN_EXPIRED"
     TIMER_TICK = "TIMER_TICK"
+    TURN_INTERRUPTED = "TURN_INTERRUPTED"
+    OBJECTION_RAISED = "OBJECTION_RAISED"
+    OBJECTION_RESOLVED = "OBJECTION_RESOLVED"
+    OBJECTION_SUSTAINED = "OBJECTION_SUSTAINED"
+    OBJECTION_OVERRULED = "OBJECTION_OVERRULED"
+    TURN_PAUSED_FOR_OBJECTION = "TURN_PAUSED_FOR_OBJECTION"
+    TURN_RESUMED_AFTER_OBJECTION = "TURN_RESUMED_AFTER_OBJECTION"
+    SCORE_SUBMITTED = "SCORE_SUBMITTED"
+    JUDGE_ASSIGNED = "JUDGE_ASSIGNED"
+    SPEAKER_CHANGED = "SPEAKER_CHANGED"
+
+
+class VisibilityMode:
+    PRIVATE = "private"
+    INSTITUTION = "institution"
+    NATIONAL = "national"
+    PUBLIC = "public"
+
+
+class ScoreVisibility:
+    HIDDEN = "hidden"
+    LIVE = "live"
+    AFTER_COMPLETION = "after_completion"
+
+
+class LiveScoreType:
+    ARGUMENT = "argument"
+    REBUTTAL = "rebuttal"
+    COURTROOM_ETIQUETTE = "courtroom_etiquette"
 
 
 # =============================================================================
@@ -79,7 +111,19 @@ class LiveCourtSession(Base):
     round_id = Column(
         Integer,
         ForeignKey("tournament_rounds.id", ondelete="RESTRICT"),
-        nullable=False
+        nullable=True
+    )
+    session_id = Column(
+        Integer,
+        ForeignKey("classroom_sessions.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True
+    )
+    tournament_match_id = Column(
+        Integer,
+        ForeignKey("tournament_matches.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True
     )
     institution_id = Column(
         Integer,
@@ -96,22 +140,44 @@ class LiveCourtSession(Base):
         ForeignKey("live_turns.id", ondelete="SET NULL"),
         nullable=True
     )
+    current_speaker_id = Column(
+        Integer,
+        ForeignKey("classroom_participants.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    current_side = Column(String(20), nullable=True)
+    visibility_mode = Column(
+        String(20),
+        nullable=False,
+        default=VisibilityMode.INSTITUTION
+    )
+    score_visibility = Column(
+        String(20),
+        nullable=False,
+        default=ScoreVisibility.AFTER_COMPLETION
+    )
     started_at = Column(DateTime, nullable=True)
     ended_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     
     # Relationships
     round = relationship("TournamentRound")
+    session = relationship("ClassroomSession", foreign_keys=[session_id])
+    tournament_match = relationship("TournamentMatch", foreign_keys=[tournament_match_id])
     institution = relationship("Institution")
     current_turn = relationship("LiveTurn", foreign_keys=[current_turn_id])
+    current_speaker = relationship("ClassroomParticipant", foreign_keys=[current_speaker_id])
     turns = relationship("LiveTurn", back_populates="session", foreign_keys="LiveTurn.session_id")
     events = relationship("LiveEventLog", back_populates="session")
     objections = relationship("LiveObjection", back_populates="session")  # Phase 6
     exhibits = relationship("SessionExhibit", back_populates="session")  # Phase 7
+    judge_scores = relationship("LiveJudgeScore", back_populates="session")
     
     __table_args__ = (
         Index('idx_live_session_round', 'round_id'),
         Index('idx_live_session_institution_status', 'institution_id', 'status'),
+        Index('idx_live_session_classroom', 'session_id', 'status'),
+        Index('idx_live_session_match', 'tournament_match_id', 'status'),
     )
     
     def is_active(self) -> bool:
@@ -127,9 +193,15 @@ class LiveCourtSession(Base):
         result = {
             "id": self.id,
             "round_id": self.round_id,
+            "session_id": self.session_id,
+            "tournament_match_id": self.tournament_match_id,
             "institution_id": self.institution_id,
             "status": self.status.value if self.status else None,
             "current_turn_id": self.current_turn_id,
+            "current_speaker_id": self.current_speaker_id,
+            "current_side": self.current_side,
+            "visibility_mode": self.visibility_mode,
+            "score_visibility": self.score_visibility,
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "ended_at": self.ended_at.isoformat() if self.ended_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -175,6 +247,7 @@ class LiveTurn(Base):
         nullable=False
     )
     allocated_seconds = Column(Integer, nullable=False)
+    actual_seconds = Column(Integer, nullable=True)
     state = Column(
         Enum(LiveTurnState, create_constraint=True),
         nullable=False,
@@ -184,6 +257,7 @@ class LiveTurn(Base):
     ended_at = Column(DateTime, nullable=True)
     violation_flag = Column(Boolean, nullable=False, default=False)
     is_timer_paused = Column(Boolean, nullable=False, default=False)  # Phase 6: objection pause
+    is_interrupted = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     
     # Relationships
@@ -191,6 +265,7 @@ class LiveTurn(Base):
     participant = relationship("User")
     objections = relationship("LiveObjection", back_populates="turn")  # Phase 6
     exhibits = relationship("SessionExhibit", back_populates="turn")  # Phase 7
+    live_session_id = synonym("session_id")
     
     __table_args__ = (
         Index('idx_live_turn_session', 'session_id'),
@@ -214,6 +289,9 @@ class LiveTurn(Base):
         
         # Always return integer (avoid float)
         return int(elapsed)
+
+    def is_active(self) -> bool:
+        return self.state == LiveTurnState.ACTIVE
     
     def get_remaining_seconds(self) -> int:
         """
@@ -245,15 +323,18 @@ class LiveTurn(Base):
         return {
             "id": self.id,
             "session_id": self.session_id,
+            "live_session_id": self.session_id,
             "participant_id": self.participant_id,
             "side": self.side.value if self.side else None,
             "turn_type": self.turn_type.value if self.turn_type else None,
             "allocated_seconds": self.allocated_seconds,
+            "actual_seconds": self.actual_seconds,
             "state": self.state.value if self.state else None,
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "ended_at": self.ended_at.isoformat() if self.ended_at else None,
             "violation_flag": self.violation_flag,
             "is_timer_paused": self.is_timer_paused,
+            "is_interrupted": self.is_interrupted,
             "elapsed_seconds": self.get_elapsed_seconds(),
             "remaining_seconds": self.get_remaining_seconds(),
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -282,6 +363,7 @@ class LiveEventLog(Base):
     
     # Relationships
     session = relationship("LiveCourtSession", back_populates="events")
+    live_session_id = synonym("session_id")
     
     __table_args__ = (
         UniqueConstraint('session_id', 'event_sequence', name='uq_event_session_seq'),
@@ -333,6 +415,7 @@ class LiveEventLog(Base):
         return {
             "id": self.id,
             "session_id": self.session_id,
+            "live_session_id": self.session_id,
             "event_sequence": self.event_sequence,
             "event_type": self.event_type,
             "event_payload_json": self.event_payload_json,
@@ -341,6 +424,46 @@ class LiveEventLog(Base):
             "hash_valid": self.verify_hash(),
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+class LiveJudgeScore(Base):
+    __tablename__ = "live_judge_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(
+        Integer,
+        ForeignKey("live_court_sessions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )
+    judge_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )
+    participant_id = Column(
+        Integer,
+        ForeignKey("classroom_participants.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True
+    )
+    score_type = Column(String(50), nullable=False)
+    provisional_score = Column(Numeric(10, 2), nullable=False)
+    is_final = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    session = relationship("LiveCourtSession", back_populates="judge_scores")
+    judge = relationship("User", foreign_keys=[judge_id])
+    participant = relationship("ClassroomParticipant", foreign_keys=[participant_id])
+    live_session_id = synonym("session_id")
+
+    __table_args__ = (
+        Index("idx_live_judge_score_session", "session_id"),
+        Index("idx_live_judge_score_judge", "judge_id"),
+        Index("idx_live_judge_score_participant", "participant_id"),
+        UniqueConstraint("session_id", "judge_id", "participant_id", "score_type", name="uq_live_judge_score"),
+    )
 
 
 # =============================================================================
@@ -359,6 +482,31 @@ async def get_next_event_sequence(session_id: int, db) -> int:
         .where(LiveEventLog.session_id == session_id)
     )
     return result.scalar_one()
+
+
+def compute_event_hash(
+    previous_hash: str,
+    event_sequence_or_payload: Any,
+    event_payload_or_timestamp: Any,
+    timestamp_str: Optional[str] = None
+) -> str:
+    if timestamp_str is None:
+        event_sequence = 0
+        payload = event_sequence_or_payload
+        timestamp = event_payload_or_timestamp
+    else:
+        event_sequence = event_sequence_or_payload
+        payload = event_payload_or_timestamp
+        timestamp = timestamp_str
+
+    if hasattr(timestamp, "isoformat"):
+        timestamp_value = timestamp.isoformat()
+    else:
+        timestamp_value = str(timestamp)
+
+    payload_json = json.dumps(payload or {}, sort_keys=True)
+    combined = str(previous_hash) + str(event_sequence) + payload_json + timestamp_value
+    return hashlib.sha256(combined.encode()).hexdigest()
 
 
 # =============================================================================
@@ -391,3 +539,8 @@ def validate_session_before_insert(mapper, connection, target):
     """Validate session data before insertion."""
     if not target.status:
         target.status = LiveCourtStatus.NOT_STARTED
+
+
+LiveSessionStatus = LiveCourtStatus
+LiveTurnType = OralTurnType
+LiveSessionEvent = LiveEventLog

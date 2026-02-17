@@ -28,10 +28,10 @@ from backend.orm.tournament_results import (
     TournamentResultsFreeze
 )
 from backend.orm.oral_rounds import OralEvaluation
-from backend.orm.judge_panels import JudgePanel
-from backend.orm.tournament_pairings import TournamentPairing
+from backend.orm.panel_assignment import JudgePanel
+from backend.orm.round_pairing import RoundPairing, TournamentRound
 from backend.orm.exhibit import SessionExhibit
-from backend.orm.live_court import LiveEventLog, LiveCourtSession
+from backend.orm.live_court import LiveEventLog, LiveCourtSession, LiveCourtStatus
 
 
 def compute_signature(root_hash: str, secret: str) -> str:
@@ -179,11 +179,16 @@ async def _collect_component_hashes(
     """
     hashes = {}
     
+    round_result = await db.execute(
+        select(TournamentRound.id).where(TournamentRound.tournament_id == tournament_id)
+    )
+    round_ids = [row[0] for row in round_result.all()]
+    
     # Get Phase 3 pairing checksum
     pairing_result = await db.execute(
-        select(TournamentPairing.pairing_checksum)
-        .where(TournamentPairing.tournament_id == tournament_id)
-        .order_by(TournamentPairing.id)
+        select(RoundPairing.pairing_hash)
+        .where(RoundPairing.round_id.in_(round_ids))
+        .order_by(RoundPairing.id)
         .limit(1)
     )
     pairing_row = pairing_result.first()
@@ -191,8 +196,8 @@ async def _collect_component_hashes(
     
     # Get Phase 4 panel checksum
     panel_result = await db.execute(
-        select(JudgePanel.panel_checksum)
-        .where(JudgePanel.tournament_id == tournament_id)
+        select(JudgePanel.panel_hash)
+        .where(JudgePanel.round_id.in_(round_ids))
         .order_by(JudgePanel.id)
         .limit(1)
     )
@@ -205,23 +210,23 @@ async def _collect_component_hashes(
         .join(LiveCourtSession)
         .where(
             and_(
-                LiveCourtSession.tournament_id == tournament_id,
-                LiveCourtSession.session_status == "COMPLETED"
+                LiveCourtSession.round_id.in_(round_ids),
+                LiveCourtSession.status == LiveCourtStatus.COMPLETED
             )
         )
-        .order_by(LiveEventLog.sequence_number)
+        .order_by(LiveEventLog.event_sequence)
     )
     hashes["events"] = [row[0] for row in event_result.all()]
     
     # Get Phase 6 objection hashes
     from backend.orm.live_objection import LiveObjection
     objection_result = await db.execute(
-        select(LiveObjection.event_hash)
+        select(LiveObjection.objection_hash)
         .join(LiveCourtSession)
         .where(
             and_(
-                LiveCourtSession.tournament_id == tournament_id,
-                LiveObjection.event_hash.isnot(None)
+                LiveCourtSession.round_id.in_(round_ids),
+                LiveObjection.objection_hash.isnot(None)
             )
         )
         .order_by(LiveObjection.raised_at)
@@ -234,7 +239,7 @@ async def _collect_component_hashes(
         .join(LiveCourtSession)
         .where(
             and_(
-                LiveCourtSession.tournament_id == tournament_id,
+                LiveCourtSession.round_id.in_(round_ids),
                 SessionExhibit.exhibit_hash.isnot(None)
             )
         )

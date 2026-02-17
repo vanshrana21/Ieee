@@ -10,7 +10,10 @@ from decimal import Decimal
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, desc
+from sqlalchemy import (
+    select, and_, desc,
+    Column, Integer, String, DateTime, ForeignKey, Text
+)
 
 from backend.database import Base
 from backend.orm.user import User

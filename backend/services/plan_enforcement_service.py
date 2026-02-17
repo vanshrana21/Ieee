@@ -14,7 +14,7 @@ from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from backend.orm.tournament_results import Institution
+from backend.orm.institution import Institution
 
 
 # Plan Limit Exceptions
@@ -68,7 +68,7 @@ class PlanEnforcementService:
             raise ValueError(f"Institution {institution_id} not found")
         
         # Count tournaments (deterministic)
-        from backend.orm.tournament_results import NationalTournament
+        from backend.orm.national_network import NationalTournament
         
         count_result = await self.db.execute(
             select(func.count(NationalTournament.id)).where(

@@ -23,8 +23,6 @@ from backend.orm.tournament_results import (
     TournamentAuditSnapshot
 )
 from backend.orm.oral_rounds import OralEvaluation
-from backend.orm.judge_panels import JudgePanel
-from backend.orm.tournament_pairings import TournamentPairing
 
 
 class TestTamperDetection:

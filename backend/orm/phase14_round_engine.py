@@ -25,6 +25,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, validates
 
 from backend.database import Base
+from backend.orm.round_pairing import TournamentRound
+from backend.orm.national_network import TournamentMatch
 
 
 # =============================================================================
@@ -81,133 +83,6 @@ SPEAKER_FLOW_SEQUENCE = [
 
 
 # =============================================================================
-# Table: tournament_rounds
-# =============================================================================
-
-class TournamentRound(Base):
-    """
-    Tournament round with strict state machine.
-    
-    State transitions:
-        SCHEDULED → LIVE → COMPLETED → FROZEN
-    """
-    __tablename__ = "tournament_rounds"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tournament_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey('tournaments.id', ondelete='RESTRICT'),
-        nullable=False,
-        index=True
-    )
-    round_number = Column(Integer, nullable=False)
-    round_type = Column(String(20), nullable=False)
-    status = Column(String(20), nullable=False, default='scheduled')
-    bench_count = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    
-    # Relationships
-    matches = relationship("TournamentMatch", back_populates="round", lazy='selectin')
-    
-    __table_args__ = (
-        UniqueConstraint('tournament_id', 'round_number', name='uq_round_tournament_number'),
-        Index('idx_round_status', 'status'),
-        Index('idx_round_tournament', 'tournament_id'),
-        CheckConstraint("round_number > 0", name="ck_round_number_positive"),
-        CheckConstraint("bench_count >= 0", name="ck_bench_count_non_negative"),
-        CheckConstraint(
-            "status IN ('scheduled', 'live', 'completed', 'frozen')",
-            name="ck_round_status_valid"
-        ),
-    )
-    
-    @validates('status')
-    def validate_status(self, key, value):
-        valid_transitions = {
-            'scheduled': ['live'],
-            'live': ['completed'],
-            'completed': ['frozen'],
-            'frozen': [],  # Terminal state
-        }
-        if self.status and value not in valid_transitions.get(self.status, []):
-            raise ValueError(f"Invalid status transition: {self.status} → {value}")
-        return value
-
-
-# =============================================================================
-# Table: tournament_matches
-# =============================================================================
-
-class TournamentMatch(Base):
-    """
-    Individual match within a round.
-    
-    State transitions:
-        SCHEDULED → LIVE → SCORING → COMPLETED → FROZEN
-    """
-    __tablename__ = "tournament_matches"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    round_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey('tournament_rounds.id', ondelete='RESTRICT'),
-        nullable=False,
-        index=True
-    )
-    bench_number = Column(Integer, nullable=False)
-    team_petitioner_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey('tournament_teams.id', ondelete='RESTRICT'),
-        nullable=False
-    )
-    team_respondent_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey('tournament_teams.id', ondelete='RESTRICT'),
-        nullable=False
-    )
-    status = Column(String(20), nullable=False, default='scheduled')
-    winner_team_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey('tournament_teams.id', ondelete='SET NULL'),
-        nullable=True
-    )
-    locked = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    
-    # Relationships
-    round = relationship("TournamentRound", back_populates="matches")
-    speaker_turns = relationship("MatchSpeakerTurn", back_populates="match", order_by="MatchSpeakerTurn.turn_order", lazy='selectin')
-    timer_state = relationship("MatchTimerState", back_populates="match", uselist=False, lazy='selectin')
-    score_lock = relationship("MatchScoreLock", back_populates="match", uselist=False, lazy='selectin')
-    
-    __table_args__ = (
-        UniqueConstraint('round_id', 'bench_number', name='uq_match_round_bench'),
-        Index('idx_match_status', 'status'),
-        Index('idx_match_round', 'round_id'),
-        Index('idx_match_petitioner', 'team_petitioner_id'),
-        Index('idx_match_respondent', 'team_respondent_id'),
-        CheckConstraint("bench_number > 0", name="ck_bench_number_positive"),
-        CheckConstraint(
-            "status IN ('scheduled', 'live', 'scoring', 'completed', 'frozen')",
-            name="ck_match_status_valid"
-        ),
-    )
-    
-    @validates('status')
-    def validate_status(self, key, value):
-        valid_transitions = {
-            'scheduled': ['live'],
-            'live': ['scoring', 'completed'],
-            'scoring': ['completed'],
-            'completed': ['frozen'],
-            'frozen': [],  # Terminal state
-        }
-        if self.status and value not in valid_transitions.get(self.status, []):
-            raise ValueError(f"Invalid status transition: {self.status} → {value}")
-        return value
-
-
-# =============================================================================
 # Table: match_speaker_turns
 # =============================================================================
 
@@ -222,13 +97,13 @@ class MatchSpeakerTurn(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     match_id = Column(
-        UUID(as_uuid=True),
+        Integer,
         ForeignKey('tournament_matches.id', ondelete='RESTRICT'),
         nullable=False,
         index=True
     )
     team_id = Column(
-        UUID(as_uuid=True),
+        Integer,
         ForeignKey('tournament_teams.id', ondelete='RESTRICT'),
         nullable=False
     )
@@ -240,7 +115,7 @@ class MatchSpeakerTurn(Base):
     status = Column(String(20), nullable=False, default='pending')
     
     # Relationships
-    match = relationship("TournamentMatch", back_populates="speaker_turns")
+    match = relationship("TournamentMatch")
     
     __table_args__ = (
         UniqueConstraint('match_id', 'turn_order', name='uq_turn_match_order'),
@@ -285,7 +160,7 @@ class MatchTimerState(Base):
     __tablename__ = "match_timer_state"
     
     match_id = Column(
-        UUID(as_uuid=True),
+        Integer,
         ForeignKey('tournament_matches.id', ondelete='CASCADE'),
         primary_key=True
     )
@@ -300,7 +175,7 @@ class MatchTimerState(Base):
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    match = relationship("TournamentMatch", back_populates="timer_state")
+    match = relationship("TournamentMatch")
     active_turn = relationship("MatchSpeakerTurn", lazy='selectin')
     
     __table_args__ = (
@@ -322,14 +197,14 @@ class MatchScoreLock(Base):
     __tablename__ = "match_score_lock"
     
     match_id = Column(
-        UUID(as_uuid=True),
+        Integer,
         ForeignKey('tournament_matches.id', ondelete='CASCADE'),
         primary_key=True
     )
     total_petitioner_score = Column(Numeric(5, 2), nullable=False)
     total_respondent_score = Column(Numeric(5, 2), nullable=False)
     winner_team_id = Column(
-        UUID(as_uuid=True),
+        Integer,
         ForeignKey('tournament_teams.id', ondelete='RESTRICT'),
         nullable=True
     )
@@ -337,7 +212,7 @@ class MatchScoreLock(Base):
     frozen_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     
     # Relationships
-    match = relationship("TournamentMatch", back_populates="score_lock")
+    match = relationship("TournamentMatch")
     
     __table_args__ = (
         CheckConstraint("total_petitioner_score >= 0", name="ck_score_petitioner_non_negative"),

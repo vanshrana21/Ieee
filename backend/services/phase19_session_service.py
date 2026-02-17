@@ -155,7 +155,7 @@ class SessionService:
         session = CourtroomSession(
             assignment_id=assignment_id,
             status=SessionStatus.PENDING,
-            metadata=metadata,
+            meta_data_json=metadata,
             integrity_hash=None
         )
         

@@ -20,7 +20,6 @@ from backend.orm.tournament_results import (
     TournamentSpeakerResult,
     TournamentAuditSnapshot
 )
-from backend.orm.tournament_pairings import TournamentPairing
 
 
 def compute_signature(data: str, secret: str) -> str:

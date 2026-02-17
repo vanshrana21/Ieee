@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Profile - Moot Court Rankings</title>
+    <link rel="stylesheet" href="/css/player-profile.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="profile-container">
+        <header class="profile-header" id="profile-header">
+            <div class="profile-basic">
+                <h1 id="player-name">Loading...</h1>
+                <div class="profile-rating">
+                    <span class="rating-value" id="current-rating">-</span>
+                    <span class="rating-label">Current Rating</span>
+                </div>
+                <div class="profile-rank">
+                    <span class="rank-value" id="global-rank">-</span>
+                    <span class="rank-label">Global Rank</span>
+                </div>
+                <div class="profile-winrate">
+                    <span class="winrate-value" id="win-rate">-</span>
+                    <span class="winrate-label">Win Rate</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="profile-content">
+            <section class="profile-section">
+                <h2>Performance Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Peak Rating</div>
+                        <div class="stat-value" id="peak-rating">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Matches</div>
+                        <div class="stat-value" id="total-matches">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Average Score</div>
+                        <div class="stat-value" id="avg-score">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Percentile Rank</div>
+                        <div class="stat-value" id="percentile-rank">-</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="profile-section">
+                <h2>Rating History</h2>
+                <div class="chart-container">
+                    <canvas id="rating-chart"></canvas>
+                </div>
+            </section>
+
+            <section class="profile-section">
+                <h2>Recent Matches</h2>
+                <div class="matches-table-container">
+                    <table class="matches-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Opponent</th>
+                                <th>Opponent Rating</th>
+                                <th>Result</th>
+                                <th>Rating Change</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-matches-body">
+                            <tr>
+                                <td colspan="6" class="loading">Loading matches...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="profile-section">
+                <h2>Performance Metrics</h2>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Rating Change (Last 10)</span>
+                        <span class="metric-value" id="rating-delta-10">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Strongest Win</span>
+                        <span class="metric-value" id="strongest-win">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Worst Loss</span>
+                        <span class="metric-value" id="worst-loss">-</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Average Round Score</span>
+                        <span class="metric-value" id="avg-round-score">-</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="/js/player-profile.js"></script>
+</body>
+</html>

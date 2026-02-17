@@ -7,6 +7,7 @@ PHASE 8 UPDATE: Added relationships for progress tracking
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
+from backend.orm.classroom_session import ClassroomScore
 from backend.orm.base import Base
 
 
@@ -146,8 +147,8 @@ class User(Base):
     
     classroom_scores = relationship(
         "ClassroomScore",
-        foreign_keys="ClassroomScore.user_id",
-        back_populates="user"
+        back_populates="user",
+        foreign_keys=[ClassroomScore.user_id]
     )
     
     classroom_arguments = relationship(
@@ -156,7 +157,6 @@ class User(Base):
         cascade="all, delete-orphan"
     )
     
-    # Classroom round relationships
     rounds_as_petitioner = relationship(
         "ClassroomRound",
         foreign_keys="ClassroomRound.petitioner_id",
@@ -181,8 +181,7 @@ class User(Base):
     )
     
     institution = relationship(
-        "Institution",
-        back_populates="users"
+        "Institution"
     )
     
     bulk_upload_sessions = relationship(
@@ -195,6 +194,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    
+    # Phase 4: Competitive Match relationships REMOVED to prevent back_populates issues
+    # matches_as_player1 and matches_as_player2 removed
+    # Use direct queries instead of reverse relationships
     
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', semester={self.current_semester})>"

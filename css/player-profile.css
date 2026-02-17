@@ -1,0 +1,258 @@
+/**
+ * Phase 6 — Player Profile Styles
+ * Dark courtroom aesthetic with gold accents
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #e8e8e8;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.profile-header {
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 40px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+    border-radius: 8px;
+    border-bottom: 3px solid #d4af37;
+}
+
+.profile-basic {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-header h1 {
+    font-size: 2.5em;
+    color: #d4af37;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.profile-rating,
+.profile-rank,
+.profile-winrate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.rating-value {
+    font-size: 3em;
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.rank-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.winrate-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #90ee90;
+}
+
+.rating-label,
+.rank-label,
+.winrate-label {
+    color: #b8b8b8;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.profile-section {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 25px;
+    border-radius: 8px;
+    border-left: 4px solid #d4af37;
+}
+
+.profile-section h2 {
+    color: #d4af37;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    padding-bottom: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 6px;
+    text-align: center;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #d4af37;
+}
+
+.stat-label {
+    color: #b8b8b8;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.chart-container {
+    height: 400px;
+    margin-top: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 6px;
+}
+
+.matches-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.matches-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.matches-table thead {
+    background: rgba(212, 175, 55, 0.2);
+}
+
+.matches-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    color: #d4af37;
+    border-bottom: 2px solid #d4af37;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 1px;
+}
+
+.matches-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.matches-table tbody tr:hover {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.opponent-link {
+    color: #e8e8e8;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.opponent-link:hover {
+    color: #d4af37;
+}
+
+.result-win {
+    color: #90ee90;
+    font-weight: bold;
+}
+
+.result-loss {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.result-draw {
+    color: #b8b8b8;
+    font-weight: bold;
+}
+
+.positive {
+    color: #90ee90;
+}
+
+.negative {
+    color: #ff6b6b;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid #d4af37;
+}
+
+.metric-label {
+    color: #b8b8b8;
+    font-size: 0.9em;
+}
+
+.metric-value {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.loading, .error, .empty {
+    text-align: center;
+    padding: 40px;
+    color: #b8b8b8;
+    font-style: italic;
+}
+
+.error {
+    color: #ff6b6b;
+    font-size: 1.2em;
+}

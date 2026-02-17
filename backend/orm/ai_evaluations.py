@@ -108,7 +108,11 @@ class AIEvaluation(Base):
     rubric_version = relationship("AIRubricVersion", back_populates="evaluations")
     canonical_attempt = relationship("AIEvaluationAttempt", foreign_keys=[canonical_attempt_id])
     finalized_by = relationship("User", foreign_keys=[finalized_by_faculty_id])
-    attempts = relationship("AIEvaluationAttempt", back_populates="evaluation", foreign_keys="AIEvaluationAttempt.evaluation_id")
+    attempts = relationship(
+        "AIEvaluationAttempt",
+        back_populates="evaluation",
+        foreign_keys="AIEvaluationAttempt.evaluation_id"
+    )
     overrides = relationship("FacultyOverride", back_populates="evaluation")
     
     def __repr__(self) -> str:
@@ -196,7 +200,11 @@ class AIEvaluationAttempt(Base):
     )
     
     # Relationships
-    evaluation = relationship("AIEvaluation", back_populates="attempts", foreign_keys=[evaluation_id])
+    evaluation = relationship(
+        "AIEvaluation",
+        back_populates="attempts",
+        foreign_keys=[evaluation_id]
+    )
     
     def __repr__(self) -> str:
         return f"<AIEvaluationAttempt(id={self.id}, eval={self.evaluation_id}, attempt={self.attempt_number}, status={self.parse_status})>"

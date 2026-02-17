@@ -32,7 +32,7 @@ class InstitutionAdmin(Base):
     
     # Relationships
     institution = relationship("Institution", back_populates="admins")
-    user = relationship("User", back_populates="institution_admin_roles")
+    user = relationship("User", foreign_keys=[user_id], back_populates="institution_admin_roles")
     
     # Unique constraint: one admin role per institution per user
     __table_args__ = (

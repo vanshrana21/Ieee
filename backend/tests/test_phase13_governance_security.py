@@ -31,7 +31,7 @@ from backend.services.plan_enforcement_service import (
     PlanEnforcementService,
     PlanLimitExceededError
 )
-from backend.orm.tournament_results import (
+from backend.orm.institution import (
     Institution,
     InstitutionRole,
     InstitutionAuditLog

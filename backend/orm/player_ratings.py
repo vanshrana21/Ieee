@@ -4,7 +4,7 @@ Player Ratings Database Models
 ELO rating system for Online 1v1 Mode.
 Isolated from Classroom Mode - no shared tables.
 """
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
@@ -34,9 +34,17 @@ class PlayerRating(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
+    # Last processed match (for audit / inspection)
+    last_match_id = Column(Integer, ForeignKey("matches.id"), nullable=True)
+    
     # Relationships
-    user = relationship("User", back_populates="player_rating")
-    rating_history = relationship("RatingHistory", back_populates="player_rating", cascade="all, delete-orphan")
+    user = relationship("User", foreign_keys=[user_id])
+    rating_history = relationship(
+        "RatingHistory",
+        back_populates="player_rating",
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [RatingHistory.player_rating_id]
+    )
     
     def get_k_factor(self) -> int:
         """
@@ -83,6 +91,7 @@ class PlayerRating(Base):
         # Create history entry
         return RatingHistory(
             user_id=self.user_id,
+            player_rating_id=self.id,
             match_id=match_id,
             old_rating=old_rating,
             new_rating=new_rating,
@@ -130,6 +139,12 @@ class RatingHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     match_id = Column(Integer, ForeignKey("matches.id"), nullable=False, index=True)
+    player_rating_id = Column(
+        Integer,
+        ForeignKey("player_ratings.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
     
     # Rating data
     old_rating = Column(Integer, nullable=False)
@@ -142,13 +157,18 @@ class RatingHistory(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    player_rating = relationship("PlayerRating", back_populates="rating_history")
-    user = relationship("User", back_populates="rating_history")
+    player_rating = relationship(
+        "PlayerRating",
+        back_populates="rating_history",
+        foreign_keys=[player_rating_id]
+    )
+    user = relationship("User")
     match = relationship("Match")
     
-    # Composite index for efficient queries
+    # Composite index for efficient queries and uniqueness per (user, match)
     __table_args__ = (
         Index('idx_rating_history_user_time', 'user_id', 'timestamp'),
+        UniqueConstraint('user_id', 'match_id', name='uq_rating_history_user_match'),
     )
     
     def to_dict(self):
@@ -212,5 +232,4 @@ def add_user_relationships():
     from backend.orm.user import User
     
     User.player_rating = relationship("PlayerRating", back_populates="user", uselist=False)
-    User.rating_history = relationship("RatingHistory", back_populates="user")
     User.matchmaking_queue_entry = relationship("MatchmakingQueue", back_populates="user", uselist=False)

@@ -13,7 +13,7 @@ from sqlalchemy import select, func, and_
 
 from backend.services.institution_service import InstitutionService
 from backend.services.plan_enforcement_service import PlanEnforcementService
-from backend.orm.tournament_results import Institution, InstitutionRole
+from backend.orm.institution import Institution, InstitutionRole
 
 
 class TestInstitutionConcurrency:

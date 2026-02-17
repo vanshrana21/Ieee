@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import math
 
 from backend.orm.player_ratings import PlayerRating, RatingHistory
+from backend.orm.online_match import Match
 
 
 class RatingService:
@@ -236,6 +237,19 @@ class RatingService:
         max_rating = rating + range_size
         
         return (min_rating, max_rating)
+
+    @staticmethod
+    async def process_rating_update_for_match(db_session, match: Match) -> None:
+        """
+        Phase 4 safety guard:
+        Rating updates must only occur for non-AI, finalized matches.
+        """
+        if match.is_ai_match or match.state != "finalized":
+            # Explicitly skip AI matches and non-finalized matches
+            return
+
+        # Placeholder for Phase 5 rating logic.
+        # Intentionally left without implementation in Phase 4.
     
     @classmethod
     async def process_match_result(

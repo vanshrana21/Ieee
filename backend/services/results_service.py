@@ -21,7 +21,7 @@ from backend.orm.tournament_results import (
 from backend.orm.national_network import NationalTournament, TournamentMatch
 from backend.orm.round_pairing import TournamentRound, RoundType
 from backend.orm.live_court import LiveCourtSession, LiveCourtStatus
-from backend.orm.memorial import MemorialSubmission
+from backend.orm.moot_problem import MemorialSubmission, MemorialEvaluation
 
 
 class ResultsAlreadyFrozenError(Exception):
@@ -335,16 +335,20 @@ async def _fetch_memorial_scores(
     # Query memorial submissions
     result = await db.execute(
         select(
-            MemorialSubmission.team_id,
-            func.sum(MemorialSubmission.total_score).label("total")
+            MemorialSubmission.tournament_team_id,
+            func.sum(MemorialEvaluation.total_score).label("total")
+        )
+        .join(
+            MemorialEvaluation,
+            MemorialEvaluation.memorial_submission_id == MemorialSubmission.id
         )
         .where(MemorialSubmission.tournament_id == tournament_id)
-        .group_by(MemorialSubmission.team_id)
+        .group_by(MemorialSubmission.tournament_team_id)
     )
     
     scores = {}
     for row in result.all():
-        scores[row.team_id] = float(row.total or 0)
+        scores[row.tournament_team_id] = float(row.total or 0)
     
     return scores
 

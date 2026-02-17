@@ -10,7 +10,10 @@ from datetime import datetime
 from typing import Optional
 from pathlib import Path
 
-import asyncpg
+try:
+    import asyncpg
+except Exception:
+    asyncpg = None
 
 
 class DbCommand:

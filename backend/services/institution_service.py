@@ -17,7 +17,7 @@ from sqlalchemy import select, insert, update, delete, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from backend.orm.tournament_results import (
+from backend.orm.institution import (
     Institution,
     InstitutionRole,
     InstitutionAuditLog

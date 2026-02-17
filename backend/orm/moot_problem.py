@@ -24,9 +24,10 @@ from enum import Enum
 from typing import Optional, Dict, Any, List
 
 from sqlalchemy import (
-    Column, Integer, String, DateTime, ForeignKey, Text,
+    Column, Integer, String, DateTime, ForeignKey, Text, Boolean,
     Numeric, Enum as SQLEnum, Index, UniqueConstraint, event
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, validates
 
 from backend.orm.base import Base

@@ -499,10 +499,10 @@ class TestEdgeCases:
         session = CourtroomSession(
             id=uuid4(),
             assignment_id=sample_assignment_id,
-            metadata=metadata
+            meta_data_json=metadata
         )
         
-        assert session.metadata == metadata
+        assert session.meta_data_json == metadata
 
 
 # =============================================================================

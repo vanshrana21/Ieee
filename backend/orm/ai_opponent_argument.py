@@ -43,7 +43,7 @@ class AIOpponentArgument(Base):
     
     # Relationships
     round = relationship("OralRound", back_populates="ai_arguments")
-    generated_by = relationship("User", back_populates="ai_opponent_arguments")
+    generated_by = relationship("User", foreign_keys=[generated_by_id])
     
     def __repr__(self):
         return f"<AIOpponentArgument(id={self.id}, round_id={self.round_id}, side={self.opponent_side})>"

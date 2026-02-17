@@ -284,8 +284,14 @@ async def init_db():
         # PHASE 2: Competition Infrastructure
         from backend.orm.competition import Competition
         from backend.orm.team import Team, TeamMember
-        from backend.orm.memorial import MemorialSubmission
         from backend.orm.oral_round import OralRound
+        from backend.orm.moot_problem import (
+            MootProblem,
+            MootClarification,
+            MemorialSubmission,
+            MemorialEvaluation,
+            MemorialScoreFreeze,
+        )
         
         # PHASE 5/6: Moot court and submissions
         from backend.orm.moot_case import MootCase

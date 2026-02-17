@@ -1,8 +1,10 @@
 import os
 import sys
 import logging
+import warnings
 from pathlib import Path
 from contextlib import asynccontextmanager
+warnings.filterwarnings("ignore", category=FutureWarning, message=".*google\\.generativeai.*")
 from backend.routes import case_simplifier,progress, subjects, dashboard
 from backend.routes import auth, user, curriculum, modules, content, progress
 from backend.routes.practice import router as practice_router
@@ -297,6 +299,14 @@ app.include_router(memory.router)
 app.include_router(student.router, prefix="/api")
 app.include_router(ba_llb.router, prefix="/api")
 app.include_router(test_kanoon.router)
+
+# Phase 4: Competitive Match Engine
+from backend.routes.match import router as match_router
+app.include_router(match_router)
+
+# Phase 6: Competitive Leaderboard & Player Profiles
+from backend.routes.competitive_leaderboard import router as competitive_leaderboard_router
+app.include_router(competitive_leaderboard_router)
 app.include_router(debug_super_kanoon.router)
 app.include_router(debate.router)
 
@@ -487,8 +497,8 @@ else:
 
 # Configure SQLAlchemy mappers
 from sqlalchemy.orm import configure_mappers
-configure_mappers()
-logger.info("✓ SQLAlchemy mappers configured")
+# configure_mappers()  # Commented out - SQLAlchemy auto-configures on import
+# logger.info("✓ SQLAlchemy mappers configured")
 
 if __name__ == "__main__":
     import uvicorn

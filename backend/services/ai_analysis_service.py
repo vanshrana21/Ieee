@@ -8,7 +8,9 @@ Phase 20 Integration: Lifecycle guards prevent evaluation on closed tournaments.
 """
 import os
 import logging
+import warnings
 from typing import List, Dict, Optional
+warnings.filterwarnings("ignore", category=FutureWarning, message=".*google\\.generativeai.*")
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)

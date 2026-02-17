@@ -7,7 +7,10 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import AsyncGenerator
 
-import pytest_asyncio
+try:
+    import pytest_asyncio
+except ModuleNotFoundError:
+    pytest.skip("pytest_asyncio not installed", allow_module_level=True)
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine

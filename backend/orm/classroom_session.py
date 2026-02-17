@@ -18,21 +18,6 @@ import re
 from backend.orm.base import Base
 
 
-# Phase 3: Model-level lock enforcement
-@event.listens_for(ClassroomScore, "before_update")
-def prevent_update_if_locked(mapper, connection, target):
-    """Prevent modification of locked scores at model level."""
-    if target.is_locked:
-        raise Exception("Locked score cannot be modified")
-
-
-@event.listens_for(ClassroomScore, "before_delete")
-def prevent_delete_if_locked(mapper, connection, target):
-    """Prevent deletion of locked scores at model level."""
-    if target.is_locked:
-        raise Exception("Locked score cannot be deleted")
-
-
 class SessionState(PyEnum):
     """Classroom session states."""
     CREATED = "created"
@@ -103,19 +88,23 @@ class ClassroomSession(Base):
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
-    teacher = relationship("User", back_populates="classroom_sessions", lazy="selectin")
+    teacher = relationship("User", foreign_keys=[teacher_id], lazy="selectin")
     case = relationship(
         "MootCase",
-        back_populates="sessions",
         lazy="selectin"
     )
-    participants = relationship("ClassroomParticipant", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
+    participants = relationship("ClassroomParticipant", cascade="all, delete-orphan", lazy="selectin")
     scores = relationship("ClassroomScore", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
-    arguments = relationship("ClassroomArgument", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
-    rounds = relationship("ClassroomRound", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
-    round_actions = relationship("ClassroomRoundAction", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
-    state_logs = relationship("ClassroomSessionStateLog", back_populates="session", cascade="all, delete-orphan", lazy="selectin", order_by="desc(ClassroomSessionStateLog.created_at)")
-    leaderboard_snapshots = relationship("SessionLeaderboardSnapshot", back_populates="session", lazy="selectin")  # Phase 5
+    arguments = relationship("ClassroomArgument", cascade="all, delete-orphan", lazy="selectin")
+    rounds = relationship("ClassroomRound", cascade="all, delete-orphan", lazy="selectin")
+    round_actions = relationship("ClassroomRoundAction", cascade="all, delete-orphan", lazy="selectin")
+    state_logs = relationship("ClassroomSessionStateLog", cascade="all, delete-orphan", lazy="selectin", order_by="desc(ClassroomSessionStateLog.created_at)")
+    leaderboard_snapshots = relationship("SessionLeaderboardSnapshot", lazy="selectin")  # Phase 5
+    arguments = relationship("ClassroomArgument", cascade="all, delete-orphan", lazy="selectin")
+    rounds = relationship("ClassroomRound", cascade="all, delete-orphan", lazy="selectin")
+    round_actions = relationship("ClassroomRoundAction", cascade="all, delete-orphan", lazy="selectin")
+    state_logs = relationship("ClassroomSessionStateLog", cascade="all, delete-orphan", lazy="selectin", order_by="desc(ClassroomSessionStateLog.created_at)")
+    leaderboard_snapshots = relationship("SessionLeaderboardSnapshot", lazy="selectin")  # Phase 5
     
     # Production-grade constraints
     __table_args__ = (
@@ -253,8 +242,14 @@ class ClassroomParticipant(Base):
     
     # Relationships
     session = relationship("ClassroomSession", back_populates="participants")
-    user = relationship("User", back_populates="classroom_participations")
-    score = relationship("ClassroomScore", back_populates="participant")
+    user = relationship("User", foreign_keys=[user_id], back_populates="classroom_participations")
+    score = relationship(
+        "ClassroomScore",
+        back_populates="participant",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False
+    )
     turns = relationship("ClassroomTurn", back_populates="participant")  # Phase 3
     leaderboard_entries = relationship("SessionLeaderboardEntry", back_populates="participant", lazy="selectin")  # Phase 5
     
@@ -364,10 +359,13 @@ class ClassroomScore(Base):
     evaluation_duration_ms = Column(Integer, nullable=True)
     
     # Relationships
-    session = relationship("ClassroomSession", back_populates="scores")
+    session = relationship("ClassroomSession", back_populates="scores", lazy="selectin")
     user = relationship("User", foreign_keys=[user_id], back_populates="classroom_scores")
     submitted_by_user = relationship("User", foreign_keys=[submitted_by])
-    participant = relationship("ClassroomParticipant", back_populates="score")
+    participant = relationship(
+        "ClassroomParticipant",
+        back_populates="score"
+    )
     
     # DB-level constraints (Phase 3)
     __table_args__ = (
@@ -424,7 +422,7 @@ class ClassroomArgument(Base):
     
     # Relationships
     session = relationship("ClassroomSession", back_populates="arguments")
-    user = relationship("User", back_populates="classroom_arguments")
+    user = relationship("User", foreign_keys=[user_id], back_populates="classroom_arguments")
     
     def to_dict(self):
         return {
@@ -439,12 +437,21 @@ class ClassroomArgument(Base):
         }
 
 
-# Add relationships to User model
-def add_user_relationships():
-    """Add classroom relationships to User model."""
-    from backend.orm.user import User
-    
-    User.classroom_sessions = relationship("ClassroomSession", back_populates="teacher")
-    User.classroom_participations = relationship("ClassroomParticipant", back_populates="user")
-    User.classroom_scores = relationship("ClassroomScore", foreign_keys=[ClassroomScore.user_id], back_populates="user")
-    User.classroom_arguments = relationship("ClassroomArgument", back_populates="user")
+# User relationships removed to prevent back_populates conflicts
+# Use direct queries instead of reverse relationships
+
+
+# ====== ORM LOCK EVENTS (MUST BE AFTER CLASS DEFINITION) ======
+
+@event.listens_for(ClassroomScore, "before_update")
+def prevent_update_if_locked(mapper, connection, target):
+    """Prevent modification of locked scores at model level."""
+    if target.is_locked:
+        raise Exception("Locked score cannot be modified")
+
+
+@event.listens_for(ClassroomScore, "before_delete")
+def prevent_delete_if_locked(mapper, connection, target):
+    """Prevent deletion of locked scores at model level."""
+    if target.is_locked:
+        raise Exception("Locked score cannot be deleted")

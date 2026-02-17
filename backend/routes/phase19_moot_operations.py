@@ -158,7 +158,7 @@ async def create_session(
             started_at=session.started_at.isoformat() if session.started_at else None,
             ended_at=session.ended_at.isoformat() if session.ended_at else None,
             recording_url=session.recording_url,
-            metadata=session.metadata,
+            metadata=session.meta_data_json,
             integrity_hash=session.integrity_hash,
             created_at=session.created_at.isoformat() if session.created_at else ""
         )
@@ -197,7 +197,7 @@ async def get_session(
         started_at=session.started_at.isoformat() if session.started_at else None,
         ended_at=session.ended_at.isoformat() if session.ended_at else None,
         recording_url=session.recording_url,
-        metadata=session.metadata,
+        metadata=session.meta_data_json,
         integrity_hash=session.integrity_hash,
         created_at=session.created_at.isoformat() if session.created_at else ""
     )
@@ -230,7 +230,7 @@ async def start_session(
             started_at=session.started_at.isoformat() if session.started_at else None,
             ended_at=session.ended_at.isoformat() if session.ended_at else None,
             recording_url=session.recording_url,
-            metadata=session.metadata,
+            metadata=session.meta_data_json,
             integrity_hash=session.integrity_hash,
             created_at=session.created_at.isoformat() if session.created_at else ""
         )
@@ -275,7 +275,7 @@ async def pause_session(
             started_at=session.started_at.isoformat() if session.started_at else None,
             ended_at=session.ended_at.isoformat() if session.ended_at else None,
             recording_url=session.recording_url,
-            metadata=session.metadata,
+            metadata=session.meta_data_json,
             integrity_hash=session.integrity_hash,
             created_at=session.created_at.isoformat() if session.created_at else ""
         )
@@ -318,7 +318,7 @@ async def resume_session(
             started_at=session.started_at.isoformat() if session.started_at else None,
             ended_at=session.ended_at.isoformat() if session.ended_at else None,
             recording_url=session.recording_url,
-            metadata=session.metadata,
+            metadata=session.meta_data_json,
             integrity_hash=session.integrity_hash,
             created_at=session.created_at.isoformat() if session.created_at else ""
         )
@@ -365,7 +365,7 @@ async def complete_session(
             started_at=session.started_at.isoformat() if session.started_at else None,
             ended_at=session.ended_at.isoformat() if session.ended_at else None,
             recording_url=session.recording_url,
-            metadata=session.metadata,
+            metadata=session.meta_data_json,
             integrity_hash=session.integrity_hash,
             created_at=session.created_at.isoformat() if session.created_at else ""
         )
@@ -744,7 +744,7 @@ async def get_active_sessions(
             started_at=session.started_at.isoformat() if session.started_at else None,
             ended_at=session.ended_at.isoformat() if session.ended_at else None,
             recording_url=session.recording_url,
-            metadata=session.metadata,
+            metadata=session.meta_data_json,
             integrity_hash=session.integrity_hash,
             created_at=session.created_at.isoformat() if session.created_at else ""
         )

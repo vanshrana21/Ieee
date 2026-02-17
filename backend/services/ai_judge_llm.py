@@ -11,7 +11,10 @@ from typing import Optional, Dict, Any, Tuple
 from dataclasses import dataclass
 
 import google.generativeai as genai
-from groq import AsyncGroq
+try:
+    from groq import AsyncGroq
+except Exception:
+    AsyncGroq = None
 
 from backend.config.feature_flags import feature_flags
 
@@ -83,9 +86,11 @@ class LLMAdapter:
         """Initialize Groq client."""
         import os
         api_key = os.getenv("GROQ_API_KEY")
-        if api_key:
+        if api_key and AsyncGroq:
             self.groq_client = AsyncGroq(api_key=api_key)
             logger.info("✓ Groq LLM adapter initialized")
+        elif api_key and not AsyncGroq:
+            logger.warning("⚠️ Groq SDK not installed, Groq unavailable")
         else:
             logger.warning("⚠️ GROQ_API_KEY not set, Groq unavailable")
     

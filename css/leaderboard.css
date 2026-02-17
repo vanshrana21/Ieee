@@ -1,0 +1,215 @@
+/**
+ * Phase 6 — Competitive Leaderboard Styles
+ * Dark courtroom aesthetic with gold accents
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #e8e8e8;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.leaderboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.leaderboard-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #d4af37;
+}
+
+.leaderboard-header h1 {
+    font-size: 2.5em;
+    color: #d4af37;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.subtitle {
+    color: #b8b8b8;
+    font-size: 1.1em;
+}
+
+.leaderboard-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.pagination-info {
+    color: #b8b8b8;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-pagination {
+    padding: 8px 20px;
+    background: #2d2d2d;
+    color: #e8e8e8;
+    border: 1px solid #d4af37;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-pagination:hover:not(:disabled) {
+    background: #d4af37;
+    color: #1a1a1a;
+}
+
+.btn-pagination:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.leaderboard-table-container {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-table thead {
+    background: rgba(212, 175, 55, 0.2);
+}
+
+.leaderboard-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: bold;
+    color: #d4af37;
+    border-bottom: 2px solid #d4af37;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 1px;
+}
+
+.leaderboard-table td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.leaderboard-table tbody tr:hover {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.rank-gold {
+    background: rgba(212, 175, 55, 0.15);
+    border-left: 4px solid #d4af37;
+}
+
+.rank-silver {
+    background: rgba(192, 192, 192, 0.1);
+    border-left: 4px solid #c0c0c0;
+}
+
+.rank-bronze {
+    background: rgba(205, 127, 50, 0.1);
+    border-left: 4px solid #cd7f32;
+}
+
+.rank-cell {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #d4af37;
+}
+
+.player-cell {
+    font-weight: 500;
+}
+
+.player-link {
+    color: #e8e8e8;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.player-link:hover {
+    color: #d4af37;
+}
+
+.rating-cell {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #d4af37;
+}
+
+.peak-cell {
+    color: #b8b8b8;
+    font-size: 0.9em;
+}
+
+.record-cell {
+    font-family: 'Courier New', monospace;
+}
+
+.winrate-cell {
+    color: #90ee90;
+}
+
+.trend-cell {
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.trend-up {
+    color: #90ee90;
+}
+
+.trend-down {
+    color: #ff6b6b;
+}
+
+.trend-neutral {
+    color: #b8b8b8;
+}
+
+.loading, .error, .empty {
+    text-align: center;
+    padding: 40px;
+    color: #b8b8b8;
+    font-style: italic;
+}
+
+.error {
+    color: #ff6b6b;
+}
+
+.leaderboard-footer {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #888;
+    font-size: 0.9em;
+}

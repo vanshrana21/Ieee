@@ -13,7 +13,7 @@ import pytest
 
 from backend.core import tenant_guard
 from backend.services import plan_enforcement_service, institution_service
-from backend.orm.tournament_results import Institution, InstitutionRole, InstitutionAuditLog
+from backend.orm.institution import Institution, InstitutionRole, InstitutionAuditLog
 
 
 class TestTenantGuardDeterminism:

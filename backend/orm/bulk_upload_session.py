@@ -38,8 +38,8 @@ class BulkUploadSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
-    institution = relationship("Institution", back_populates="bulk_upload_sessions")
-    uploaded_by = relationship("User", back_populates="bulk_upload_sessions")
+    institution = relationship("Institution")
+    uploaded_by = relationship("User", foreign_keys=[uploaded_by_user_id])
     
     def __repr__(self):
         return f"<BulkUploadSession(id={self.id}, status={self.status}, total={self.total_rows}, success={self.success_count})>"

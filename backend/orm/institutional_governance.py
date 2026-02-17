@@ -27,21 +27,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from backend.orm.base import Base
-
-
-# =============================================================================
-# Compliance Mode Enum
-# =============================================================================
-
-class ComplianceMode(str, enum.Enum):
-    """
-    Institution compliance mode.
-    
-    STANDARD: Normal academic operations
-    STRICT: Enhanced audit, external review required, all approvals mandatory
-    """
-    STANDARD = "standard"
-    STRICT = "strict"
+from backend.orm.institution import Institution
 
 
 class RankingVisibilityMode(str, enum.Enum):
@@ -94,79 +80,6 @@ class LedgerEventType(str, enum.Enum):
     SNAPSHOT_PUBLISHED = "snapshot_published"
     APPROVAL_GRANTED = "approval_granted"
     APPROVAL_REJECTED = "approval_rejected"
-
-
-# =============================================================================
-# PART 1 — Multi-Tenant Institution Model
-# =============================================================================
-
-class Institution(Base):
-    """
-    Multi-tenant institution root entity.
-    
-    Each institution has complete data isolation.
-    All academic operations are scoped to an institution.
-    
-    Rules:
-    - Never delete active institutions
-    - Use is_active for soft-disable
-    """
-    __tablename__ = "institutions"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    
-    # Institution details
-    name = Column(String(200), nullable=False, unique=True)
-    slug = Column(String(50), nullable=False, unique=True)  # URL-friendly identifier
-    
-    # Compliance and accreditation
-    accreditation_body = Column(String(200), nullable=True)
-    accreditation_number = Column(String(100), nullable=True)
-    compliance_mode = Column(
-        Enum(ComplianceMode, name="compliance_mode_enum", create_constraint=True),
-        nullable=False,
-        default=ComplianceMode.STANDARD
-    )
-    
-    # Settings
-    settings_json = Column(Text, nullable=True)  # JSON for flexible institution settings
-    
-    # Status
-    is_active = Column(Boolean, nullable=False, default=True)
-    
-    # Timestamps
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    deactivated_at = Column(DateTime, nullable=True)
-    
-    # Constraints
-    __table_args__ = (
-        Index("idx_institutions_slug", "slug"),
-        Index("idx_institutions_compliance", "compliance_mode"),
-        Index("idx_institutions_active", "is_active"),
-    )
-    
-    # Relationships
-    academic_years = relationship("AcademicYear", back_populates="institution")
-    policy_profiles = relationship("SessionPolicyProfile", back_populates="institution")
-    ledger_entries = relationship("InstitutionalLedgerEntry", back_populates="institution")
-    metrics = relationship("InstitutionMetrics", back_populates="institution")
-    
-    def __repr__(self) -> str:
-        return f"<Institution(id={self.id}, name={self.name}, mode={self.compliance_mode})>"
-    
-    def to_dict(self) -> Dict[str, Any]:
-        import json
-        return {
-            "id": self.id,
-            "name": self.name,
-            "slug": self.slug,
-            "accreditation_body": self.accreditation_body,
-            "accreditation_number": self.accreditation_number,
-            "compliance_mode": self.compliance_mode.value if self.compliance_mode else None,
-            "settings": json.loads(self.settings_json) if self.settings_json else {},
-            "is_active": self.is_active,
-            "created_at": self.created_at.isoformat() if self.created_at else None
-        }
 
 
 class AcademicYear(Base):

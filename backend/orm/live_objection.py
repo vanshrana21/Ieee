@@ -18,7 +18,7 @@ from sqlalchemy import (
     Column, Integer, String, DateTime, ForeignKey, 
     Enum as SQLEnum, Text, Boolean, Index
 )
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship, validates, synonym
 
 from backend.database import Base
 
@@ -131,6 +131,12 @@ class LiveObjection(Base):
     turn = relationship('LiveTurn', back_populates='objections')
     raised_by = relationship('User', foreign_keys=[raised_by_user_id])
     ruled_by = relationship('User', foreign_keys=[ruled_by_user_id])
+
+    live_session_id = synonym("session_id")
+    live_turn_id = synonym("turn_id")
+    raised_by_participant_id = synonym("raised_by_user_id")
+    resolved_by_judge_id = synonym("ruled_by_user_id")
+    status = synonym("state")
     
     # Table arguments for partial unique index (PostgreSQL)
     __table_args__ = (

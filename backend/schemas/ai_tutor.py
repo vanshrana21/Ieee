@@ -38,7 +38,7 @@ class AITutorResponse(BaseModel):
     data: Dict[str, Any] = Field(..., description="Response data")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Response generated successfully",
@@ -87,7 +87,7 @@ class RecommendationsResponse(BaseModel):
     data: Dict[str, List[RecommendationItem]]
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Recommendations generated",

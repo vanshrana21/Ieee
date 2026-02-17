@@ -9,7 +9,7 @@ class MemorialStatus(str, enum.Enum):
     REJECTED = "rejected"
 
 class MemorialSubmission(Base):
-    __tablename__ = "memorial_submissions"
+    __tablename__ = "competition_memorial_submissions"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)

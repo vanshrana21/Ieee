@@ -19,9 +19,9 @@ from sqlalchemy import (
     Column, Integer, String, DateTime, Boolean, ForeignKey,
     Numeric, Enum as SQLEnum, Index, UniqueConstraint, CheckConstraint
 )
-from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.orm import relationship, validates, event
-from sqlalchemy import select, and_
+from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy.orm import relationship, validates
+from sqlalchemy import select, and_, event
 
 from backend.orm.base import Base
 from backend.database import Base

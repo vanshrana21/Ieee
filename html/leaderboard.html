@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Leaderboard - Moot Court Rankings</title>
+    <link rel="stylesheet" href="/css/leaderboard.css">
+</head>
+<body>
+    <div class="leaderboard-container">
+        <header class="leaderboard-header">
+            <h1>National Moot Court Leaderboard</h1>
+            <p class="subtitle">Ranked by ELO Rating</p>
+        </header>
+
+        <div class="leaderboard-controls">
+            <div class="pagination-info">
+                <span id="pagination-text">Loading...</span>
+            </div>
+            <div class="pagination-controls">
+                <button id="prev-btn" class="btn-pagination" disabled>Previous</button>
+                <button id="next-btn" class="btn-pagination" disabled>Next</button>
+            </div>
+        </div>
+
+        <div class="leaderboard-table-container">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Rating</th>
+                        <th>Peak</th>
+                        <th>W/L/D</th>
+                        <th>Win %</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <tr>
+                        <td colspan="7" class="loading">Loading leaderboard...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="leaderboard-footer">
+            <p>Only finalized ranked matches are included. AI matches excluded.</p>
+        </div>
+    </div>
+
+    <script src="/js/leaderboard.js"></script>
+</body>
+</html>
