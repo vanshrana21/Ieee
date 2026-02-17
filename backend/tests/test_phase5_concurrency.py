@@ -18,7 +18,7 @@ from backend.orm.live_court import (
     LiveCourtSession, LiveTurn, LiveEventLog,
     LiveCourtStatus, LiveTurnState, OralSide, OralTurnType
 )
-from backend.orm.national_network import Institution
+from backend.orm.institution import Institution
 from backend.orm.round_pairing import TournamentRound, RoundType
 from backend.orm.user import User, UserRole
 from backend.services.live_court_service import (

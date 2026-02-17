@@ -19,7 +19,8 @@ from backend.orm.panel_assignment import (
     JudgePanel, PanelMember, PanelMemberRole, JudgeAssignmentHistory, PanelFreeze
 )
 from backend.orm.round_pairing import TournamentRound, RoundPairing, RoundType, RoundStatus
-from backend.orm.national_network import TournamentTeam, NationalTournament, Institution
+from backend.orm.national_network import TournamentTeam, NationalTournament
+from backend.orm.institution import Institution
 from backend.orm.user import User, UserRole
 from backend.services.panel_assignment_service import (
     generate_panels_for_round, publish_panels, verify_panel_integrity,
